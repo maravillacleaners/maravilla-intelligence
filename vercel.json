@@ -1,0 +1,35 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "nodeVersion": "20.x",
+  "env": {
+    "NODE_ENV": {
+      "value": "production"
+    },
+    "AIRTABLE_API_KEY": {
+      "required": true
+    },
+    "AIRTABLE_BASE_ID": {
+      "required": true
+    },
+    "AIRTABLE_SUBS_BASE_ID": {
+      "required": true
+    },
+    "JWT_SECRET_SUPPLIER": {
+      "required": true
+    },
+    "EMAIL_SERVICE": {
+      "value": "sendgrid"
+    },
+    "EMAIL_API_KEY": {
+      "required": false
+    }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}
