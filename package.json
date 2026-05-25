@@ -1,0 +1,35 @@
+{
+  "name": "maravilla-intelligence",
+  "version": "1.0.0",
+  "description": "Maravilla x 16x9 Commercial Intelligence System - NAICS Targeting & Lead Scoring",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js",
+    "test:config": "node --test tests/config.test.js",
+    "test:watch": "node --test tests/**/*.test.js --watch",
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "lint": "eslint .",
+    "validate": "node -c config/config.js"
+  },
+  "keywords": [
+    "commercial-intelligence",
+    "naics-targeting",
+    "lead-scoring",
+    "maravilla",
+    "b2b-outreach"
+  ],
+  "author": "Maravilla Cleaners",
+  "license": "PROPRIETARY",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.48.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
