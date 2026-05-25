@@ -1,0 +1,527 @@
+{
+  "name": "Flow A - Client Discovery (Sunbiz Query)",
+  "description": "Daily trigger 6 AM ET. Query Sunbiz API for new FL companies <90 days. Branch: NAICS=561720 → skip (Flow B), else → continue. SAM check, enrich, Claude score, dedup, save to Airtable pending_review",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": "every",
+        "unit": "day",
+        "value": 1,
+        "triggerAtHour": 6,
+        "triggerAtMinute": 0
+      },
+      "name": "Schedule Trigger - 6 AM ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "flow-a-daily-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize query parameters for Sunbiz API\n// Query for new FL companies formed < 90 days ago\nconst ninetyDaysAgo = new Date();\nninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);\nconst formattedDate = ninetyDaysAgo.toISOString().split('T')[0];\n\nreturn [{\n  json: {\n    query_date: formattedDate,\n    state: 'FL',\n    query_status: 'active',\n    page: 1,\n    limit: 100,\n    total_found: 0,\n    processed_count: 0,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Initialize Query Parameters",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.SUNBIZ_API_URL || 'https://sunbiz.example.com/api/search' }}",
+        "authentication": "none",
+        "method": "GET",
+        "qs": {
+          "state": "FL",
+          "date_formed_after": "{{ $node['Initialize Query Parameters'].json.query_date }}",
+          "status": "ACTIVE",
+          "page": 1,
+          "limit": 100
+        },
+        "options": {}
+      },
+      "name": "Query Sunbiz API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse Sunbiz response and extract company records\nconst response = $node['Query Sunbiz API'].json || { results: [], total: 0 };\n\nif (!response.results || response.results.length === 0) {\n  return [{\n    json: {\n      records: [],\n      total_count: 0,\n      message: 'No new companies found from Sunbiz query'\n    }\n  }];\n}\n\nconst records = response.results.map((company, idx) => ({\n  json: {\n    index: idx + 1,\n    legal_name: company.company_name || '',\n    dba: company.dba_name || '',\n    sunbiz_status: company.status || 'ACTIVE',\n    date_formed: company.date_formed || '',\n    naics: company.naics || '',\n    naics_description: company.naics_description || '',\n    officer_name: company.principal_officer || '',\n    registered_address: company.registered_address || '',\n    physical_address: company.mailing_address || '',\n    county: company.county || '',\n    zip: company.zip || '',\n    sunbiz_record_id: company.record_id || '',\n    source: 'Sunbiz',\n    created_at: new Date().toISOString()\n  }\n}));\n\nreturn records;"
+      },
+      "name": "Parse Sunbiz Records",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Branch logic: Check if NAICS = PRIMARY_NAICS (561720)\n// If yes, skip (Flow B), else continue (Flow A)\nconst primaryNaics = '561720';\nconst naics = $node['Parse Sunbiz Records'].json.naics || '';\n\nif (naics === primaryNaics) {\n  return [{\n    json: {\n      ...($node['Parse Sunbiz Records'].json),\n      route: 'flow_b_skip',\n      reason: 'Primary NAICS detected (561720 - Janitorial Services)',\n      skip: true\n    },\n    pairedItem: { item: 0 }\n  }];\n} else {\n  return [{\n    json: {\n      ...($node['Parse Sunbiz Records'].json),\n      route: 'flow_a_continue',\n      skip: false\n    },\n    pairedItem: { item: 0 }\n  }];\n}"
+      },
+      "name": "Branch - Check NAICS",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "nodeEqualsValue": [
+            {
+              "name": "skip",
+              "value": "false"
+            }
+          ]
+        }
+      },
+      "name": "Filter - Continue Only",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.SAM_API_URL || 'https://api.sam.gov/prod/opendata' }}",
+        "authentication": "none",
+        "method": "GET",
+        "qs": {
+          "api_key": "{{ $env.SAM_API_KEY || '' }}",
+          "q": "{{ $node['Filter - Continue Only'].json.legal_name }}",
+          "format": "json"
+        },
+        "options": {}
+      },
+      "name": "SAM Check - Federal Registration",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Enrich company data with additional details\nconst samData = $node['SAM Check - Federal Registration'].json || {};\nconst hasGovernmentRegistration = samData.results && samData.results.length > 0;\n\nreturn [{\n  json: {\n    ...($node['Filter - Continue Only'].json),\n    has_sam_registration: hasGovernmentRegistration,\n    sam_uei: samData.results?.[0]?.uei || null,\n    sam_cage: samData.results?.[0]?.cage || null,\n    government_ready: hasGovernmentRegistration ? 'yes' : 'no',\n    enriched_at: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Enrich - Add SAM Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Prospects",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "GET",
+        "qs": {
+          "filterByFormula": "OR(\n  SEARCH(LOWER('{{ $node['Enrich - Add SAM Data'].json.legal_name }}'), LOWER({legal_name})),\n  SEARCH(LOWER('{{ $node['Enrich - Add SAM Data'].json.sunbiz_record_id }}'), {sunbiz_record_id})\n)",
+          "maxRecords": 1
+        },
+        "options": {}
+      },
+      "name": "Dedup Check - Airtable",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1650, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Check if already exists and if opted out\nconst existing = $node['Dedup Check - Airtable'].json?.records || [];\nconst alreadyExists = existing.length > 0;\nconst isOptedOut = alreadyExists && existing[0].fields?.opt_out === true;\n\nreturn [{\n  json: {\n    ...($node['Enrich - Add SAM Data'].json),\n    already_exists: alreadyExists,\n    is_opted_out: isOptedOut,\n    existing_record_id: alreadyExists ? existing[0].id : null,\n    should_skip: isOptedOut || alreadyExists\n  }\n}];"
+      },
+      "name": "Check - Already Exists or Opted Out",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "nodeEqualsValue": [
+            {
+              "name": "should_skip",
+              "value": "false"
+            }
+          ]
+        }
+      },
+      "name": "Filter - Skip Duplicates and Opted Out",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [2050, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.ENRICHMENT_SERVICE_URL || 'http://localhost:3000/api/enrich' }}",
+        "authentication": "none",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "{{ JSON.stringify($node['Filter - Skip Duplicates and Opted Out'].json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Enrich Prospect - Contact Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2250, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.SCORING_SERVICE_URL || 'http://localhost:3000/api/score' }}",
+        "authentication": "none",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "{{ JSON.stringify($node['Enrich Prospect - Contact Details'].json || $node['Filter - Skip Duplicates and Opted Out'].json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Score via Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2250, 400],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Combine enriched data with scoring results and prepare for Airtable\nconst enriched = $node['Enrich Prospect - Contact Details'].json || {};\nconst scored = $node['Score via Claude API'].json || {};\n\nreturn [{\n  json: {\n    ...($node['Filter - Skip Duplicates and Opted Out'].json),\n    business_email: enriched.business_email || enriched.email || '',\n    phone: enriched.phone || '',\n    website: enriched.website || '',\n    linkedin: enriched.linkedin || '',\n    has_physical_office: enriched.has_physical_office || false,\n    sqft_estimate: enriched.sqft_estimate || 0,\n    employees_estimate: enriched.employees_estimate || 0,\n    score: scored?.score || 0,\n    service_fit: scored?.service_fit || 'unknown',\n    segment: scored?.segment || 'Newly Formed',\n    priority: scored?.priority || 5,\n    intent_signal: scored?.intent_signal || 'low',\n    icebreaker: scored?.icebreaker || '',\n    pipeline_status: 'pending_review',\n    source: 'Sunbiz',\n    scored_at: new Date().toISOString(),\n    is_virtual_office: !enriched.has_physical_office,\n    change_detected: false,\n    re_engagement_candidate: false,\n    opt_out: false\n  }\n}];"
+      },
+      "name": "Prepare Airtable Record",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Prospects",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"legal_name\": \"{{ $node['Prepare Airtable Record'].json.legal_name }}\",\n  \"dba\": \"{{ $node['Prepare Airtable Record'].json.dba }}\",\n  \"sunbiz_status\": \"{{ $node['Prepare Airtable Record'].json.sunbiz_status }}\",\n  \"date_formed\": \"{{ $node['Prepare Airtable Record'].json.date_formed }}\",\n  \"naics\": \"{{ $node['Prepare Airtable Record'].json.naics }}\",\n  \"officer_name\": \"{{ $node['Prepare Airtable Record'].json.officer_name }}\",\n  \"registered_address\": \"{{ $node['Prepare Airtable Record'].json.registered_address }}\",\n  \"physical_address\": \"{{ $node['Prepare Airtable Record'].json.physical_address }}\",\n  \"county\": \"{{ $node['Prepare Airtable Record'].json.county }}\",\n  \"zip\": \"{{ $node['Prepare Airtable Record'].json.zip }}\",\n  \"business_email\": \"{{ $node['Prepare Airtable Record'].json.business_email }}\",\n  \"phone\": \"{{ $node['Prepare Airtable Record'].json.phone }}\",\n  \"website\": \"{{ $node['Prepare Airtable Record'].json.website }}\",\n  \"linkedin\": \"{{ $node['Prepare Airtable Record'].json.linkedin }}\",\n  \"has_physical_office\": {{ $node['Prepare Airtable Record'].json.has_physical_office }},\n  \"sqft_estimate\": {{ $node['Prepare Airtable Record'].json.sqft_estimate }},\n  \"employees_estimate\": {{ $node['Prepare Airtable Record'].json.employees_estimate }},\n  \"is_virtual_office\": {{ $node['Prepare Airtable Record'].json.is_virtual_office }},\n  \"has_sam_registration\": {{ $node['Prepare Airtable Record'].json.has_sam_registration }},\n  \"segment\": \"{{ $node['Prepare Airtable Record'].json.segment }}\",\n  \"service_fit\": \"{{ $node['Prepare Airtable Record'].json.service_fit }}\",\n  \"priority\": \"{{ $node['Prepare Airtable Record'].json.priority }}\",\n  \"intent_signal\": \"{{ $node['Prepare Airtable Record'].json.intent_signal }}\",\n  \"icebreaker\": \"{{ $node['Prepare Airtable Record'].json.icebreaker }}\",\n  \"score\": {{ $node['Prepare Airtable Record'].json.score }},\n  \"pipeline_status\": \"{{ $node['Prepare Airtable Record'].json.pipeline_status }}\",\n  \"source\": \"{{ $node['Prepare Airtable Record'].json.source }}\",\n  \"change_detected\": {{ $node['Prepare Airtable Record'].json.change_detected }},\n  \"re_engagement_candidate\": {{ $node['Prepare Airtable Record'].json.re_engagement_candidate }},\n  \"opt_out\": {{ $node['Prepare Airtable Record'].json.opt_out }}\n}\""
+            }
+          ]
+        }
+      },
+      "name": "Save to Airtable Prospects",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2650, 300],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"record_id\": \"{{ $node['Save to Airtable Prospects'].json.id }}\",\n  \"event_type\": \"created\",\n  \"source\": \"Flow A - Sunbiz Discovery\",\n  \"performed_by\": \"n8n-automation\",\n  \"notes\": \"New prospect created from Sunbiz query: {{ $node['Prepare Airtable Record'].json.legal_name }} (Score: {{ $node['Prepare Airtable Record'].json.score }}, Segment: {{ $node['Prepare Airtable Record'].json.segment }})\"\n}\""
+            }
+          ]
+        }
+      },
+      "name": "Log Created Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2850, 150],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"record_id\": \"{{ $node['Save to Airtable Prospects'].json.id }}\",\n  \"event_type\": \"scored\",\n  \"source\": \"Flow A - Claude Scoring\",\n  \"performed_by\": \"n8n-automation\",\n  \"notes\": \"Prospect scored via Claude API: {{ $node['Prepare Airtable Record'].json.legal_name }} (Score: {{ $node['Prepare Airtable Record'].json.score }}/100, Priority: {{ $node['Prepare Airtable Record'].json.priority }})\"\n}\""
+            }
+          ]
+        }
+      },
+      "name": "Log Scored Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2850, 300],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "nodeEqualsValue": [
+            {
+              "name": "skip",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "name": "Filter - Route to Flow B",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [1250, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"event_type\": \"routed\",\n  \"source\": \"Flow A - Branch Check\",\n  \"performed_by\": \"n8n-automation\",\n  \"notes\": \"Primary NAICS (561720) detected, routed to Flow B for supplier discovery: {{ $node['Filter - Route to Flow B'].json.legal_name }}\"\n}\""
+            }
+          ]
+        }
+      },
+      "name": "Log Routed to Flow B",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 500],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger - 6 AM ET": {
+      "main": [
+        [
+          {
+            "node": "Initialize Query Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Query Parameters": {
+      "main": [
+        [
+          {
+            "node": "Query Sunbiz API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Sunbiz API": {
+      "main": [
+        [
+          {
+            "node": "Parse Sunbiz Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Sunbiz Records": {
+      "main": [
+        [
+          {
+            "node": "Branch - Check NAICS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Branch - Check NAICS": {
+      "main": [
+        [
+          {
+            "node": "Filter - Continue Only",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter - Route to Flow B",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter - Continue Only": {
+      "main": [
+        [
+          {
+            "node": "SAM Check - Federal Registration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SAM Check - Federal Registration": {
+      "main": [
+        [
+          {
+            "node": "Enrich - Add SAM Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich - Add SAM Data": {
+      "main": [
+        [
+          {
+            "node": "Dedup Check - Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dedup Check - Airtable": {
+      "main": [
+        [
+          {
+            "node": "Check - Already Exists or Opted Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check - Already Exists or Opted Out": {
+      "main": [
+        [
+          {
+            "node": "Filter - Skip Duplicates and Opted Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter - Skip Duplicates and Opted Out": {
+      "main": [
+        [
+          {
+            "node": "Enrich Prospect - Contact Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Prospect - Contact Details": {
+      "main": [
+        [
+          {
+            "node": "Score via Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score via Claude API": {
+      "main": [
+        [
+          {
+            "node": "Prepare Airtable Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Airtable Record": {
+      "main": [
+        [
+          {
+            "node": "Save to Airtable Prospects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Airtable Prospects": {
+      "main": [
+        [
+          {
+            "node": "Log Created Event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Scored Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter - Route to Flow B": {
+      "main": [
+        [
+          {
+            "node": "Log Routed to Flow B",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "meta": {
+    "instanceId": "flow-a-clients-v1",
+    "created": "2026-05-25T10:00:00Z",
+    "updated": "2026-05-25T10:00:00Z",
+    "triggerMode": "scheduled"
+  }
+}

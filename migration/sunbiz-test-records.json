@@ -1,0 +1,72 @@
+[
+  {
+    "record_id": "FL20260301001",
+    "company_name": "ABC Property Management Group LLC",
+    "dba_name": "ABC PM",
+    "status": "ACTIVE",
+    "date_formed": "2026-02-15",
+    "naics": "531210",
+    "naics_description": "Real Estate Management",
+    "principal_officer": "John Smith",
+    "registered_address": "123 Main St, Miami, FL 33101",
+    "mailing_address": "123 Main St, Miami, FL 33101",
+    "county": "Miami-Dade",
+    "zip": "33101"
+  },
+  {
+    "record_id": "FL20260305002",
+    "company_name": "Sunshine Medical Clinic",
+    "dba_name": null,
+    "status": "ACTIVE",
+    "date_formed": "2026-02-20",
+    "naics": "621498",
+    "naics_description": "Specialty Hospital",
+    "principal_officer": "Dr. Maria Garcia",
+    "registered_address": "456 Health Way, Tampa, FL 33602",
+    "mailing_address": "456 Health Way, Tampa, FL 33602",
+    "county": "Hillsborough",
+    "zip": "33602"
+  },
+  {
+    "record_id": "FL20260310003",
+    "company_name": "Office Plus Holdings",
+    "dba_name": "OP Solutions",
+    "status": "ACTIVE",
+    "date_formed": "2026-02-25",
+    "naics": "531120",
+    "naics_description": "Office Building",
+    "principal_officer": "Robert Johnson",
+    "registered_address": "789 Commerce Ave, Orlando, FL 32801",
+    "mailing_address": "789 Commerce Ave, Orlando, FL 32801",
+    "county": "Orange",
+    "zip": "32801"
+  },
+  {
+    "record_id": "FL20260312004",
+    "company_name": "Federal Maintenance Solutions Inc",
+    "dba_name": null,
+    "status": "ACTIVE",
+    "date_formed": "2026-02-28",
+    "naics": "927340",
+    "naics_description": "Government Administration",
+    "principal_officer": "Thomas Anderson",
+    "registered_address": "321 Government Blvd, Jacksonville, FL 32202",
+    "mailing_address": "321 Government Blvd, Jacksonville, FL 32202",
+    "county": "Duval",
+    "zip": "32202"
+  },
+  {
+    "record_id": "FL20260315005",
+    "company_name": "Cleaning Elite Services LLC",
+    "dba_name": "Elite Cleaning",
+    "status": "ACTIVE",
+    "date_formed": "2026-03-01",
+    "naics": "561720",
+    "naics_description": "Janitorial Services",
+    "principal_officer": "Patricia Wilson",
+    "registered_address": "555 Service Rd, Broward, FL 33301",
+    "mailing_address": "555 Service Rd, Broward, FL 33301",
+    "county": "Broward",
+    "zip": "33301"
+  }
+]
