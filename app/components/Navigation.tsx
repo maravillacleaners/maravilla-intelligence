@@ -12,6 +12,7 @@ export default function Navigation() {
     { href: '/prospects', label: '👥 Prospects', icon: '📋' },
     { href: '/contracts', label: '📄 Contracts', icon: '📊' },
     { href: '/subs', label: '🏗️ Subs', icon: '🏭' },
+    { href: '/suppliers/dashboard', label: '🤝 Supplier Portal', icon: '🏢' },
     { href: '/campaigns', label: '📧 Campaigns', icon: '✉️' },
     { href: '/analytics', label: '📈 Analytics', icon: '📊' },
     { href: '/runs', label: '⚙️ Runs', icon: '🔄' },
