@@ -57,7 +57,9 @@ export async function POST(request: Request) {
     // ========================================================================
     // 4. CHECK IF EMAIL ALREADY EXISTS
     // ========================================================================
+    console.log('[API /api/suppliers/register] Checking if email exists:', body.business_email.trim().toLowerCase())
     const existingSupplier = await getSupplierByEmail(body.business_email.trim().toLowerCase())
+    console.log('[API /api/suppliers/register] Email check result:', existingSupplier ? 'exists' : 'new')
     if (existingSupplier) {
       return Response.json({ error: 'Email already registered' }, { status: 409 })
     }
@@ -101,11 +103,12 @@ export async function POST(request: Request) {
         password_hash: passwordHash,
       })
     } catch (dbError) {
-      console.error('[API /api/suppliers/register] Database error:', dbError)
+      const errorMsg = dbError instanceof Error ? dbError.message : typeof dbError === 'string' ? dbError : JSON.stringify(dbError);
+      console.error('[API /api/suppliers/register] Database error:', dbError, 'Message:', errorMsg)
       return Response.json(
         {
           error: 'Failed to create supplier account',
-          details: dbError instanceof Error ? dbError.message : 'Unknown database error',
+          details: errorMsg,
         },
         { status: 500 }
       )

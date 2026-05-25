@@ -1,0 +1,164 @@
+{
+  "name": "Flow C - Federal Contracts Intelligence (SAM.gov Query)",
+  "description": "Daily trigger 8 AM ET. Query SAM.gov for recent contract opportunities (last 7 days). Filter by NAICS=561720. Extract contractor info, opportunity value, prime/sub status. Enrich, Claude score, save to Airtable with record_type=contract",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": "every",
+        "unit": "day",
+        "value": 1,
+        "triggerAtHour": 8,
+        "triggerAtMinute": 0
+      },
+      "name": "Schedule Trigger - 8 AM ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "flow-c-daily-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize SAM.gov contract query parameters\nconst sevenDaysAgo = new Date();\nsevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);\nconst formattedDate = sevenDaysAgo.toISOString().split('T')[0];\n\nreturn [{\n  json: {\n    query_date: formattedDate,\n    naics: process.env.PRIMARY_NAICS || '561720',\n    page: 1,\n    limit: 100,\n    total_found: 0,\n    processed_count: 0,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Initialize SAM.gov Query",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.SAMGOV_API_URL || 'https://api.sam.gov/opportunities' }}",
+        "authentication": "none",
+        "method": "GET",
+        "qs": {
+          "api_key": "{{ $env.SAMGOV_API_KEY || 'demo-key' }}",
+          "naics": "{{ $node['Initialize SAM.gov Query'].json.naics }}",
+          "postedDate[from]": "{{ $node['Initialize SAM.gov Query'].json.query_date }}",
+          "limit": 100
+        },
+        "options": {}
+      },
+      "name": "Query SAM.gov API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse SAM.gov response and extract contract opportunities\nconst response = $node['Query SAM.gov API'].json || { opportunitiesData: [], totalRecords: 0 };\n\nif (!response.opportunitiesData || response.opportunitiesData.length === 0) {\n  return [{\n    json: {\n      records: [],\n      total_count: 0,\n      message: 'No contract opportunities found'\n    }\n  }];\n}\n\nconst records = response.opportunitiesData.map((opp, idx) => ({\n  json: {\n    record_type: 'contract',\n    index: idx + 1,\n    legal_name: opp.title || opp.agencyName || 'Unknown',\n    opportunity_id: opp.id || '',\n    description: opp.description || '',\n    naics: opp.naicsCode || '',\n    agency: opp.agencyName || '',\n    office: opp.officeAddress || '',\n    contact_name: opp.contactName || '',\n    contact_email: opp.email || '',\n    contact_phone: opp.phone || '',\n    deadline: opp.archiveDate || '',\n    estimated_value: opp.estimatedAmount || 0,\n    posted_date: opp.postedDate || '',\n    type: opp.type || 'Solicitation',\n    prime_contractor: opp.primeOrSub === 'prime' || !opp.primeOrSub ? true : false,\n    source: 'SAM.gov',\n    created_at: new Date().toISOString()\n  }\n}));\n\nreturn records;"
+      },
+      "name": "Parse SAM.gov Records",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.ENRICH_API_URL || 'http://localhost:3000/api/enrich' }}",
+        "authentication": "none",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "{{ JSON.stringify($node['Parse SAM.gov Records'].json) }}"
+            }
+          ]
+        }
+      },
+      "name": "Enrich Contract Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.SCORE_API_URL || 'http://localhost:3000/api/score' }}",
+        "authentication": "none",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "{{ JSON.stringify($node['Enrich Contract Data'].json || $node['Parse SAM.gov Records'].json) }}"
+            }
+          ]
+        }
+      },
+      "name": "Score Contract Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 400],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare contract record for Airtable\nconst enriched = $node['Enrich Contract Data'].json;\nconst scored = $node['Score Contract Opportunity'].json;\n\nreturn [{\n  json: {\n    record_type: 'contract',\n    legal_name: enriched?.legal_name || $node['Parse SAM.gov Records'].json?.legal_name || 'Unknown',\n    business_email: enriched?.business_email || $node['Parse SAM.gov Records'].json?.contact_email || '',\n    phone: enriched?.phone || $node['Parse SAM.gov Records'].json?.contact_phone || '',\n    county: enriched?.county || '',\n    score: scored?.score || 0,\n    priority: scored?.priority || 'medium',\n    pipeline_status: 'pending',\n    icebreaker: scored?.icebreaker || `Opportunity identified on SAM.gov. Estimated value: $${$node['Parse SAM.gov Records'].json?.estimated_value || '0'}. Deadline: ${$node['Parse SAM.gov Records'].json?.deadline || 'TBD'}.`,\n    segment: scored?.segment || 'Government/GovCon',\n    service_fit: scored?.service_fit || 0.8,\n    ticket_estimate: $node['Parse SAM.gov Records'].json?.estimated_value || 0,\n    agency: $node['Parse SAM.gov Records'].json?.agency || 'Unknown',\n    total_obligated_amount: $node['Parse SAM.gov Records'].json?.estimated_value || 0,\n    teaming_email_draft: `Regarding SAM.gov Opportunity ID: ${$node['Parse SAM.gov Records'].json?.opportunity_id || 'N/A'}\\n\\nWe are interested in partnering on this opportunity as a ${$node['Parse SAM.gov Records'].json?.prime_contractor ? 'prime contractor' : 'subcontractor'}.`,\n    event_type: 'Contract Opportunity',\n    event_date: $node['Parse SAM.gov Records'].json?.deadline || new Date().toISOString(),\n    source: 'SAM.gov',\n    sam_opportunity_id: $node['Parse SAM.gov Records'].json?.opportunity_id || ''\n  }\n}];"
+      },
+      "name": "Prepare Contract Record",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Intelligence",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{{ JSON.stringify($node['Prepare Contract Record'].json) }}"
+            }
+          ]
+        }
+      },
+      "name": "Save Contract to Airtable",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log completion\nreturn [{\n  json: {\n    status: 'success',\n    message: `Contract opportunity saved to Airtable`,\n    opportunity_id: $node['Prepare Contract Record'].json?.sam_opportunity_id || 'unknown',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Log Completion",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger - 8 AM ET": {
+      "main": [[{ "node": "Initialize SAM.gov Query", "type": "main", "index": 0 }]]
+    },
+    "Initialize SAM.gov Query": {
+      "main": [[{ "node": "Query SAM.gov API", "type": "main", "index": 0 }]]
+    },
+    "Query SAM.gov API": {
+      "main": [[{ "node": "Parse SAM.gov Records", "type": "main", "index": 0 }]]
+    },
+    "Parse SAM.gov Records": {
+      "main": [[{ "node": "Enrich Contract Data", "type": "main", "index": 0 }]]
+    },
+    "Enrich Contract Data": {
+      "main": [[{ "node": "Score Contract Opportunity", "type": "main", "index": 0 }]]
+    },
+    "Score Contract Opportunity": {
+      "main": [[{ "node": "Prepare Contract Record", "type": "main", "index": 0 }]]
+    },
+    "Prepare Contract Record": {
+      "main": [[{ "node": "Save Contract to Airtable", "type": "main", "index": 0 }]]
+    },
+    "Save Contract to Airtable": {
+      "main": [[{ "node": "Log Completion", "type": "main", "index": 0 }]]
+    }
+  }
+}

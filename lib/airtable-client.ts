@@ -13,7 +13,7 @@ const AIRTABLE_API_URL = 'https://api.airtable.com/v0'
 export async function getProspects(): Promise<Prospect[]> {
   const apiKey = process.env.NEXT_PUBLIC_AIRTABLE_API_KEY || process.env.AIRTABLE_API_KEY
   const baseId = process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID || process.env.AIRTABLE_BASE_ID
-  const tableId = 'CLIENTS'
+  const tableName = 'Intelligence'
 
   if (!apiKey || !baseId) {
     console.error('Missing Airtable credentials')
@@ -22,7 +22,7 @@ export async function getProspects(): Promise<Prospect[]> {
 
   try {
     const response = await fetch(
-      `${AIRTABLE_API_URL}/${baseId}/${tableId}?view=Prospects`,
+      `${AIRTABLE_API_URL}/${baseId}/${tableName}`,
       {
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -37,15 +37,17 @@ export async function getProspects(): Promise<Prospect[]> {
 
     const data = await response.json()
 
-    return (data.records || []).map((record: any) => ({
-      id: record.id,
-      legal_name: record.fields.legal_name || 'Unknown',
-      score: record.fields.score || 0,
-      priority: record.fields.priority || 'low',
-      icebreaker: record.fields.icebreaker || '',
-      pipeline_status: record.fields.pipeline_status || 'pending',
-      ghl_contact_id: record.fields.ghl_contact_id,
-    }))
+    return (data.records || [])
+      .filter((record: any) => record.fields.record_type === 'prospect')
+      .map((record: any) => ({
+        id: record.id,
+        legal_name: record.fields.legal_name || 'Unknown',
+        score: record.fields.score || 0,
+        priority: record.fields.priority || 'low',
+        icebreaker: record.fields.icebreaker || '',
+        pipeline_status: record.fields.pipeline_status || 'pending',
+        ghl_contact_id: record.fields.ghl_contact_id,
+      }))
   } catch (error) {
     console.error('Error fetching prospects from Airtable:', error)
     return []
@@ -58,7 +60,7 @@ export async function updateProspectStatus(
 ): Promise<boolean> {
   const apiKey = process.env.NEXT_PUBLIC_AIRTABLE_API_KEY || process.env.AIRTABLE_API_KEY
   const baseId = process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID || process.env.AIRTABLE_BASE_ID
-  const tableId = 'CLIENTS'
+  const tableName = 'Intelligence'
 
   if (!apiKey || !baseId) {
     console.error('Missing Airtable credentials')
@@ -67,7 +69,7 @@ export async function updateProspectStatus(
 
   try {
     const response = await fetch(
-      `${AIRTABLE_API_URL}/${baseId}/${tableId}/${recordId}`,
+      `${AIRTABLE_API_URL}/${baseId}/${tableName}/${recordId}`,
       {
         method: 'PATCH',
         headers: {

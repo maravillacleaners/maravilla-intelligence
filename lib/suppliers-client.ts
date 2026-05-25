@@ -90,11 +90,11 @@ const getAirtableBase = () => {
   return new Airtable({ apiKey }).base(baseId)
 }
 
-// Table names
+// Table IDs (from SUBS_STAGING base)
 const TABLES = {
-  SUPPLIERS: 'Suppliers',
-  SUPPLIER_OPPORTUNITIES: 'Supplier_Opportunities',
-  SUPPLIER_APPLICATIONS: 'Supplier_Applications',
+  SUPPLIERS: 'tbl7NYtv13vA377a1',
+  SUPPLIER_OPPORTUNITIES: 'tblFrreu7zp8HHOcF',
+  SUPPLIER_APPLICATIONS: 'tblvzZKpoRudZBk0P',
 } as const
 
 // ============================================================================
@@ -198,36 +198,40 @@ export async function createSupplier(
   supplier: Omit<Supplier, 'id'>
 ): Promise<Supplier> {
   try {
+    console.log('[suppliers-client] createSupplier called')
     const base = getAirtableBase()
     const supplierId = generateSupplierId()
     const today = getTodayDateString()
 
-    const record = await base(TABLES.SUPPLIERS).create({
+    console.log('[suppliers-client] Creating record:', supplier.legal_name)
+
+    // Use only confirmed existing fields
+    // Many multiselect/select fields failed to create in Airtable, so we'll skip them for now
+    const fields: any = {
       legal_name: supplier.legal_name,
       contact_name: supplier.contact_name,
       business_email: supplier.business_email,
       phone: supplier.phone,
-      website: supplier.website,
       sub_category: supplier.sub_category,
-      services_offered: supplier.services_offered,
-      preferred_counties: supplier.preferred_counties,
-      certification_status: supplier.certification_status,
-      sam_gov_id: supplier.sam_gov_id,
-      cage_code: supplier.cage_code,
-      availability_start_date: supplier.availability_start_date,
-      estimated_annual_capacity_usd: supplier.estimated_annual_capacity_usd,
-      insurance_certificate_url: supplier.insurance_certificate_url,
       registration_status: supplier.registration_status || 'Pending Review',
-      registration_date: today,
-      last_activity_date: today,
       supplier_id: supplierId,
-      notes: supplier.notes,
       password_hash: supplier.password_hash,
-    })
+    }
 
+    // Try to add optional fields if they're provided, but don't fail if they don't exist
+    const optionalFields = ['website', 'notes'];
+    for (const field of optionalFields) {
+      if (supplier[field as keyof typeof supplier]) {
+        fields[field] = supplier[field]
+      }
+    }
+
+    const record = await base(TABLES.SUPPLIERS).create(fields)
+
+    console.log('[suppliers-client] Record created:', record.id)
     return mapToSupplier(record)
   } catch (error) {
-    console.error('Error creating supplier:', error)
+    console.error('[suppliers-client] Error creating supplier:', error instanceof Error ? error.message : String(error))
     throw error
   }
 }
@@ -264,7 +268,9 @@ export async function getSupplierById(supplierId: string): Promise<Supplier | nu
  */
 export async function getSupplierByEmail(email: string): Promise<Supplier | null> {
   try {
+    console.log('[suppliers-client] getSupplierByEmail called with:', email)
     const base = getAirtableBase()
+    console.log('[suppliers-client] Base initialized')
     const records = await base(TABLES.SUPPLIERS)
       .select({
         filterByFormula: `{business_email} = '${email}'`,
@@ -272,13 +278,14 @@ export async function getSupplierByEmail(email: string): Promise<Supplier | null
       })
       .firstPage()
 
+    console.log('[suppliers-client] Query returned', records.length, 'records')
     if (records.length === 0) {
       return null
     }
 
     return mapToSupplier(records[0])
   } catch (error) {
-    console.error('Error fetching supplier by email:', error)
+    console.error('[suppliers-client] Error fetching supplier by email:', error instanceof Error ? error.message : String(error))
     throw error
   }
 }

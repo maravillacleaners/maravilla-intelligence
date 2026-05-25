@@ -1,0 +1,253 @@
+{
+  "name": "Flow I - Supplier Notifications",
+  "description": "Hourly trigger. Fetch new Supplier_Opportunities (status='Available', not notified). Check notification preference (immediate or daily at 9 AM). Build and send emails via SendGrid. Create Communications records. Update status to 'Notified'. Log sent count.",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": "every",
+        "unit": "hour",
+        "value": 1
+      },
+      "name": "Schedule Trigger - Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "flow-i-hourly-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize query parameters\nconst currentHour = new Date().getHours();\n\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    current_hour: currentHour,\n    is_morning: currentHour === 9,\n    sent_count: 0,\n    failed_count: 0\n  }\n}];"
+      },
+      "name": "Initialize Notification Query",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Supplier%20Opportunities",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "GET",
+        "qs": {
+          "filterByFormula": "AND({status}='Available', NOT({notified}=true))",
+          "maxRecords": 100,
+          "sort": [
+            {
+              "field": "created_date",
+              "direction": "asc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Fetch Unnotified Opportunities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse opportunity records\nconst response = $node['Fetch Unnotified Opportunities'].json || { records: [] };\n\nif (!response.records || response.records.length === 0) {\n  return [{\n    json: {\n      opportunities: [],\n      total_count: 0,\n      message: 'No unnotified opportunities found'\n    }\n  }];\n}\n\nconst opportunities = response.records.map((record, idx) => ({\n  json: {\n    index: idx + 1,\n    record_id: record.id,\n    supplier_id: record.fields?.supplier_id || '',\n    opportunity_id: record.fields?.opportunity_id || '',\n    opportunity_name: record.fields?.opportunity_name || 'Unknown',\n    supplier_email: record.fields?.supplier_email || '',\n    match_score: record.fields?.match_score || 0,\n    match_reason: record.fields?.match_reason || '',\n    contract_deadline: record.fields?.contract_deadline || '',\n    contract_value_usd: record.fields?.contract_value_usd || 0,\n    status: record.fields?.status || 'Available'\n  }\n}));\n\nreturn opportunities;"
+      },
+      "name": "Parse Opportunities",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Suppliers",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "GET",
+        "qs": {
+          "fields": ["legal_name", "contact_name", "email", "notification_preference"],
+          "maxRecords": 500
+        },
+        "options": {}
+      },
+      "name": "Fetch Supplier Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Create lookup map of suppliers by ID\nconst suppliersResponse = $node['Fetch Supplier Details'].json || { records: [] };\nconst supplierMap = {};\n\nif (suppliersResponse.records && suppliersResponse.records.length > 0) {\n  suppliersResponse.records.forEach(record => {\n    supplierMap[record.id] = {\n      legal_name: record.fields?.legal_name || '',\n      contact_name: record.fields?.contact_name || '',\n      email: record.fields?.email || record.fields?.business_email || '',\n      notification_preference: record.fields?.notification_preference || 'daily'\n    };\n  });\n}\n\nconst opportunity = $node['Parse Opportunities'].json;\nconst supplier = supplierMap[opportunity.supplier_id] || {\n  legal_name: 'Unknown',\n  contact_name: 'Contact',\n  email: opportunity.supplier_email,\n  notification_preference: 'daily'\n};\n\nreturn [{\n  json: {\n    ...opportunity,\n    contact_name: supplier.contact_name,\n    legal_name: supplier.legal_name,\n    email: supplier.email,\n    notification_preference: supplier.notification_preference\n  }\n}];"
+      },
+      "name": "Enrich with Supplier Details",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Check if we should send notification based on preference\nconst opportunity = $node['Enrich with Supplier Details'].json;\nconst currentHour = $node['Initialize Notification Query'].json.current_hour;\nconst isNineAM = currentHour === 9;\n\n// Send if: immediate preference OR (daily preference AND current hour is 9 AM)\nconst shouldSend = \n  opportunity.notification_preference === 'immediate' || \n  (opportunity.notification_preference === 'daily' && isNineAM);\n\nreturn [{\n  json: {\n    ...opportunity,\n    should_send: shouldSend,\n    reason: shouldSend ? \n      (opportunity.notification_preference === 'immediate' ? 'Immediate preference' : 'Daily at 9 AM') :\n      (opportunity.notification_preference === 'daily' ? 'Waiting for 9 AM' : 'Unknown preference')\n  }\n}];"
+      },
+      "name": "Check Notification Preference",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "nodeEqualsValue": [
+            {
+              "name": "should_send",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "name": "Filter - Send Now",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Build email content\nconst opp = $node['Filter - Send Now'].json;\nconst deadline = opp.contract_deadline ? new Date(opp.contract_deadline).toLocaleDateString() : 'TBD';\nconst value = opp.contract_value_usd ? `$${opp.contract_value_usd.toLocaleString()}` : 'N/A';\n\nconst subject = `New Opportunity: ${opp.opportunity_name}`;\n\nconst htmlContent = `\n<html>\n  <body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\">\n    <p>Hi <strong>${opp.contact_name || 'Contact'}</strong>,</p>\n    \n    <p>We found a new opportunity that matches your services:</p>\n    \n    <div style=\"background: #f5f5f5; padding: 15px; border-left: 4px solid #3222F4; margin: 20px 0;\">\n      <p><strong>📋 Opportunity:</strong> ${opp.opportunity_name}</p>\n      <p><strong>💰 Estimated Value:</strong> ${value}</p>\n      <p><strong>🎯 Match Score:</strong> ${opp.match_score}%</p>\n      <p><strong>⏰ Deadline:</strong> ${deadline}</p>\n      <p><strong>Why matched:</strong> ${opp.match_reason}</p>\n    </div>\n    \n    <p>\n      <a href=\"https://suppliers.maravillacleaners.com/opportunities/${opp.opportunity_id}\" \n         style=\"background: #3222F4; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;\">\n        View Opportunity\n      </a>\n    </p>\n    \n    <p>Questions? Reply to this email or contact our team.</p>\n    \n    <p>Best regards,<br/>\n    <strong>Maravilla Intelligence Team</strong><br/>\n    <em>intelligent supplier matching & opportunity engine</em>\n    </p>\n  </body>\n</html>\n`;\n\nreturn [{\n  json: {\n    ...opp,\n    email_subject: subject,\n    email_html: htmlContent,\n    email_to: opp.email,\n    email_from: process.env.SENDGRID_FROM_EMAIL || 'noreply@maravillacleaners.com'\n  }\n}];"
+      },
+      "name": "Format Email Content",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.sendgrid.com/v3/mail/send",
+        "authentication": "none",
+        "method": "POST",
+        "sendBody": true,
+        "headers": {
+          "Authorization": "Bearer {{ $env.SENDGRID_API_KEY }}"
+        },
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "personalizations",
+              "value": "[{\"to\": [{\"email\": \"{{ $node['Format Email Content'].json.email_to }}\"}]}]"
+            },
+            {
+              "name": "from",
+              "value": "{\"email\": \"{{ $node['Format Email Content'].json.email_from }}\"}"
+            },
+            {
+              "name": "subject",
+              "value": "{{ $node['Format Email Content'].json.email_subject }}"
+            },
+            {
+              "name": "content",
+              "value": "[{\"type\": \"text/html\", \"value\": \"{{ $node['Format Email Content'].json.email_html }}\"}]"
+            }
+          ]
+        }
+      },
+      "name": "Send Email via SendGrid",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2050, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Communications",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{{ JSON.stringify({supplier_id: $node['Format Email Content'].json.supplier_id, opportunity_id: $node['Format Email Content'].json.opportunity_id, communication_type: 'Email', recipient_email: $node['Format Email Content'].json.email_to, subject: $node['Format Email Content'].json.email_subject, status: 'Sent', sent_date: new Date().toISOString()}) }}"
+            }
+          ]
+        }
+      },
+      "name": "Create Communication Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2250, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Supplier%20Opportunities/{{ $node['Format Email Content'].json.record_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "PATCH",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{{ JSON.stringify({status: 'Notified', notified: true, notified_date: new Date().toISOString()}) }}"
+            }
+          ]
+        }
+      },
+      "name": "Update Opportunity Status to Notified",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2250, 400],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log completion\nconst emailSent = $node['Send Email via SendGrid'].statusCode === 202 || $node['Send Email via SendGrid'].statusCode === 200;\nconst opportunity = $node['Format Email Content'].json;\n\nreturn [{\n  json: {\n    status: emailSent ? 'success' : 'failed',\n    supplier: opportunity.legal_name,\n    opportunity: opportunity.opportunity_name,\n    recipient: opportunity.email,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Log Sent Email",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2450, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger - Every Hour": {
+      "main": [[{ "node": "Initialize Notification Query", "type": "main", "index": 0 }]]
+    },
+    "Initialize Notification Query": {
+      "main": [[{ "node": "Fetch Unnotified Opportunities", "type": "main", "index": 0 }]]
+    },
+    "Fetch Unnotified Opportunities": {
+      "main": [[{ "node": "Parse Opportunities", "type": "main", "index": 0 }]]
+    },
+    "Parse Opportunities": {
+      "main": [[{ "node": "Fetch Supplier Details", "type": "main", "index": 0 }]]
+    },
+    "Fetch Supplier Details": {
+      "main": [[{ "node": "Enrich with Supplier Details", "type": "main", "index": 0 }]]
+    },
+    "Enrich with Supplier Details": {
+      "main": [[{ "node": "Check Notification Preference", "type": "main", "index": 0 }]]
+    },
+    "Check Notification Preference": {
+      "main": [[{ "node": "Filter - Send Now", "type": "main", "index": 0 }]]
+    },
+    "Filter - Send Now": {
+      "main": [[{ "node": "Format Email Content", "type": "main", "index": 0 }]]
+    },
+    "Format Email Content": {
+      "main": [[{ "node": "Send Email via SendGrid", "type": "main", "index": 0 }]]
+    },
+    "Send Email via SendGrid": {
+      "main": [
+        [
+          { "node": "Create Communication Record", "type": "main", "index": 0 },
+          { "node": "Update Opportunity Status to Notified", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Create Communication Record": {
+      "main": [[{ "node": "Log Sent Email", "type": "main", "index": 0 }]]
+    },
+    "Update Opportunity Status to Notified": {
+      "main": [[{ "node": "Log Sent Email", "type": "main", "type": "main", "index": 0 }]]
+    }
+  }
+}

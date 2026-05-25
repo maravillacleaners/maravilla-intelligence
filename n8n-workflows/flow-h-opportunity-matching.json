@@ -1,0 +1,154 @@
+{
+  "name": "Flow H - Opportunity Matching",
+  "description": "Daily trigger 9 AM ET. Fetch new contracts from Intelligence table. Match contracts to qualified suppliers based on category, location, certification, capacity. Calculate match_score (0-100). Create Supplier_Opportunities records. Log results.",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": "every",
+        "unit": "day",
+        "value": 1,
+        "triggerAtHour": 9,
+        "triggerAtMinute": 0
+      },
+      "name": "Schedule Trigger - 9 AM ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "flow-h-daily-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize query parameters for contract search\n// Get contracts created since yesterday\nconst yesterday = new Date();\nyesterday.setDate(yesterday.getDate() - 1);\nconst formattedDate = yesterday.toISOString().split('T')[0];\n\nreturn [{\n  json: {\n    query_date: formattedDate,\n    timestamp: new Date().toISOString(),\n    matched_count: 0,\n    total_processed: 0,\n    errors: []\n  }\n}];"
+      },
+      "name": "Initialize Query Parameters",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Intelligence",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "GET",
+        "qs": {
+          "filterByFormula": "AND({record_type}='contract', {created_date}>=DATE('{{ $node['Initialize Query Parameters'].json.query_date }}'  ))",
+          "maxRecords": 100,
+          "sort": [
+            {
+              "field": "created_date",
+              "direction": "desc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Fetch Contracts from Intelligence",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse contract records and extract needed fields\nconst response = $node['Fetch Contracts from Intelligence'].json || { records: [] };\n\nif (!response.records || response.records.length === 0) {\n  return [{\n    json: {\n      contracts: [],\n      total_count: 0,\n      message: 'No contracts found from yesterday'\n    }\n  }];\n}\n\nconst contracts = response.records.map((record, idx) => ({\n  json: {\n    index: idx + 1,\n    record_id: record.id,\n    opportunity_id: record.fields?.sam_opportunity_id || record.fields?.opportunity_id || '',\n    opportunity_name: record.fields?.legal_name || record.fields?.opportunity_name || 'Unknown',\n    agency: record.fields?.agency || '',\n    deadline: record.fields?.deadline || record.fields?.event_date || '',\n    estimated_value: record.fields?.total_obligated_amount || record.fields?.estimated_value || 0,\n    service_category: record.fields?.service_fit_category || record.fields?.segment || 'Government/GovCon',\n    created_date: record.fields?.created_date || new Date().toISOString()\n  }\n}));\n\nreturn contracts;"
+      },
+      "name": "Parse Contract Records",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Suppliers",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "GET",
+        "qs": {
+          "maxRecords": 500
+        },
+        "options": {}
+      },
+      "name": "Fetch All Suppliers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse supplier records\nconst response = $node['Fetch All Suppliers'].json || { records: [] };\n\nif (!response.records || response.records.length === 0) {\n  return [{\n    json: {\n      suppliers: [],\n      total_count: 0,\n      message: 'No suppliers found'\n    }\n  }];\n}\n\nconst suppliers = response.records.map((record) => ({\n  json: {\n    supplier_id: record.id,\n    record_id: record.id,\n    legal_name: record.fields?.legal_name || '',\n    contact_name: record.fields?.contact_name || '',\n    email: record.fields?.email || record.fields?.business_email || '',\n    sub_category: record.fields?.sub_category || record.fields?.supplier_type || '',\n    preferred_counties: record.fields?.preferred_counties || [],\n    certifications: record.fields?.certifications || [],\n    estimated_annual_capacity_usd: record.fields?.estimated_annual_capacity_usd || 0,\n    notification_preference: record.fields?.notification_preference || 'daily'\n  }\n}));\n\nreturn suppliers;"
+      },
+      "name": "Parse Supplier Records",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// For each contract, match with suppliers and calculate match scores\n// This is a simplified version - in production, would use more sophisticated matching\n\nconst contract = $node['Parse Contract Records'].json;\nconst suppliersArray = $node['Parse Supplier Records'].json || [];\nconst suppliers = Array.isArray(suppliersArray) ? suppliersArray : (suppliersArray.suppliers || []);\n\nconst matches = suppliers.map(supplier => {\n  const supplierData = supplier.json || supplier;\n  let matchScore = 0;\n  const reasons = [];\n\n  // Category match: 60 points\n  const categoryMatch = contract.service_category && \n    supplierData.sub_category && \n    (contract.service_category.toLowerCase().includes(supplierData.sub_category.toLowerCase()) ||\n     supplierData.sub_category.toLowerCase().includes(contract.service_category.toLowerCase()));\n  \n  if (categoryMatch) {\n    matchScore += 60;\n    reasons.push('Category match');\n  }\n\n  // Location match: 20 points\n  const counties = Array.isArray(supplierData.preferred_counties) ? supplierData.preferred_counties : [];\n  const locationMatch = counties.length > 0; // Simplified - would check against contract location\n  if (locationMatch) {\n    matchScore += 20;\n    reasons.push('Has preferred counties');\n  }\n\n  // Certification match: 10 points\n  const certs = Array.isArray(supplierData.certifications) ? supplierData.certifications : [];\n  if (certs.length > 0) {\n    matchScore += 10;\n    reasons.push('Has certifications');\n  }\n\n  // Capacity sufficient: 10 points\n  if (supplierData.estimated_annual_capacity_usd > 0) {\n    matchScore += 10;\n    reasons.push('Has capacity');\n  }\n\n  return {\n    json: {\n      contract_id: contract.record_id,\n      opportunity_id: contract.opportunity_id,\n      opportunity_name: contract.opportunity_name,\n      supplier_id: supplierData.record_id,\n      supplier_name: supplierData.legal_name,\n      supplier_email: supplierData.email,\n      match_score: matchScore,\n      match_reason: reasons.join(', '),\n      is_match: matchScore >= 30,\n      contract_deadline: contract.deadline,\n      contract_value: contract.estimated_value\n    }\n  };\n});\n\n// Filter to only qualified matches (score >= 30)\nreturn matches.filter(m => m.json.is_match);"
+      },
+      "name": "Calculate Match Scores",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Supplier%20Opportunities",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{{ JSON.stringify({opportunity_id: $node['Calculate Match Scores'].json.opportunity_id, opportunity_name: $node['Calculate Match Scores'].json.opportunity_name, supplier_id: $node['Calculate Match Scores'].json.supplier_id, supplier_email: $node['Calculate Match Scores'].json.supplier_email, match_score: $node['Calculate Match Scores'].json.match_score, match_reason: $node['Calculate Match Scores'].json.match_reason, contract_deadline: $node['Calculate Match Scores'].json.contract_deadline, contract_value_usd: $node['Calculate Match Scores'].json.contract_value, status: 'Available'}) }}"
+            }
+          ]
+        }
+      },
+      "name": "Create Supplier Opportunity Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1650, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log completion and summary\nconst matchResults = $node['Calculate Match Scores'].json || {};\nconst isArray = Array.isArray(matchResults);\nconst totalMatches = isArray ? matchResults.length : 1;\n\nreturn [{\n  json: {\n    status: 'success',\n    message: 'Opportunity matching workflow completed',\n    total_opportunities_created: totalMatches,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Log Results",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1850, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger - 9 AM ET": {
+      "main": [[{ "node": "Initialize Query Parameters", "type": "main", "index": 0 }]]
+    },
+    "Initialize Query Parameters": {
+      "main": [[{ "node": "Fetch Contracts from Intelligence", "type": "main", "index": 0 }]]
+    },
+    "Fetch Contracts from Intelligence": {
+      "main": [[{ "node": "Parse Contract Records", "type": "main", "index": 0 }]]
+    },
+    "Parse Contract Records": {
+      "main": [[{ "node": "Fetch All Suppliers", "type": "main", "index": 0 }]]
+    },
+    "Fetch All Suppliers": {
+      "main": [[{ "node": "Parse Supplier Records", "type": "main", "index": 0 }]]
+    },
+    "Parse Supplier Records": {
+      "main": [[{ "node": "Calculate Match Scores", "type": "main", "index": 0 }]]
+    },
+    "Calculate Match Scores": {
+      "main": [[{ "node": "Create Supplier Opportunity Record", "type": "main", "index": 0 }]]
+    },
+    "Create Supplier Opportunity Record": {
+      "main": [[{ "node": "Log Results", "type": "main", "index": 0 }]]
+    }
+  }
+}
