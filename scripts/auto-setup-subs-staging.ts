@@ -3,45 +3,68 @@
 /**
  * Automated field creation for SUBS_STAGING base
  *
- * Usage:
+ * This script creates all required fields in the SUBS_STAGING base tables.
+ *
+ * Prerequisites:
  * 1. Create SUBS_STAGING base in Airtable manually
  * 2. Create 4 empty tables: Suppliers, Supplier_Opportunities, Supplier_Applications, Communications
- * 3. Run this script with Base ID:
+ * 3. Get the Base ID from the URL
  *
+ * Usage:
  *    npx ts-node scripts/auto-setup-subs-staging.ts appXXXXXXXXXXXXXX
+ *    or
+ *    npx ts-node scripts/auto-setup-subs-staging.ts (will prompt for Base ID)
  *
- * The script will add all required fields to each table automatically.
+ * The script will add all required fields to each table automatically via the Airtable API.
  */
 
 import Airtable from 'airtable'
 import * as readline from 'readline'
+import { makeAirtableRequest } from '../lib/airtable-http'
 
-const api = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
+const API_KEY = process.env.AIRTABLE_API_KEY
 
-interface FieldDefinition {
+interface FieldPayload {
   name: string
   type: string
   options?: Record<string, any>
 }
 
-const FIELD_DEFINITIONS: Record<string, FieldDefinition[]> = {
+const FIELD_DEFINITIONS: Record<string, FieldPayload[]> = {
   Suppliers: [
+    { name: 'supplier_id', type: 'singleLineText' },
     { name: 'legal_name', type: 'singleLineText' },
     { name: 'contact_name', type: 'singleLineText' },
     { name: 'business_email', type: 'email' },
     { name: 'phone', type: 'phoneNumber' },
     { name: 'website', type: 'url' },
-    { name: 'sub_category', type: 'singleLineText' },
+    {
+      name: 'sub_category',
+      type: 'singleSelect',
+      options: {
+        choices: [
+          { name: 'Janitorial Services' },
+          { name: 'HVAC' },
+          { name: 'Plumbing' },
+          { name: 'Electrical' },
+          { name: 'Construction' },
+          { name: 'Landscaping' },
+          { name: 'Security' },
+          { name: 'Other' },
+        ],
+      },
+    },
     {
       name: 'services_offered',
       type: 'multipleSelect',
       options: {
         choices: [
-          { name: 'Janitorial' },
-          { name: 'Landscaping' },
-          { name: 'HVAC' },
-          { name: 'Painting' },
-          { name: 'Construction' },
+          { name: 'Deep Cleaning' },
+          { name: 'Routine Cleaning' },
+          { name: 'Commercial Cleaning' },
+          { name: 'Post-Construction' },
+          { name: 'Maintenance' },
+          { name: 'Specialty Services' },
         ],
       },
     },
@@ -51,12 +74,13 @@ const FIELD_DEFINITIONS: Record<string, FieldDefinition[]> = {
       options: {
         choices: [
           { name: 'Lee' },
-          { name: 'Collier' },
           { name: 'Hillsborough' },
-          { name: 'Polk' },
           { name: 'Pinellas' },
           { name: 'Duval' },
           { name: 'Miami-Dade' },
+          { name: 'Polk' },
+          { name: 'St. Lucie' },
+          { name: 'Collier' },
         ],
       },
     },
@@ -65,39 +89,37 @@ const FIELD_DEFINITIONS: Record<string, FieldDefinition[]> = {
       type: 'singleSelect',
       options: {
         choices: [
+          { name: 'Not Certified' },
           { name: 'MBE' },
           { name: 'WBE' },
-          { name: '8(a)' },
+          { name: 'VOSB' },
           { name: 'HUBZone' },
-          { name: 'None' },
+          { name: 'GSA Schedule' },
+          { name: 'State Contract' },
+          { name: 'Multiple' },
         ],
       },
     },
     { name: 'sam_gov_id', type: 'singleLineText' },
     { name: 'cage_code', type: 'singleLineText' },
     { name: 'availability_start_date', type: 'date' },
-    {
-      name: 'estimated_annual_capacity_usd',
-      type: 'currency',
-      options: { precision: 0, symbol: '$' },
-    },
+    { name: 'estimated_annual_capacity_usd', type: 'number' },
     { name: 'insurance_certificate_url', type: 'url' },
     {
       name: 'registration_status',
       type: 'singleSelect',
       options: {
         choices: [
-          { name: 'Pending Review' },
-          { name: 'Approved' },
-          { name: 'Rejected' },
+          { name: 'Pending' },
           { name: 'Active' },
           { name: 'Inactive' },
+          { name: 'Suspended' },
+          { name: 'Approved' },
         ],
       },
     },
     { name: 'registration_date', type: 'date' },
     { name: 'last_activity_date', type: 'date' },
-    { name: 'supplier_id', type: 'singleLineText' },
     { name: 'password_hash', type: 'singleLineText' },
     { name: 'notes', type: 'multilineText' },
   ],
@@ -107,24 +129,21 @@ const FIELD_DEFINITIONS: Record<string, FieldDefinition[]> = {
     { name: 'opportunity_id', type: 'singleLineText' },
     { name: 'opportunity_name', type: 'singleLineText' },
     { name: 'agency', type: 'singleLineText' },
-    {
-      name: 'contract_value_usd',
-      type: 'currency',
-      options: { precision: 0, symbol: '$' },
-    },
+    { name: 'contract_value_usd', type: 'number' },
     { name: 'deadline', type: 'date' },
-    { name: 'match_score', type: 'number', options: { precision: 0 } },
+    { name: 'match_score', type: 'number' },
     { name: 'match_reason', type: 'multilineText' },
     {
       name: 'status',
       type: 'singleSelect',
       options: {
         choices: [
-          { name: 'Available' },
+          { name: 'New' },
+          { name: 'Matched' },
           { name: 'Applied' },
-          { name: 'Declined' },
-          { name: 'Selected' },
           { name: 'Won' },
+          { name: 'Lost' },
+          { name: 'Archived' },
         ],
       },
     },
@@ -142,6 +161,7 @@ const FIELD_DEFINITIONS: Record<string, FieldDefinition[]> = {
       type: 'singleSelect',
       options: {
         choices: [
+          { name: 'Draft' },
           { name: 'Submitted' },
           { name: 'Under Review' },
           { name: 'Accepted' },
@@ -163,10 +183,12 @@ const FIELD_DEFINITIONS: Record<string, FieldDefinition[]> = {
       type: 'singleSelect',
       options: {
         choices: [
-          { name: 'Welcome' },
           { name: 'Opportunity Notification' },
-          { name: 'Application Status' },
-          { name: 'Other' },
+          { name: 'Application Reminder' },
+          { name: 'Feedback' },
+          { name: 'Onboarding' },
+          { name: 'Follow-up' },
+          { name: 'System Alert' },
         ],
       },
     },
@@ -178,6 +200,7 @@ const FIELD_DEFINITIONS: Record<string, FieldDefinition[]> = {
       options: {
         choices: [
           { name: 'Sent' },
+          { name: 'Delivered' },
           { name: 'Opened' },
           { name: 'Clicked' },
           { name: 'Bounced' },
@@ -187,8 +210,35 @@ const FIELD_DEFINITIONS: Record<string, FieldDefinition[]> = {
   ],
 }
 
+/**
+ * Get the ID for a table by name from base metadata.
+ * @param baseId - The Airtable base ID
+ * @param tableName - The name of the table to find
+ * @returns The table ID
+ * @throws Error if table not found
+ */
+async function getTableId(baseId: string, tableName: string): Promise<string> {
+  const response = await makeAirtableRequest(`/meta/bases/${baseId}/tables`)
+  const table = response.tables.find((t: any) => t.name === tableName)
+  if (table) {
+    return table.id
+  } else {
+    throw new Error(`Table ${tableName} not found`)
+  }
+}
+
+/**
+ * Create a field in an Airtable table.
+ * @param baseId - The Airtable base ID
+ * @param tableId - The table ID
+ * @param field - The field definition
+ * @throws Error on API failure
+ */
+async function createField(baseId: string, tableId: string, field: FieldPayload): Promise<void> {
+  await makeAirtableRequest(`/meta/bases/${baseId}/tables/${tableId}/fields`, 'POST', field)
+}
+
 async function createFieldsForTable(baseId: string, tableName: string): Promise<void> {
-  const base = api.base(baseId)
   const fields = FIELD_DEFINITIONS[tableName]
 
   if (!fields) {
@@ -196,52 +246,74 @@ async function createFieldsForTable(baseId: string, tableName: string): Promise<
     return
   }
 
-  console.log(`\n📋 Adding ${fields.length} fields to "${tableName}"...`)
+  console.log(`\n📋 Setting up "${tableName}" table...`)
 
-  for (const field of fields) {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 200)) // Rate limiting
+  try {
+    const tableId = await getTableId(baseId, tableName)
+    console.log(`  ✓ Found table (ID: ${tableId})`)
 
-      const payload: any = {
-        name: field.name,
-        type: field.type,
+    console.log(`  Adding ${fields.length} fields...`)
+    let created = 0
+    let skipped = 0
+
+    for (const field of fields) {
+      try {
+        // Rate limiting: Airtable API allows 5 requests/sec = 200ms minimum between requests.
+        // Using 100ms to allow some parallelism while staying within limits.
+        await new Promise((resolve) => setTimeout(resolve, 100))
+
+        await createField(baseId, tableId, field)
+        console.log(`    ✓ ${field.name}`)
+        created++
+      } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : String(error)
+        if (errorMsg.includes('already exists')) {
+          console.log(`    ⊘ ${field.name} (already exists)`)
+          skipped++
+        } else {
+          console.error(`    ✗ ${field.name}: ${errorMsg}`)
+        }
       }
-
-      if (field.options) {
-        payload.options = field.options
-      }
-
-      // Note: This would require direct API call, not Airtable SDK
-      // For now, we'll just log what would be created
-      console.log(`  ✓ ${field.name} (${field.type})`)
-    } catch (error) {
-      console.error(`  ✗ Failed to create ${field.name}:`, error)
     }
-  }
 
-  console.log(`✅ "${tableName}" fields ready`)
+    console.log(`  ✅ ${tableName}: ${created} created, ${skipped} skipped`)
+  } catch (error) {
+    console.error(`  ❌ Failed to set up ${tableName}:`, error)
+    throw error
+  }
 }
 
-async function main() {
-  const args = process.argv.slice(2)
-  let baseId = args[0]
-
-  if (!baseId) {
-    console.log('📋 SUBS_STAGING Automated Setup')
-    console.log('================================\n')
-    console.log('Usage: npx ts-node scripts/auto-setup-subs-staging.ts appXXXXXXXXXXXXXX\n')
-
+async function promptForBaseId(): Promise<string> {
+  return new Promise((resolve) => {
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
     })
 
-    baseId = await new Promise(resolve => {
-      rl.question('Enter Base ID (from SUBS_STAGING URL): ', answer => {
+    rl.question(
+      '\nEnter SUBS_STAGING Base ID (format: appXXXXXXXXXXXXXX): ',
+      (answer) => {
         rl.close()
         resolve(answer.trim())
-      })
-    })
+      }
+    )
+  })
+}
+
+async function main() {
+  console.log('\n════════════════════════════════════════════════════════════════')
+  console.log('SUBS_STAGING Automated Field Creation')
+  console.log('════════════════════════════════════════════════════════════════')
+
+  if (!API_KEY) {
+    console.error('\n❌ AIRTABLE_API_KEY not set in environment')
+    process.exit(1)
+  }
+
+  let baseId = process.argv[2]
+
+  if (!baseId) {
+    baseId = await promptForBaseId()
   }
 
   if (!baseId.startsWith('app')) {
@@ -249,7 +321,7 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`\n🚀 Setting up Base: ${baseId}`)
+  console.log(`\n🚀 Base ID: ${baseId}`)
   console.log('Tables: Suppliers, Supplier_Opportunities, Supplier_Applications, Communications')
   console.log('Fields: 45 total\n')
 
@@ -259,13 +331,16 @@ async function main() {
     await createFieldsForTable(baseId, 'Supplier_Applications')
     await createFieldsForTable(baseId, 'Communications')
 
-    console.log('\n✅ Field definitions created successfully!')
+    console.log('\n════════════════════════════════════════════════════════════════')
+    console.log('✅ Setup Complete!')
+    console.log('════════════════════════════════════════════════════════════════')
     console.log('\n📝 Next steps:')
-    console.log('1. Update .env with: AIRTABLE_SUBS_BASE_ID=' + baseId)
-    console.log('2. Test: npm run dev')
-    console.log('3. Visit: http://localhost:3000/suppliers/register')
+    console.log(`1. Update .env with: AIRTABLE_SUBS_BASE_ID=${baseId}`)
+    console.log('2. Verify setup: npx ts-node scripts/verify-subs-staging.ts')
+    console.log('3. Start development: npm run dev')
+    console.log('4. Visit: http://localhost:3000/suppliers/register\n')
   } catch (error) {
-    console.error('❌ Setup failed:', error)
+    console.error('\n❌ Setup failed:', error)
     process.exit(1)
   }
 }
