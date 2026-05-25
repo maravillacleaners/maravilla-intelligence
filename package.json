@@ -11,7 +11,9 @@
     "start": "node index.js",
     "dev": "node --watch index.js",
     "lint": "eslint .",
-    "validate": "node -c config/config.js"
+    "validate": "node -c config/config.js",
+    "airtable:validate": "node airtable/validate-schemas.js",
+    "airtable:create-bases": "node airtable/create-bases.js"
   },
   "keywords": [
     "commercial-intelligence",
@@ -23,6 +25,7 @@
   "author": "Maravilla Cleaners",
   "license": "PROPRIETARY",
   "dependencies": {
+    "airtable": "^0.12.2",
     "axios": "^1.6.0",
     "dotenv": "^16.0.3"
   },
