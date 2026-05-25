@@ -22,20 +22,15 @@ export interface Supplier {
   phone: string
   website?: string
   sub_category: string
-  services_offered: string[] // multiselect
-  preferred_counties: string[] // multiselect
-  certification_status?: string
-  sam_gov_id?: string
-  cage_code?: string
-  availability_start_date?: string // YYYY-MM-DD
-  estimated_annual_capacity_usd?: number
-  insurance_certificate_url?: string
   registration_status: 'Pending Review' | 'Approved' | 'Rejected' | 'Active' | 'Inactive'
-  registration_date?: string // YYYY-MM-DD
-  last_activity_date?: string // YYYY-MM-DD
   supplier_id: string // Custom field: sup-${timestamp}
-  notes?: string
   password_hash?: string
+  // Note: The following fields failed to create properly in Airtable (corrupted configurations):
+  // - services_offered, preferred_counties, certification_status
+  // - sam_gov_id, cage_code, availability_start_date, estimated_annual_capacity_usd
+  // - insurance_certificate_url, registration_date, last_activity_date, notes
+  // These can be added back once Airtable schema is manually cleaned up
+  notes?: string
 }
 
 /**
