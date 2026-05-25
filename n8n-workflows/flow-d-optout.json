@@ -1,0 +1,232 @@
+{
+  "name": "Flow D - Opt-Out Webhook Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ghl/opt-out",
+        "responseMode": "responseNode",
+        "responseData": "first"
+      },
+      "name": "Webhook - GHL Opt-Out",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "flow-d-optout"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Validate and prepare payload\nconst { email, ghl_contact_id, timestamp } = items[0].json.body;\n\nif (!email) {\n  throw new Error('Email is required in opt-out payload');\n}\n\nreturn [{\n  json: {\n    email: email.toLowerCase(),\n    ghl_contact_id: ghl_contact_id || null,\n    timestamp: timestamp || new Date().toISOString(),\n  }\n}];"
+      },
+      "name": "Validate Payload",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Prospects",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "GET",
+        "qs": {
+          "filterByFormula": "=LOWER({email}) = '{{ $node['Validate Payload'].json.email }}'",
+          "maxRecords": 1
+        }
+      },
+      "name": "Find Prospect by Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 200],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Prospects/{{ $node['Find Prospect by Email'].json.records[0].id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "PATCH",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"opt_out\": true,\n  \"opt_out_date\": \"{{ $node['Validate Payload'].json.timestamp.split('T')[0] }}\",\n  \"opt_out_source\": \"GHL\",\n  \"ghl_contact_id\": \"{{ $node['Validate Payload'].json.ghl_contact_id }}\"\n}"
+            }
+          ]
+        }
+      },
+      "name": "Update Prospect - Mark Opted Out",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 200],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Suppression%20List",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "GET",
+        "qs": {
+          "filterByFormula": "=LOWER({email}) = '{{ $node['Validate Payload'].json.email }}'",
+          "maxRecords": 1
+        }
+      },
+      "name": "Check Suppression List",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 400],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Suppression%20List",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"email\": \"{{ $node['Validate Payload'].json.email }}\",\n  \"status\": \"Active\",\n  \"opt_out_date\": \"{{ $node['Validate Payload'].json.timestamp.split('T')[0] }}\",\n  \"source\": \"GHL Webhook\",\n  \"ghl_contact_id\": \"{{ $node['Validate Payload'].json.ghl_contact_id }}\"\n}"
+            }
+          ]
+        }
+      },
+      "name": "Create Suppression List Entry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"event_type\": \"opted_out\",\n  \"email\": \"{{ $node['Validate Payload'].json.email }}\",\n  \"ghl_contact_id\": \"{{ $node['Validate Payload'].json.ghl_contact_id }}\",\n  \"timestamp\": \"{{ $node['Validate Payload'].json.timestamp }}\",\n  \"details\": \"Contact opted out via GHL webhook\"\n}"
+            }
+          ]
+        }
+      },
+      "name": "Create Audit Log Entry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "respondWithData": true
+      },
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - GHL Opt-Out": {
+      "main": [
+        [
+          {
+            "node": "Validate Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Payload": {
+      "main": [
+        [
+          {
+            "node": "Find Prospect by Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Suppression List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Prospect by Email": {
+      "main": [
+        [
+          {
+            "node": "Update Prospect - Mark Opted Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Suppression List": {
+      "main": [
+        [
+          {
+            "node": "Create Suppression List Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Prospect - Mark Opted Out": {
+      "main": [
+        [
+          {
+            "node": "Create Audit Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Suppression List Entry": {
+      "main": [
+        [
+          {
+            "node": "Create Audit Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Audit Log Entry": {
+      "main": [
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
