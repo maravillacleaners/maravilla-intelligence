@@ -1,0 +1,419 @@
+{
+  "name": "Flow B - Sub Discovery (Sunbiz Query)",
+  "description": "Daily trigger 6 AM ET. Query Sunbiz API for new janitorial subs (NAICS=561720) <180 days. Classify into sub_category (Commercial/Residential/Specialty/GovCon). Save to Airtable SUBS_STAGING with status=invite_pending. Dedup: skip if legal_name exists + opt_out=true",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": "every",
+        "unit": "day",
+        "value": 1,
+        "triggerAtHour": 6,
+        "triggerAtMinute": 0
+      },
+      "name": "Schedule Trigger - 6 AM ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "flow-b-daily-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize query parameters for Sunbiz API\n// Query for new subs matching PRIMARY_NAICS formed < 180 days ago\nconst oneEightyDaysAgo = new Date();\noneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180);\nconst formattedDate = oneEightyDaysAgo.toISOString().split('T')[0];\nconst primaryNaics = $env.PRIMARY_NAICS || '561720';\n\nreturn [{\n  json: {\n    query_date: formattedDate,\n    state: 'FL',\n    naics: primaryNaics,\n    query_status: 'active',\n    page: 1,\n    limit: 100,\n    total_found: 0,\n    processed_count: 0,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Initialize Query Parameters",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.SUNBIZ_API_URL || 'https://sunbiz.example.com/api/search' }}",
+        "authentication": "none",
+        "method": "GET",
+        "qs": {
+          "state": "FL",
+          "naics": "{{ $env.PRIMARY_NAICS || '561720' }}",
+          "date_formed_after": "{{ $node['Initialize Query Parameters'].json.query_date }}",
+          "status": "ACTIVE",
+          "page": 1,
+          "limit": 100
+        },
+        "options": {}
+      },
+      "name": "Query Sunbiz API - Primary NAICS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse Sunbiz response and extract company records\nconst response = $node['Query Sunbiz API - Primary NAICS'].json || { results: [], total: 0 };\n\nif (!response.results || response.results.length === 0) {\n  return [{\n    json: {\n      records: [],\n      total_count: 0,\n      message: 'No new janitorial subs found from Sunbiz query'\n    }\n  }];\n}\n\nconst records = response.results.map((company, idx) => ({\n  json: {\n    index: idx + 1,\n    legal_name: company.company_name || '',\n    dba: company.dba_name || '',\n    sunbiz_status: company.status || 'ACTIVE',\n    date_formed: company.date_formed || '',\n    naics: company.naics || '561720',\n    naics_description: company.naics_description || 'Janitorial Services',\n    officer_name: company.principal_officer || '',\n    contact_name: company.principal_officer || '',\n    registered_address: company.registered_address || '',\n    physical_address: company.mailing_address || '',\n    county: company.county || '',\n    zip: company.zip || '',\n    sunbiz_record_id: company.record_id || '',\n    source: 'Sunbiz',\n    created_at: new Date().toISOString()\n  }\n}));\n\nreturn records;"
+      },
+      "name": "Parse Sunbiz Records",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Subs%20Staging",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "GET",
+        "qs": {
+          "filterByFormula": "OR(\n  SEARCH(LOWER('{{ $node['Parse Sunbiz Records'].json.legal_name }}'), LOWER({legal_name})),\n  SEARCH(LOWER('{{ $node['Parse Sunbiz Records'].json.sunbiz_record_id }}'), {sunbiz_record_id})\n)",
+          "maxRecords": 1
+        },
+        "options": {}
+      },
+      "name": "Dedup Check - Airtable",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Check if already exists and if opted out\nconst existing = $node['Dedup Check - Airtable'].json?.records || [];\nconst alreadyExists = existing.length > 0;\nconst isOptedOut = alreadyExists && existing[0].fields?.opt_out === true;\n\nreturn [{\n  json: {\n    ...($node['Parse Sunbiz Records'].json),\n    already_exists: alreadyExists,\n    is_opted_out: isOptedOut,\n    existing_record_id: alreadyExists ? existing[0].id : null,\n    should_skip: isOptedOut\n  }\n}];"
+      },
+      "name": "Check - Already Exists or Opted Out",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "nodeEqualsValue": [
+            {
+              "name": "should_skip",
+              "value": "false"
+            }
+          ]
+        }
+      },
+      "name": "Filter - Skip Opted Out Only",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Classify sub into category based on business signals\n// Categories: Commercial, Residential, Specialty, GovCon\n\nconst legalName = ($node['Filter - Skip Opted Out Only'].json.legal_name || '').toLowerCase();\nconst dba = ($node['Filter - Skip Opted Out Only'].json.dba || '').toLowerCase();\nconst combined = legalName + ' ' + dba;\n\nlet sub_category = 'Cleaning';\nlet classification_reasoning = '';\n\n// GovCon signals\nif (combined.includes('federal') || combined.includes('government') || combined.includes('state') || combined.includes('municipal') || combined.includes('contract')) {\n  sub_category = 'GovCon';\n  classification_reasoning = 'Government-related keywords detected';\n} \n// Residential signals (std/deep/STR = short-term rental)\nelse if (combined.includes('residential') || combined.includes('home') || combined.includes('house') || combined.includes('apartment') || combined.includes('airbnb') || combined.includes('str ') || combined.includes('short-term')) {\n  sub_category = 'Residential';\n  classification_reasoning = 'Residential service keywords detected';\n} \n// Specialty signals (carpet/pressure/junk/specialized)\nelse if (combined.includes('carpet') || combined.includes('pressure') || combined.includes('wash') || combined.includes('window') || combined.includes('junk') || combined.includes('removal') || combined.includes('carpet') || combined.includes('floor') || combined.includes('specialized')) {\n  sub_category = 'Specialty';\n  classification_reasoning = 'Specialty service keywords detected';\n} \n// Commercial signals (offices/retail/commercial/commercial)\nelse if (combined.includes('commercial') || combined.includes('office') || combined.includes('retail') || combined.includes('corporate') || combined.includes('business') || combined.includes('medical') || combined.includes('clinic')) {\n  sub_category = 'Commercial';\n  classification_reasoning = 'Commercial service keywords detected';\n}\n// Default to Commercial if nothing matched\nelse {\n  sub_category = 'Commercial';\n  classification_reasoning = 'Default classification (insufficient signal data)';\n}\n\nreturn [{\n  json: {\n    ...($node['Filter - Skip Opted Out Only'].json),\n    sub_category: sub_category,\n    classification_reasoning: classification_reasoning\n  }\n}];"
+      },
+      "name": "Classify Sub Category",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.ENRICHMENT_SERVICE_URL || 'http://localhost:3000/api/enrich' }}",
+        "authentication": "none",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "{{ JSON.stringify($node['Classify Sub Category'].json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Enrich Sub - Contact Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1850, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare record for SUBS_STAGING table\nconst enriched = $node['Enrich Sub - Contact Details'].json || {};\n\nreturn [{\n  json: {\n    legal_name: $node['Classify Sub Category'].json.legal_name,\n    contact_name: enriched.contact_name || $node['Classify Sub Category'].json.contact_name || '',\n    business_email: enriched.business_email || enriched.email || '',\n    phone: enriched.phone || '',\n    website: enriched.website || '',\n    date_formed: $node['Classify Sub Category'].json.date_formed,\n    county: $node['Classify Sub Category'].json.county,\n    sub_category: $node['Classify Sub Category'].json.sub_category,\n    status: 'New',\n    source: 'Sunbiz',\n    notes: `NAICS: 561720 (Janitorial Services). Formed: ${$node['Classify Sub Category'].json.date_formed}. Officer: ${$node['Classify Sub Category'].json.officer_name}. Address: ${$node['Classify Sub Category'].json.physical_address}. Classification: ${$node['Classify Sub Category'].json.classification_reasoning}`,\n    sunbiz_status: $node['Classify Sub Category'].json.sunbiz_status,\n    sunbiz_record_id: $node['Classify Sub Category'].json.sunbiz_record_id,\n    officer_name: $node['Classify Sub Category'].json.officer_name,\n    registered_address: $node['Classify Sub Category'].json.registered_address,\n    physical_address: $node['Classify Sub Category'].json.physical_address,\n    zip: $node['Classify Sub Category'].json.zip\n  }\n}];"
+      },
+      "name": "Prepare Airtable Record",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1850, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Subs%20Staging",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"legal_name\": \"{{ $node['Prepare Airtable Record'].json.legal_name }}\",\n  \"contact_name\": \"{{ $node['Prepare Airtable Record'].json.contact_name }}\",\n  \"business_email\": \"{{ $node['Prepare Airtable Record'].json.business_email }}\",\n  \"phone\": \"{{ $node['Prepare Airtable Record'].json.phone }}\",\n  \"website\": \"{{ $node['Prepare Airtable Record'].json.website }}\",\n  \"date_formed\": \"{{ $node['Prepare Airtable Record'].json.date_formed }}\",\n  \"county\": \"{{ $node['Prepare Airtable Record'].json.county }}\",\n  \"sub_category\": \"{{ $node['Prepare Airtable Record'].json.sub_category }}\",\n  \"status\": \"{{ $node['Prepare Airtable Record'].json.status }}\",\n  \"source\": \"{{ $node['Prepare Airtable Record'].json.source }}\",\n  \"notes\": \"{{ $node['Prepare Airtable Record'].json.notes }}\"\n}\""
+            }
+          ]
+        }
+      },
+      "name": "Save to Airtable SUBS_STAGING",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2050, 300],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"record_id\": \"{{ $node['Save to Airtable SUBS_STAGING'].json.id }}\",\n  \"event_type\": \"created\",\n  \"source\": \"Flow B - Sunbiz Sub Discovery\",\n  \"performed_by\": \"n8n-automation\",\n  \"notes\": \"New janitorial sub created from Sunbiz query: {{ $node['Prepare Airtable Record'].json.legal_name }} (Category: {{ $node['Prepare Airtable Record'].json.sub_category }}, County: {{ $node['Prepare Airtable Record'].json.county }})\"\n}\""
+            }
+          ]
+        }
+      },
+      "name": "Log Created Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2250, 200],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"record_id\": \"{{ $node['Save to Airtable SUBS_STAGING'].json.id }}\",\n  \"event_type\": \"classified\",\n  \"source\": \"Flow B - Sub Category Classifier\",\n  \"performed_by\": \"n8n-automation\",\n  \"notes\": \"Sub classified: {{ $node['Prepare Airtable Record'].json.legal_name }} ({{ $node['Prepare Airtable Record'].json.sub_category }}) - {{ $node['Prepare Airtable Record'].json.status }}\"\n}\""
+            }
+          ]
+        }
+      },
+      "name": "Log Classified Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2250, 350],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"event_type\": \"skipped\",\n  \"source\": \"Flow B - Dedup Check\",\n  \"performed_by\": \"n8n-automation\",\n  \"notes\": \"Sub skipped (already exists or opted out): {{ $node['Check - Already Exists or Opted Out'].json.legal_name }}\"\n}\""
+            }
+          ]
+        }
+      },
+      "name": "Log Skipped Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 500],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "nodeEqualsValue": [
+            {
+              "name": "should_skip",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "name": "Filter - Route Skipped Records",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [1250, 500]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger - 6 AM ET": {
+      "main": [
+        [
+          {
+            "node": "Initialize Query Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Query Parameters": {
+      "main": [
+        [
+          {
+            "node": "Query Sunbiz API - Primary NAICS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Sunbiz API - Primary NAICS": {
+      "main": [
+        [
+          {
+            "node": "Parse Sunbiz Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Sunbiz Records": {
+      "main": [
+        [
+          {
+            "node": "Dedup Check - Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dedup Check - Airtable": {
+      "main": [
+        [
+          {
+            "node": "Check - Already Exists or Opted Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check - Already Exists or Opted Out": {
+      "main": [
+        [
+          {
+            "node": "Filter - Skip Opted Out Only",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter - Route Skipped Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter - Skip Opted Out Only": {
+      "main": [
+        [
+          {
+            "node": "Classify Sub Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Sub Category": {
+      "main": [
+        [
+          {
+            "node": "Enrich Sub - Contact Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Sub - Contact Details": {
+      "main": [
+        [
+          {
+            "node": "Prepare Airtable Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Airtable Record": {
+      "main": [
+        [
+          {
+            "node": "Save to Airtable SUBS_STAGING",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Airtable SUBS_STAGING": {
+      "main": [
+        [
+          {
+            "node": "Log Created Event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Classified Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter - Route Skipped Records": {
+      "main": [
+        [
+          {
+            "node": "Log Skipped Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "meta": {
+    "instanceId": "flow-b-subs-v1",
+    "created": "2026-05-25T14:30:00Z",
+    "updated": "2026-05-25T14:30:00Z",
+    "triggerMode": "scheduled"
+  }
+}

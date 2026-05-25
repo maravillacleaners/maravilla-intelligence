@@ -56,7 +56,7 @@
     },
     {
       "parameters": {
-        "functionCode": "// Branch logic: Check if NAICS = PRIMARY_NAICS (561720)\n// If yes, skip (Flow B), else continue (Flow A)\nconst primaryNaics = '561720';\nconst naics = $node['Parse Sunbiz Records'].json.naics || '';\n\nif (naics === primaryNaics) {\n  return [{\n    json: {\n      ...($node['Parse Sunbiz Records'].json),\n      route: 'flow_b_skip',\n      reason: 'Primary NAICS detected (561720 - Janitorial Services)',\n      skip: true\n    },\n    pairedItem: { item: 0 }\n  }];\n} else {\n  return [{\n    json: {\n      ...($node['Parse Sunbiz Records'].json),\n      route: 'flow_a_continue',\n      skip: false\n    },\n    pairedItem: { item: 0 }\n  }];\n}"
+        "functionCode": "// Branch logic: Check if NAICS = PRIMARY_NAICS\n// If yes, skip (Flow B), else continue (Flow A)\nconst primaryNaics = $env.PRIMARY_NAICS || '561720';\nconst naics = $node['Parse Sunbiz Records'].json.naics || '';\n\nif (naics === primaryNaics) {\n  return [{\n    json: {\n      ...($node['Parse Sunbiz Records'].json),\n      route: 'flow_b_skip',\n      reason: `Primary NAICS detected (${primaryNaics})`,\n      skip: true\n    },\n    pairedItem: { item: 0 }\n  }];\n} else {\n  return [{\n    json: {\n      ...($node['Parse Sunbiz Records'].json),\n      route: 'flow_a_continue',\n      skip: false\n    },\n    pairedItem: { item: 0 }\n  }];\n}"
       },
       "name": "Branch - Check NAICS",
       "type": "n8n-nodes-base.function",

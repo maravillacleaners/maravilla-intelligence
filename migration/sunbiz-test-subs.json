@@ -1,0 +1,72 @@
+[
+  {
+    "record_id": "FL20261201001",
+    "company_name": "ProClean Commercial Services",
+    "dba_name": "ProClean",
+    "status": "ACTIVE",
+    "date_formed": "2026-01-10",
+    "naics": "561720",
+    "naics_description": "Janitorial Services",
+    "principal_officer": "Michael Rodriguez",
+    "registered_address": "1000 Business Plaza, Miami, FL 33101",
+    "mailing_address": "1000 Business Plaza, Miami, FL 33101",
+    "county": "Miami-Dade",
+    "zip": "33101"
+  },
+  {
+    "record_id": "FL20261215002",
+    "company_name": "Residential Cleaning Solutions Inc",
+    "dba_name": "RCS Home Cleaning",
+    "status": "ACTIVE",
+    "date_formed": "2026-01-15",
+    "naics": "561720",
+    "naics_description": "Janitorial Services",
+    "principal_officer": "Sarah Johnson",
+    "registered_address": "2500 Park Ave, Tampa, FL 33602",
+    "mailing_address": "2500 Park Ave, Tampa, FL 33602",
+    "county": "Hillsborough",
+    "zip": "33602"
+  },
+  {
+    "record_id": "FL20261220003",
+    "company_name": "Specialty Carpet & Pressure Washing",
+    "dba_name": "Specialty Services",
+    "status": "ACTIVE",
+    "date_formed": "2026-01-20",
+    "naics": "561720",
+    "naics_description": "Janitorial Services",
+    "principal_officer": "James Peterson",
+    "registered_address": "5000 Industrial Blvd, Jacksonville, FL 32202",
+    "mailing_address": "5000 Industrial Blvd, Jacksonville, FL 32202",
+    "county": "Duval",
+    "zip": "32202"
+  },
+  {
+    "record_id": "FL20261225004",
+    "company_name": "Federal Government Facility Services LLC",
+    "dba_name": "FedGov Maintenance",
+    "status": "ACTIVE",
+    "date_formed": "2026-01-25",
+    "naics": "561720",
+    "naics_description": "Janitorial Services",
+    "principal_officer": "David Thompson",
+    "registered_address": "3333 Federal Way, Tallahassee, FL 32301",
+    "mailing_address": "3333 Federal Way, Tallahassee, FL 32301",
+    "county": "Leon",
+    "zip": "32301"
+  },
+  {
+    "record_id": "FL20261230005",
+    "company_name": "Commercial Office Maintenance Corp",
+    "dba_name": "COM Maintenance",
+    "status": "ACTIVE",
+    "date_formed": "2026-02-01",
+    "naics": "561720",
+    "naics_description": "Janitorial Services",
+    "principal_officer": "Angela Martinez",
+    "registered_address": "7777 Corporate Drive, Orlando, FL 32801",
+    "mailing_address": "7777 Corporate Drive, Orlando, FL 32801",
+    "county": "Orange",
+    "zip": "32801"
+  }
+]

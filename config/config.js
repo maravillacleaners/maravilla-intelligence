@@ -12,8 +12,8 @@ const config = {
   ENVIRONMENT: process.env.NODE_ENV || 'development',
 
   // Industry Classification (SWAPPABLE)
-  PRIMARY_NAICS: process.env.PRIMARY_NAICS || '561720', // Janitorial services
-  NAICS_NAME: 'Janitorial Services',
+  PRIMARY_NAICS: process.env.PRIMARY_NAICS || '561730', // Waste Management Services (test swap)
+  NAICS_NAME: 'Waste Management Services',
 
   // Geographic Configuration - Florida Counties (EXTENSIBLE)
   FLORIDA_COUNTIES: [

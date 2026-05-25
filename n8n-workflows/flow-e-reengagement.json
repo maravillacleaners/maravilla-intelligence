@@ -1,0 +1,290 @@
+{
+  "name": "Flow E - Re-Engagement (Field Change Detection)",
+  "description": "Daily trigger 7 AM ET (after Flow A). Detect field changes on existing prospects (physical_address, website, officer_name, num_sites). Generate fresh icebreaker via Claude. Set re_engagement_candidate=true, pipeline_status='pending_review', audit log event='re_engaged'",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": "every",
+        "unit": "day",
+        "value": 1,
+        "triggerAtHour": 7,
+        "triggerAtMinute": 0
+      },
+      "name": "Schedule Trigger - 7 AM ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "flow-e-daily-trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Initialize tracking variables\n// This run will check for field changes against previous snapshot\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    flow_name: 'Flow E - Re-Engagement',\n    trigger_time: '07:00 ET',\n    tracked_fields: ['physical_address', 'website', 'officer_name', 'num_sites'],\n    changes_detected: 0,\n    prospects_processed: 0,\n    prospects_reengaged: 0\n  }\n}];"
+      },
+      "name": "Initialize Flow State",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Prospects",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "GET",
+        "qs": {
+          "view": "All",
+          "maxRecords": 500,
+          "fields": ["legal_name", "email", "physical_address", "website", "officer_name", "num_sites", "last_field_snapshot", "pipeline_status", "re_engagement_candidate", "icebreaker"]
+        }
+      },
+      "name": "Fetch All Prospects",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse Airtable prospects and compare with snapshot\n// Detect changes in tracked fields\nconst response = $node['Fetch All Prospects'].json || { records: [] };\nconst trackedFields = ['physical_address', 'website', 'officer_name', 'num_sites'];\n\nconst recordsWithChanges = response.records\n  .filter(rec => rec.fields)\n  .map(rec => {\n    const current = rec.fields;\n    const snapshot = current.last_field_snapshot ? JSON.parse(current.last_field_snapshot) : {};\n    \n    // Detect changes\n    const changes = {};\n    let hasChanges = false;\n    \n    trackedFields.forEach(field => {\n      const currentValue = current[field] || '';\n      const snapshotValue = snapshot[field] || '';\n      \n      if (currentValue !== snapshotValue && currentValue !== '') {\n        changes[field] = {\n          old_value: snapshotValue,\n          new_value: currentValue\n        };\n        hasChanges = true;\n      }\n    });\n    \n    return {\n      json: {\n        record_id: rec.id,\n        legal_name: current.legal_name || '',\n        email: current.email || '',\n        current_fields: {\n          physical_address: current.physical_address || '',\n          website: current.website || '',\n          officer_name: current.officer_name || '',\n          num_sites: current.num_sites || 0\n        },\n        snapshot_fields: snapshot,\n        detected_changes: changes,\n        has_changes: hasChanges,\n        pipeline_status: current.pipeline_status || '',\n        current_icebreaker: current.icebreaker || '',\n        re_engagement_candidate: current.re_engagement_candidate || false\n      }\n    };\n  })\n  .filter(rec => rec.json.has_changes); // Only records with changes\n\nreturn recordsWithChanges.length > 0 \n  ? recordsWithChanges \n  : [{\n      json: {\n        message: 'No field changes detected',\n        total_prospects_checked: response.records.length\n      }\n    }];"
+      },
+      "name": "Parse Prospects & Detect Changes",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "nodeEqualsValue": [
+            {
+              "name": "has_changes",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "name": "Filter - Has Field Changes",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.SCORING_SERVICE_URL || 'http://localhost:3000/api/score' }}",
+        "authentication": "none",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "{\n  \"legal_name\": \"{{ $node['Filter - Has Field Changes'].json.legal_name }}\",\n  \"email\": \"{{ $node['Filter - Has Field Changes'].json.email }}\",\n  \"physical_address\": \"{{ $node['Filter - Has Field Changes'].json.current_fields.physical_address }}\",\n  \"website\": \"{{ $node['Filter - Has Field Changes'].json.current_fields.website }}\",\n  \"officer_name\": \"{{ $node['Filter - Has Field Changes'].json.current_fields.officer_name }}\",\n  \"num_sites\": {{ $node['Filter - Has Field Changes'].json.current_fields.num_sites }},\n  \"detected_changes\": {{ JSON.stringify($node['Filter - Has Field Changes'].json.detected_changes) }},\n  \"context\": \"re_engagement\"\n}"
+            }
+          ]
+        }
+      },
+      "name": "Call Claude for Fresh Icebreaker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract Claude response and prepare fresh icebreaker\n// Claude returns: { icebreaker, intent_signal, segment, etc. }\nconst claudeResponse = $node['Call Claude for Fresh Icebreaker'].json || {};\n\nreturn [{\n  json: {\n    record_id: $node['Filter - Has Field Changes'].json.record_id,\n    legal_name: $node['Filter - Has Field Changes'].json.legal_name,\n    email: $node['Filter - Has Field Changes'].json.email,\n    detected_changes: $node['Filter - Has Field Changes'].json.detected_changes,\n    new_icebreaker: claudeResponse.icebreaker || `I noticed some updates to your profile - let's reconnect!`,\n    intent_signal: claudeResponse.intent_signal || 'medium',\n    segment: claudeResponse.segment || 'Unknown',\n    reason_for_reengagement: Object.keys($node['Filter - Has Field Changes'].json.detected_changes).join(', ')\n  }\n}];"
+      },
+      "name": "Extract New Icebreaker",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Prospects/{{ $node['Extract New Icebreaker'].json.record_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "PATCH",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"icebreaker\": \"{{ $node['Extract New Icebreaker'].json.new_icebreaker }}\",\n  \"re_engagement_candidate\": true,\n  \"pipeline_status\": \"pending_review\",\n  \"last_field_snapshot\": \"{{ JSON.stringify($node['Filter - Has Field Changes'].json.current_fields) }}\",\n  \"last_reengagement_date\": \"{{ new Date().toISOString().split('T')[0] }}\",\n  \"intent_signal\": \"{{ $node['Extract New Icebreaker'].json.intent_signal }}\"\n}"
+            }
+          ]
+        }
+      },
+      "name": "Update Prospect - Set Re-Engagement",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1650, 200],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"event_type\": \"re_engaged\",\n  \"legal_name\": \"{{ $node['Extract New Icebreaker'].json.legal_name }}\",\n  \"email\": \"{{ $node['Extract New Icebreaker'].json.email }}\",\n  \"source\": \"Flow E - Field Change Detection\",\n  \"details\": \"Field change detected: {{ $node['Extract New Icebreaker'].json.reason_for_reengagement }}. New icebreaker: {{ $node['Extract New Icebreaker'].json.new_icebreaker }}\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}"
+            }
+          ]
+        }
+      },
+      "name": "Create Audit Log - Re-Engagement",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1850, 200],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Fallback path: No changes detected\nreturn [{\n  json: {\n    message: 'No field changes detected',\n    total_prospects_checked: $node['Parse Prospects & Detect Changes'].json.total_prospects_checked || 0,\n    timestamp: new Date().toISOString(),\n    status: 'completed_no_changes'\n  }\n}];"
+      },
+      "name": "No Changes - End Flow",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 500]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aggregate results\nconst success = $node['Update Prospect - Set Re-Engagement'].json;\nconst audit = $node['Create Audit Log - Re-Engagement'].json;\n\nreturn [{\n  json: {\n    status: 'completed',\n    message: 'Flow E completed successfully',\n    legal_name: success.legal_name,\n    email: success.email,\n    field_changes: success.detected_changes,\n    new_icebreaker_generated: success.new_icebreaker !== undefined,\n    pipeline_status_updated: 'pending_review',\n    re_engagement_candidate_set: true,\n    audit_logged: true,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Return Flow Result",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2050, 200]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger - 7 AM ET": {
+      "main": [
+        [
+          {
+            "node": "Initialize Flow State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Flow State": {
+      "main": [
+        [
+          {
+            "node": "Fetch All Prospects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch All Prospects": {
+      "main": [
+        [
+          {
+            "node": "Parse Prospects & Detect Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Prospects & Detect Changes": {
+      "main": [
+        [
+          {
+            "node": "Filter - Has Field Changes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Changes - End Flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter - Has Field Changes": {
+      "main": [
+        [
+          {
+            "node": "Call Claude for Fresh Icebreaker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Claude for Fresh Icebreaker": {
+      "main": [
+        [
+          {
+            "node": "Extract New Icebreaker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract New Icebreaker": {
+      "main": [
+        [
+          {
+            "node": "Update Prospect - Set Re-Engagement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Prospect - Set Re-Engagement": {
+      "main": [
+        [
+          {
+            "node": "Create Audit Log - Re-Engagement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Audit Log - Re-Engagement": {
+      "main": [
+        [
+          {
+            "node": "Return Flow Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

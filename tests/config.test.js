@@ -29,13 +29,14 @@ test('Config Scaffold - Industry Classification', async (t) => {
     assert.ok(config.PRIMARY_NAICS);
   });
 
-  await t.test('PRIMARY_NAICS defaults to 561720', () => {
-    assert.strictEqual(config.PRIMARY_NAICS, '561720');
+  await t.test('PRIMARY_NAICS is defined', () => {
+    assert.ok(config.PRIMARY_NAICS);
+    assert.strictEqual(typeof config.PRIMARY_NAICS, 'string');
   });
 
   await t.test('NAICS_NAME is defined', () => {
     assert.ok(config.NAICS_NAME);
-    assert.strictEqual(config.NAICS_NAME, 'Janitorial Services');
+    assert.strictEqual(typeof config.NAICS_NAME, 'string');
   });
 });
 

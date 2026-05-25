@@ -15,6 +15,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import config from '../config/config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,7 +28,7 @@ console.log('\n========================================');
 console.log('FLOW A - CLIENT DISCOVERY TEST');
 console.log('========================================\n');
 
-const PRIMARY_NAICS = '561720';
+const PRIMARY_NAICS = config.PRIMARY_NAICS;
 let processedCount = 0;
 let routedToFlowB = 0;
 let savedToAirtable = 0;
@@ -159,7 +160,7 @@ console.log('========================================');
 console.log('SUMMARY');
 console.log('========================================');
 console.log(`Total records processed: ${testRecords.length}`);
-console.log(`Routed to Flow B (561720): ${routedToFlowB}`);
+console.log(`Routed to Flow B (${PRIMARY_NAICS}): ${routedToFlowB}`);
 console.log(`Saved to Airtable pending_review: ${savedToAirtable}`);
 console.log(`All Airtable fields valid: ${allFieldsValid ? 'YES' : 'NO'}`);
 console.log(`\nTest Status: ${savedToAirtable === 5 - routedToFlowB && allFieldsValid ? 'PASS' : 'FAIL'}`);

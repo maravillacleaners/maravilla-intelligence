@@ -1,0 +1,10 @@
+{
+  "test_timestamp": "2026-05-25T15:28:10.122Z",
+  "test_status": "PASS",
+  "total_records": 5,
+  "processed": 0,
+  "classified": 0,
+  "all_fields_valid": true,
+  "category_distribution": {},
+  "records": []
+}

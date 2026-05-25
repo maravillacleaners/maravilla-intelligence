@@ -1,0 +1,291 @@
+{
+  "name": "Flow 0 - CSV Migration & Lead Scoring",
+  "description": "Imports existing leads from CSV, enriches contact info, scores via Claude API, saves to Airtable with pending_review status",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST"
+      },
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileFormat": "csv",
+        "filePath": "migration/existing-leads.csv",
+        "dataLoadingOptions": {
+          "containsHeaders": true,
+          "format": "auto"
+        }
+      },
+      "name": "Read CSV File",
+      "type": "n8n-nodes-base.fileReadNode",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse each CSV row into a prospect object\nreturn items.map((item, index) => {\n  const row = item.json;\n  return {\n    json: {\n      index: index + 1,\n      legal_name: row.legal_name || '',\n      business_email: row.business_email || '',\n      phone: row.phone || '',\n      website: row.website || '',\n      county: row.county || '',\n      employees_estimate: parseInt(row.employees_estimate) || 0,\n      created_at: new Date().toISOString(),\n      source: 'CSV Migration'\n    }\n  };\n});"
+      },
+      "name": "Parse CSV Rows",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.ENRICHMENT_SERVICE_URL || 'http://localhost:3000/api/enrich' }}",
+        "authentication": "none",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "{{ JSON.stringify($node['Parse CSV Rows'].json) }}"
+            }
+          ]
+        }
+      },
+      "name": "Enrich Prospect Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "{{ $env.SCORING_SERVICE_URL || 'http://localhost:3000/api/score' }}",
+        "authentication": "none",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "{{ JSON.stringify($node['Enrich Prospect Data'].json || $node['Parse CSV Rows'].json) }}"
+            }
+          ]
+        }
+      },
+      "name": "Score via Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 400],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Combine enriched data with scoring results\nconst enriched = $node['Enrich Prospect Data'].json;\nconst scored = $node['Score via Claude API'].json;\n\nreturn [{\n  json: {\n    ...enriched,\n    score: scored?.score || 0,\n    service_fit: scored?.service_fit || 'unknown',\n    segment: scored?.segment || 'Unknown',\n    priority: scored?.priority || 5,\n    intent_signal: scored?.intent_signal || 'low',\n    icebreaker: scored?.icebreaker || '',\n    pipeline_status: 'pending_review',\n    import_batch: $node['Manual Trigger'].executionData.startData.timestamp,\n    scored_at: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Prepare Airtable Record",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Prospects",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"legal_name\": \"{{ $node['Prepare Airtable Record'].json.legal_name }}\",\n  \"business_email\": \"{{ $node['Prepare Airtable Record'].json.business_email }}\",\n  \"phone\": \"{{ $node['Prepare Airtable Record'].json.phone }}\",\n  \"website\": \"{{ $node['Prepare Airtable Record'].json.website }}\",\n  \"county\": \"{{ $node['Prepare Airtable Record'].json.county }}\",\n  \"employees_estimate\": {{ $node['Prepare Airtable Record'].json.employees_estimate }},\n  \"score\": {{ $node['Prepare Airtable Record'].json.score }},\n  \"service_fit\": \"{{ $node['Prepare Airtable Record'].json.service_fit }}\",\n  \"segment\": \"{{ $node['Prepare Airtable Record'].json.segment }}\",\n  \"priority\": {{ $node['Prepare Airtable Record'].json.priority }},\n  \"intent_signal\": \"{{ $node['Prepare Airtable Record'].json.intent_signal }}\",\n  \"icebreaker\": \"{{ $node['Prepare Airtable Record'].json.icebreaker }}\",\n  \"pipeline_status\": \"{{ $node['Prepare Airtable Record'].json.pipeline_status }}\",\n  \"source\": \"{{ $node['Prepare Airtable Record'].json.source }}\",\n  \"created_at\": \"{{ $node['Prepare Airtable Record'].json.created_at }}\"\n}"
+            }
+          ]
+        }
+      },
+      "name": "Save to Airtable Prospects",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 300],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"event_type\": \"created\",\n  \"prospect_id\": \"{{ $node['Save to Airtable Prospects'].json.id }}\",\n  \"email\": \"{{ $node['Prepare Airtable Record'].json.business_email }}\",\n  \"legal_name\": \"{{ $node['Prepare Airtable Record'].json.legal_name }}\",\n  \"segment\": \"{{ $node['Prepare Airtable Record'].json.segment }}\",\n  \"timestamp\": \"{{ $node['Prepare Airtable Record'].json.created_at }}\",\n  \"details\": \"Lead imported from CSV migration\"\n}"
+            }
+          ]
+        }
+      },
+      "name": "Log Created Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 150],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Audit%20Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableApi",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "{\n  \"event_type\": \"scored\",\n  \"prospect_id\": \"{{ $node['Save to Airtable Prospects'].json.id }}\",\n  \"email\": \"{{ $node['Prepare Airtable Record'].json.business_email }}\",\n  \"legal_name\": \"{{ $node['Prepare Airtable Record'].json.legal_name }}\",\n  \"score\": {{ $node['Prepare Airtable Record'].json.score }},\n  \"segment\": \"{{ $node['Prepare Airtable Record'].json.segment }}\",\n  \"priority\": {{ $node['Prepare Airtable Record'].json.priority }},\n  \"timestamp\": \"{{ $node['Prepare Airtable Record'].json.scored_at }}\",\n  \"details\": \"Lead scored via Claude API (service_fit={{$node['Prepare Airtable Record'].json.service_fit}}, intent={{$node['Prepare Airtable Record'].json.intent_signal}}))\"\n}"
+            }
+          ]
+        }
+      },
+      "name": "Log Scored Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 400],
+      "credentials": {
+        "airtableApi": {
+          "id": "airtable-default",
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWithData": true
+      },
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1650, 275]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read CSV File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read CSV File": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CSV Rows": {
+      "main": [
+        [
+          {
+            "node": "Enrich Prospect Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Score via Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Prospect Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare Airtable Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score via Claude API": {
+      "main": [
+        [
+          {
+            "node": "Prepare Airtable Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Airtable Record": {
+      "main": [
+        [
+          {
+            "node": "Save to Airtable Prospects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Airtable Prospects": {
+      "main": [
+        [
+          {
+            "node": "Log Created Event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Scored Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Created Event": {
+      "main": [
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Scored Event": {
+      "main": [
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
