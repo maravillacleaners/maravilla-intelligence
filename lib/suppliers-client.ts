@@ -123,21 +123,7 @@ function mapToSupplier(record: any): Supplier {
     phone: record.fields.phone || '',
     website: record.fields.website,
     sub_category: record.fields.sub_category || '',
-    services_offered: Array.isArray(record.fields.services_offered)
-      ? record.fields.services_offered
-      : [],
-    preferred_counties: Array.isArray(record.fields.preferred_counties)
-      ? record.fields.preferred_counties
-      : [],
-    certification_status: record.fields.certification_status,
-    sam_gov_id: record.fields.sam_gov_id,
-    cage_code: record.fields.cage_code,
-    availability_start_date: record.fields.availability_start_date,
-    estimated_annual_capacity_usd: record.fields.estimated_annual_capacity_usd,
-    insurance_certificate_url: record.fields.insurance_certificate_url,
     registration_status: record.fields.registration_status || 'Pending Review',
-    registration_date: record.fields.registration_date,
-    last_activity_date: record.fields.last_activity_date,
     supplier_id: record.fields.supplier_id || '',
     notes: record.fields.notes,
     password_hash: record.fields.password_hash,
@@ -190,7 +176,7 @@ function mapToSupplierApplication(record: any): SupplierApplication {
  * Auto-generates supplier_id and sets registration_date to today
  */
 export async function createSupplier(
-  supplier: Omit<Supplier, 'id'>
+  supplier: Omit<Supplier, 'id' | 'supplier_id'> & { supplier_id?: string }
 ): Promise<Supplier> {
   try {
     console.log('[suppliers-client] createSupplier called')
@@ -213,15 +199,10 @@ export async function createSupplier(
       password_hash: supplier.password_hash,
     }
 
-    // Try to add optional fields if they're provided, but don't fail if they don't exist
-    const optionalFields = ['website', 'notes'];
-    for (const field of optionalFields) {
-      if (supplier[field as keyof typeof supplier]) {
-        fields[field] = supplier[field]
-      }
-    }
+    if (supplier.website) fields.website = supplier.website
+    if (supplier.notes) fields.notes = supplier.notes
 
-    const record = await base(TABLES.SUPPLIERS).create(fields)
+    const record = await base(TABLES.SUPPLIERS).create(fields) as any
 
     console.log('[suppliers-client] Record created:', record.id)
     return mapToSupplier(record)
@@ -315,18 +296,6 @@ export async function updateSupplier(
     if (updates.phone) updateFields.phone = updates.phone
     if (updates.website !== undefined) updateFields.website = updates.website
     if (updates.sub_category) updateFields.sub_category = updates.sub_category
-    if (updates.services_offered) updateFields.services_offered = updates.services_offered
-    if (updates.preferred_counties) updateFields.preferred_counties = updates.preferred_counties
-    if (updates.certification_status !== undefined)
-      updateFields.certification_status = updates.certification_status
-    if (updates.sam_gov_id !== undefined) updateFields.sam_gov_id = updates.sam_gov_id
-    if (updates.cage_code !== undefined) updateFields.cage_code = updates.cage_code
-    if (updates.availability_start_date !== undefined)
-      updateFields.availability_start_date = updates.availability_start_date
-    if (updates.estimated_annual_capacity_usd !== undefined)
-      updateFields.estimated_annual_capacity_usd = updates.estimated_annual_capacity_usd
-    if (updates.insurance_certificate_url !== undefined)
-      updateFields.insurance_certificate_url = updates.insurance_certificate_url
     if (updates.registration_status) updateFields.registration_status = updates.registration_status
     if (updates.notes !== undefined) updateFields.notes = updates.notes
     if (updates.password_hash !== undefined) updateFields.password_hash = updates.password_hash

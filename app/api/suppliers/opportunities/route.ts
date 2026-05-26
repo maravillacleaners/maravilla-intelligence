@@ -11,6 +11,9 @@ export async function GET(request: Request) {
     }
 
     const decoded = verifyToken(token)
+    if (!decoded) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const subsBase = api.base(process.env.AIRTABLE_SUBS_BASE_ID!)
 
     const records = await subsBase('Supplier_Opportunities')

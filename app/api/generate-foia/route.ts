@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-sdk/sdk'
+import Anthropic from '@anthropic-ai/sdk'
 
 interface FOIARequest {
   companyName: string

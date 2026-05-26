@@ -21,8 +21,9 @@ import { getSupplierFromRequest } from '@/lib/suppliers-auth'
  * Requires Bearer token in Authorization header
  * Only returns applications submitted by the authenticated supplier
  */
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     // ========================================================================
     // 1. VALIDATE TOKEN AND EXTRACT SUPPLIER
     // ========================================================================
@@ -34,14 +35,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
     // ========================================================================
     // 2. SECURITY CHECK - Can only view own applications
     // ========================================================================
-    if (supplier.supplier_id !== params.id) {
+    if (supplier.supplier_id !== id) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // ========================================================================
     // 3. FETCH APPLICATIONS FOR SUPPLIER
     // ========================================================================
-    const applications = await getApplicationsForSupplier(params.id)
+    const applications = await getApplicationsForSupplier(id)
 
     // ========================================================================
     // 4. RETURN APPLICATIONS
@@ -65,8 +66,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
  * Only allows creating applications for the authenticated supplier
  * Creates both an Application record and updates the Opportunity status to "Applied"
  */
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     // ========================================================================
     // 1. VALIDATE TOKEN AND EXTRACT SUPPLIER
     // ========================================================================
@@ -78,7 +80,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     // ========================================================================
     // 2. SECURITY CHECK - Can only create applications for own supplier
     // ========================================================================
-    if (supplier.supplier_id !== params.id) {
+    if (supplier.supplier_id !== id) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -98,7 +100,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     // ========================================================================
     // 4. FETCH SUPPLIER DATA
     // ========================================================================
-    const supplierData = await getSupplierById(params.id)
+    const supplierData = await getSupplierById(id)
     if (!supplierData) {
       return Response.json({ error: 'Supplier not found' }, { status: 404 })
     }
@@ -106,7 +108,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     // ========================================================================
     // 5. CHECK IF ALREADY APPLIED TO THIS OPPORTUNITY
     // ========================================================================
-    const existingApplication = await getApplicationByOpportunity(params.id, opportunity_id)
+    const existingApplication = await getApplicationByOpportunity(id, opportunity_id)
     if (existingApplication) {
       return Response.json(
         { error: 'You have already applied to this opportunity' },
@@ -117,7 +119,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     // ========================================================================
     // 6. FETCH OPPORTUNITY DATA
     // ========================================================================
-    const opportunities = await getOpportunitiesForSupplier(params.id)
+    const opportunities = await getOpportunitiesForSupplier(id)
     const opportunity = opportunities.find(o => o.id === opportunity_id)
 
     if (!opportunity) {
@@ -133,7 +135,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const today = new Date().toISOString().split('T')[0]
 
     const application = await createSupplierApplication({
-      supplier_id: params.id,
+      supplier_id: id,
       supplier_name: supplierData.legal_name,
       opportunity_id,
       opportunity_name: opportunity.opportunity_name,

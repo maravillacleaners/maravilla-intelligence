@@ -9,6 +9,7 @@ interface EmailTemplate {
   subject: string
   body: string
   category: 'prospect' | 'contract' | 'sub'
+  variables?: string[]
 }
 
 interface Campaign {
@@ -296,7 +297,7 @@ export default function CampaignsPage() {
                       <p className="font-medium text-gray-900">{template.name}</p>
                       <p className="text-sm text-gray-600 mt-1">{template.subject}</p>
                       <p className="text-xs text-gray-500 mt-2">
-                        Variables: {template.variables.join(', ')}
+                        Variables: {(template.variables ?? []).join(', ')}
                       </p>
                     </div>
                   ))

@@ -90,15 +90,6 @@ export async function POST(request: Request) {
         phone: body.phone.trim(),
         website: body.website ? body.website.trim() : undefined,
         sub_category: body.sub_category.trim(),
-        services_offered: Array.isArray(body.services_offered) ? body.services_offered : [],
-        preferred_counties: Array.isArray(body.preferred_counties) ? body.preferred_counties : [],
-        estimated_annual_capacity_usd: body.estimated_annual_capacity_usd
-          ? parseInt(body.estimated_annual_capacity_usd)
-          : undefined,
-        certification_status: body.certification_status || undefined,
-        sam_gov_id: body.sam_gov_id || undefined,
-        cage_code: body.cage_code || undefined,
-        insurance_certificate_url: body.insurance_certificate_url || undefined,
         registration_status: 'Pending Review',
         password_hash: passwordHash,
       })

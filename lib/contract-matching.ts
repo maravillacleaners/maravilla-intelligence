@@ -37,7 +37,7 @@ export async function matchContractsToSuppliers(): Promise<ContractMatch[]> {
         if (score >= 60) {
           matches.push({
             contractId: contract.id,
-            supplierId: supplier.fields.supplier_id,
+            supplierId: String(supplier.fields.supplier_id ?? ''),
             matchScore: score,
             reason: `Services match (${score}% score)`,
           })
