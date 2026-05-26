@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { verifyToken } from '@/lib/suppliers-auth'
+import { decodeToken } from '@/lib/suppliers-auth'
 
 interface Application {
   id: string
@@ -28,7 +28,7 @@ export default function ApplicationsPage() {
           return
         }
 
-        const decoded = verifyToken(token)
+        const decoded = decodeToken(token)
         if (!decoded) {
           localStorage.removeItem('supplier_token')
           router.push('/suppliers/login')

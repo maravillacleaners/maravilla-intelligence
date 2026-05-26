@@ -113,6 +113,24 @@ export function verifyToken(token: string): SupplierJWT | null {
 }
 
 /**
+ * Decode a JWT token without verifying the signature.
+ * Safe to use in browser (client components). Actual auth happens server-side.
+ * @param token - JWT token to decode
+ * @returns Decoded payload or null if malformed
+ */
+export function decodeToken(token: string): SupplierJWT | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+    if (!payload.supplier_id || !payload.business_email) return null
+    return payload as SupplierJWT
+  } catch {
+    return null
+  }
+}
+
+/**
  * Extract and verify supplier JWT token from request Authorization header
  * Expects header format: "Bearer <token>"
  * @param request - HTTP request object with headers

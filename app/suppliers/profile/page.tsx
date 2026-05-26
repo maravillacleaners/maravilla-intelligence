@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { verifyToken } from '@/lib/suppliers-auth'
+import { decodeToken } from '@/lib/suppliers-auth'
 
 interface Supplier {
   legal_name: string
@@ -10,10 +10,9 @@ interface Supplier {
   business_email: string
   phone: string
   website?: string
-  services_offered: string[]
-  preferred_counties: string[]
-  estimated_annual_capacity_usd?: number
+  sub_category?: string
   notes?: string
+  registration_status?: string
 }
 
 export default function SupplierProfilePage() {
@@ -34,7 +33,7 @@ export default function SupplierProfilePage() {
           return
         }
 
-        const decoded = verifyToken(token)
+        const decoded = decodeToken(token)
         if (!decoded) {
           localStorage.removeItem('supplier_token')
           router.push('/suppliers/login')
@@ -76,7 +75,7 @@ export default function SupplierProfilePage() {
         return
       }
 
-      const decoded = verifyToken(token)
+      const decoded = decodeToken(token)
       if (!decoded) {
         localStorage.removeItem('supplier_token')
         router.push('/suppliers/login')
@@ -195,70 +194,19 @@ export default function SupplierProfilePage() {
             value={formData.website || ''}
             onChange={e => setFormData({ ...formData, website: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://example.com"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Services Offered</label>
-          <div className="space-y-2">
-            {['Janitorial', 'Landscaping', 'HVAC', 'Painting', 'Construction'].map(service => (
-              <label key={service} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.services_offered?.includes(service)}
-                  onChange={e => {
-                    const updated = e.target.checked
-                      ? [...(formData.services_offered || []), service]
-                      : (formData.services_offered || []).filter(s => s !== service)
-                    setFormData({ ...formData, services_offered: updated })
-                  }}
-                  className="w-4 h-4 rounded border-gray-300"
-                />
-                <span className="ml-2 text-sm">{service}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Counties</label>
-          <div className="space-y-2">
-            {['Lee', 'Collier', 'Hillsborough', 'Polk', 'Pinellas', 'Duval', 'Miami-Dade'].map(
-              county => (
-                <label key={county} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.preferred_counties?.includes(county)}
-                    onChange={e => {
-                      const updated = e.target.checked
-                        ? [...(formData.preferred_counties || []), county]
-                        : (formData.preferred_counties || []).filter(c => c !== county)
-                      setFormData({ ...formData, preferred_counties: updated })
-                    }}
-                    className="w-4 h-4 rounded border-gray-300"
-                  />
-                  <span className="ml-2 text-sm">{county} County</span>
-                </label>
-              )
-            )}
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Estimated Annual Capacity (USD)
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
           <input
-            type="number"
-            value={formData.estimated_annual_capacity_usd || ''}
-            onChange={e =>
-              setFormData({
-                ...formData,
-                estimated_annual_capacity_usd: parseInt(e.target.value) || undefined,
-              })
-            }
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            type="text"
+            value={formData.sub_category || ''}
+            disabled
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
           />
+          <p className="text-xs text-gray-500 mt-1">Category is set during registration and cannot be changed here</p>
         </div>
 
         <div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { verifyToken, type SupplierJWT } from '@/lib/suppliers-auth'
+import { decodeToken, type SupplierJWT } from '@/lib/suppliers-auth'
 
 interface DashboardData {
   supplier: {
@@ -46,7 +46,7 @@ export default function SupplierDashboardPage() {
         }
 
         // Verify token
-        const decodedToken = verifyToken(token)
+        const decodedToken = decodeToken(token)
         if (!decodedToken) {
           localStorage.removeItem('supplier_token')
           router.push('/suppliers/login')
@@ -114,8 +114,8 @@ export default function SupplierDashboardPage() {
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex justify-between items-start">
+      <div>
+        <div className="flex justify-between items-start mb-2">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Welcome back, {data.supplier.legal_name}!
