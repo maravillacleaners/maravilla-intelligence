@@ -138,6 +138,35 @@ export async function fetchSamOpportunities(options: {
   return all
 }
 
+// ── SAM.gov Entity API — fetch POC data for a known company ────────────────────
+export async function fetchSamEntity(companyName: string): Promise<any | null> {
+  const apiKey = process.env.SAM_GOV_API_KEY
+  if (!apiKey || apiKey.length < 8) return null
+
+  try {
+    const params = new URLSearchParams({ api_key: apiKey, q: companyName, limit: '1' })
+    const res = await fetch(`https://api.sam.gov/prod/entity-information/v3/entities?${params}`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    const entity = data.entityData?.[0]
+    if (!entity) return null
+    const poc = entity.pointsOfContact?.governmentBusinessPOC
+    return {
+      entity_name: entity.entityRegistration?.legalBusinessName || companyName,
+      uei: entity.entityRegistration?.ueiSAM || '',
+      co_name: poc?.firstName ? `${poc.firstName} ${poc.lastName}`.trim() : '',
+      co_email: poc?.electronicBusinessPOC?.email || poc?.email || '',
+      co_phone: poc?.phoneNumber || '',
+      cage_code: entity.entityRegistration?.cageCode || '',
+      naics_code: entity.assertions?.goodsAndServices?.naicsList?.[0]?.naicsCode || '',
+    }
+  } catch {
+    return null
+  }
+}
+
 // ── Backward-compat aliases for legacy callers ─────────────────────────────────
 export const scrapeSamGov = fetchSamOpportunities
 export async function saveContractsToAirtable(_contracts: any[]) {
