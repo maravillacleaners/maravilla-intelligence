@@ -330,6 +330,23 @@ async function ingestSam(dry_run: boolean): Promise<{ created: number; updated: 
           })
         }
 
+        // Auto-create outreach task if we have a CO email
+        if (primaryPoc?.email && score >= 65) {
+          const dueDate = (() => { const d = new Date(); d.setDate(d.getDate() + 2); return d.toISOString().split('T')[0] })()
+          await atCreate(TBL_TASKS, {
+            Entity_Key:  entity_key,
+            Entity_Name: rawName,
+            Entity_Type: 'lead',
+            Task:        `Outreach: Send capabilities statement to ${primaryPoc.fullName || 'CO'} at ${rawName}`,
+            Notes:       `Email: ${primaryPoc.email} | Phone: ${primaryPoc.phone || 'N/A'} | Role: Contracting Officer | Solicitation: ${opp.title} | NAICS: ${opp.naicsCode} | Deadline: ${opp.responseDeadline?.split('T')[0] || 'N/A'}`,
+            Status:      'Open',
+            Priority:    score >= 80 ? 'High' : 'Medium',
+            Owner:       'Sales',
+            Due_Date:    dueDate,
+            Created_At:  new Date().toISOString(),
+          })
+        }
+
         stats.created++
         await delay(120)
       } else {
