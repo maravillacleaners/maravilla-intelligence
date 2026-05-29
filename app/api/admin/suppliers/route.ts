@@ -16,12 +16,12 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') || undefined
 
-    // Note: In production, validate admin token here
-    // Example:
-    // const token = request.headers.get('authorization')?.split(' ')[1]
-    // if (!token || !verifyAdminToken(token)) {
-    //   return Response.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
+    const authHeader = request.headers.get('authorization') ?? ''
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+    const adminSecret = process.env.ADMIN_SECRET ?? 'maravilla-admin-2026'
+    if (!token || token !== adminSecret) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     const suppliers = await listSuppliers({ status: status || undefined })
 
@@ -74,11 +74,12 @@ export async function PUT(request: Request) {
       )
     }
 
-    // Note: In production, validate admin token here
-    // const token = request.headers.get('authorization')?.split(' ')[1]
-    // if (!token || !verifyAdminToken(token)) {
-    //   return Response.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
+    const authHeader = request.headers.get('authorization') ?? ''
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+    const adminSecret = process.env.ADMIN_SECRET ?? 'maravilla-admin-2026'
+    if (!token || token !== adminSecret) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     // Update supplier status
     await updateSupplier(supplier_id, {

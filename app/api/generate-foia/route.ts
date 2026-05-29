@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const claudeApiKey = process.env.CLAUDE_API_KEY || process.env.NEXT_PUBLIC_CLAUDE_API_KEY
+    const claudeApiKey = process.env.ANTHROPIC_API_KEY
 
     if (!claudeApiKey) {
       // Return mock FOIA draft

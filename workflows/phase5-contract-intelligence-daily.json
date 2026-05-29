@@ -1,0 +1,243 @@
+{
+  "name": "Phase 5 Contract Intelligence Daily Orchestration",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": "every",
+        "unit": "days",
+        "value": 1,
+        "triggerAtHour": 7,
+        "triggerAtMinute": 0
+      },
+      "id": "scheduler",
+      "name": "Cron: Daily 7AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 100]
+    },
+    {
+      "parameters": {
+        "url": "{{ env.API_SERVER_URL }}/api/discovery/usaspending",
+        "method": "GET"
+      },
+      "id": "query_usaspending",
+      "name": "Query USA Spending API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 100]
+    },
+    {
+      "parameters": {
+        "url": "{{ env.API_SERVER_URL }}/api/discovery/fedbizopps",
+        "method": "GET"
+      },
+      "id": "query_fedbizopps",
+      "name": "Query FedBizOpps API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 250]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Combine discoveries from both sources\nconst usaspending = $input.all()[0].json?.data || [];\nconst fedbizopps = $input.all()[1].json?.data || [];\nconst combined = [...usaspending, ...fedbizopps];\n\nreturn {\n  discoveries: combined,\n  count: combined.length,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "combine_discoveries",
+      "name": "Combine Discovery Results",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 175]
+    },
+    {
+      "parameters": {
+        "url": "{{ env.API_SERVER_URL }}/api/intelligence/save-discoveries",
+        "method": "POST",
+        "sendBody": true,
+        "body": "{\"discoveries\": {{ $json.discoveries | stringify }}}"
+      },
+      "id": "save_discoveries",
+      "name": "Persist to Airtable",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 175]
+    },
+    {
+      "parameters": {
+        "url": "{{ env.API_SERVER_URL }}/api/intelligence/score-awards",
+        "method": "POST",
+        "sendBody": true,
+        "body": "{\"source\": \"usaspending\"}"
+      },
+      "id": "score_usaspending",
+      "name": "Score USA Spending Awards",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 100]
+    },
+    {
+      "parameters": {
+        "url": "{{ env.API_SERVER_URL }}/api/intelligence/score-awards",
+        "method": "POST",
+        "sendBody": true,
+        "body": "{\"source\": \"sam-gov\"}"
+      },
+      "id": "score_fedbizopps",
+      "name": "Score SAM.gov Opportunities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "url": "{{ env.API_SERVER_URL }}/api/intelligence/high-scoring-awards",
+        "method": "GET"
+      },
+      "id": "get_high_scoring",
+      "name": "Get High Scoring Awards (minScore=50)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 175]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Generate daily report\nconst timestamp = new Date().toISOString();\nconst highScoring = $input.all()[0].json?.data || [];\n\nreturn {\n  timestamp,\n  pipelineStatus: 'completed',\n  highScoringCount: highScoring.length,\n  minScore: 50,\n  message: `Phase 5 orchestration completed at ${timestamp}. Found ${highScoring.length} high-scoring awards (score >= 50).`,\n  summaryData: highScoring.slice(0, 5).map(a => ({\n    id: a.id,\n    score: a.award_score,\n    title: a.title,\n    source: a.source\n  }))\n};"
+      },
+      "id": "generate_report",
+      "name": "Generate Daily Report",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 175]
+    },
+    {
+      "parameters": {
+        "url": "{{ env.SLACK_WEBHOOK_URL }}",
+        "method": "POST",
+        "sendBody": true,
+        "body": "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Phase 5 Contract Intelligence Daily Report*\\n{{ $json.timestamp }}\\n\\n✅ Pipeline Status: {{ $json.pipelineStatus }}\\n📊 High Scoring Awards (score ≥ 50): {{ $json.highScoringCount }}\\n\\n{{ $json.message }}\"}},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Top Awards*\"}}]}"
+      },
+      "id": "notify_slack",
+      "name": "Notify Slack - General",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1650, 175]
+    }
+  ],
+  "connections": {
+    "scheduler": {
+      "main": [
+        [
+          {
+            "node": "query_usaspending",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "query_fedbizopps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query_usaspending": {
+      "main": [
+        [
+          {
+            "node": "combine_discoveries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query_fedbizopps": {
+      "main": [
+        [
+          {
+            "node": "combine_discoveries",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "combine_discoveries": {
+      "main": [
+        [
+          {
+            "node": "save_discoveries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save_discoveries": {
+      "main": [
+        [
+          {
+            "node": "score_usaspending",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "score_fedbizopps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "score_usaspending": {
+      "main": [
+        [
+          {
+            "node": "get_high_scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "score_fedbizopps": {
+      "main": [
+        [
+          {
+            "node": "get_high_scoring",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "get_high_scoring": {
+      "main": [
+        [
+          {
+            "node": "generate_report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_report": {
+      "main": [
+        [
+          {
+            "node": "notify_slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 3600,
+    "maxRetries": 2,
+    "timezone": "America/New_York"
+  }
+}

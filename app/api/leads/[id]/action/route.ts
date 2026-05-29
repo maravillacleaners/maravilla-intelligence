@@ -160,8 +160,8 @@ export async function POST(
 
   // 1. Update lead stage
   const patchFields: Record<string, any> = {
-    Stage:    cfg.stage,
-    Last_Seen: new Date().toISOString().split('T')[0],
+    Stage:       cfg.stage,
+    Signal_Date: new Date().toISOString().split('T')[0],
   }
   if (notes) patchFields.Notes = (lead.fields?.Notes ? lead.fields.Notes + '\n' : '') + `[${new Date().toLocaleDateString()}] ${notes}`
   await atPatch(TBL_LEADS, id, patchFields)

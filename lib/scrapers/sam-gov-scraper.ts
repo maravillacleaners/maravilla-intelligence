@@ -51,9 +51,8 @@ async function fetchPage(apiKey: string, naicsCode: string, state: string, poste
     limit: '25',
     postedFrom,
     postedTo,
-    naicsCode,
-    placeOfPerformanceState: state,
-    active: 'Yes',
+    ncode: naicsCode,           // SAM API uses ncode, not naicsCode
+    state,                      // SAM API uses state, not placeOfPerformanceState
   })
 
   const res = await fetch(`${SAM_BASE}?${params}`, {

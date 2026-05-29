@@ -6,6 +6,7 @@ interface EmailRequest {
   opportunityTitle?: string
   role: 'prime' | 'sub'
   tone?: 'formal' | 'friendly'
+  purpose?: 'quote_request' | 'partnership' | 'followup'
 }
 
 export async function POST(request: Request) {
@@ -19,39 +20,39 @@ export async function POST(request: Request) {
       )
     }
 
-    const claudeApiKey = process.env.CLAUDE_API_KEY || process.env.NEXT_PUBLIC_CLAUDE_API_KEY
+    const claudeApiKey = process.env.ANTHROPIC_API_KEY
     const tone = body.tone || 'formal'
     const role = body.role || 'sub'
+    const purpose = body.purpose || (role === 'sub' ? 'quote_request' : 'partnership')
+
+    // Build purpose-specific prompt context
+    const purposeContext: Record<string, string> = {
+      quote_request: `You are ${body.companyName}, a commercial cleaning company in Florida that holds federal janitorial contracts. You are emailing ${body.agency || 'a cleaning/facilities company'} to REQUEST a price quote from them — you want to potentially subcontract work to them. Ask for their rates per square foot, minimum contract size, and availability in Florida. Be direct and professional. Subject line should mention "Quote Request."`,
+      partnership: `You are ${body.companyName}, reaching out to ${body.agency || 'a contractor'} about a potential teaming partnership on federal janitorial contracts in Florida. Express interest in working together on upcoming bids.`,
+      followup: `You are ${body.companyName} following up with ${body.agency || 'a company'} on a previous conversation about subcontracting opportunities in Florida. Be friendly and concise.`,
+    }
+
+    const additionalContext = body.opportunityTitle ? `\n\nContext: ${body.opportunityTitle}` : ''
 
     if (!claudeApiKey) {
-      // Return mock email
-      const mockEmail =
-        role === 'prime'
-          ? `Subject: Partnership Opportunity with ${body.companyName}\n\nDear ${body.agency || 'Decision Maker'},\n\nWe are reaching out to express our interest in partnering with you on federal contracting opportunities${body.opportunityTitle ? ` such as ${body.opportunityTitle}` : ''}. Our company brings specialized expertise and a proven track record of success.\n\nWe would welcome the opportunity to discuss how we can add value to your initiatives.\n\nBest regards,\n${body.companyName} Team`
-          : `Subject: Teaming Opportunity - ${body.companyName}\n\nDear ${body.agency || 'Prime Contractor'},\n\nWe are interested in supporting your federal contracting efforts as a teaming partner${body.opportunityTitle ? ` on ${body.opportunityTitle}` : ''}. Our capabilities complement your offerings and we have a strong track record of subcontractor performance.\n\nPlease let us know if you would like to discuss teaming arrangements.\n\nBest regards,\n${body.companyName} Team`
+      const mockEmail = purpose === 'quote_request'
+        ? `Subject: Quote Request — Janitorial Subcontract Opportunity\n\nDear ${body.agency || 'Operations Manager'},\n\nMy name is [Your Name] from Maravilla Cleaners. We are a commercial cleaning company currently managing federal janitorial contracts across Florida and are looking to expand our subcontractor network.\n\nWe'd love to get a quote from your team for the following:\n- Janitorial / commercial cleaning services\n- Location(s): Florida (multiple counties)\n- Frequency: recurring weekly/bi-weekly\n\nCould you share:\n1. Your rates per square foot (or per visit)\n2. Minimum contract size you typically work with\n3. Your availability for new work starting in the next 30–60 days\n\nWe pay net-15 and are a reliable partner. Looking forward to connecting.\n\nBest regards,\n[Your Name]\nMaravilla Cleaners\nhello@maravillacleaners.com`
+        : `Subject: Partnership Opportunity — ${body.companyName}\n\nDear ${body.agency || 'Decision Maker'},\n\nWe are interested in exploring a teaming partnership for federal janitorial contracts in Florida. Our company has a strong track record and we believe there is good synergy between our capabilities.\n\nWould you be open to a 15-minute call this week?\n\nBest regards,\n${body.companyName} Team`
 
-      return Response.json({
-        success: true,
-        email: mockEmail,
-      })
+      return Response.json({ success: true, email: mockEmail })
     }
 
     const client = new Anthropic({
       apiKey: claudeApiKey,
     })
 
-    const roleDescription =
-      role === 'prime'
-        ? 'as a prime contractor interested in federal contracts'
-        : 'as a subcontractor looking to team on federal opportunities'
-
     const message = await client.messages.create({
-      model: 'claude-opus-4-1',
-      max_tokens: 400,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 450,
       messages: [
         {
           role: 'user',
-          content: `Write a ${tone} outreach email from ${body.companyName} ${roleDescription}${body.agency ? ` to ${body.agency}` : ''}${body.opportunityTitle ? ` regarding ${body.opportunityTitle}` : ''}. Keep it to 100-150 words. Include: greeting, brief value proposition, specific interest, and call to action.`,
+          content: `${purposeContext[purpose] || purposeContext.partnership}${additionalContext}\n\nWrite a ${tone} outreach email in 120–160 words. Include a clear subject line (start with "Subject:"), greeting, the main ask, and a call to action. Do not use placeholders like [Your Name] — use "The Maravilla Cleaners Team" for sign-off.`,
         },
       ],
     })

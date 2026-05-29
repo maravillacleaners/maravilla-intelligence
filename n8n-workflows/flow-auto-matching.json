@@ -1,0 +1,112 @@
+{
+  "name": "Auto Contract Matching",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "trigger_hour",
+              "operator": "equals",
+              "value": 0,
+              "combinator": "or"
+            }
+          ]
+        }
+      },
+      "name": "Hourly Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/contracts",
+        "method": "GET"
+      },
+      "name": "Fetch Open Contracts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/suppliers",
+        "method": "GET"
+      },
+      "name": "Fetch Active Suppliers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "expression": "={\n  contractCount: $input.json.contracts?.length || 0,\n  supplierCount: $input.json.suppliers?.length || 0,\n  matchingTime: new Date().toISOString()\n}"
+      },
+      "name": "Calculate Matches",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/contracts/auto-match",
+        "method": "POST",
+        "sendBody": true,
+        "body": {
+          "timestamp": "={{ $now.toISO8601() }}"
+        }
+      },
+      "name": "Create Opportunities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Hourly Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Open Contracts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Open Contracts": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Suppliers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Suppliers": {
+      "main": [
+        [
+          {
+            "node": "Calculate Matches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Matches": {
+      "main": [
+        [
+          {
+            "node": "Create Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

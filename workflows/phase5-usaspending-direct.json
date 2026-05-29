@@ -1,0 +1,138 @@
+{
+  "name": "Phase 5 — USASpending Contract Intelligence (Daily)",
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Daily 7AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 7,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "query-usaspending",
+      "name": "Query USASpending API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.usaspending.gov/api/v2/search/spending_by_award/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "{\"filters\":{\"award_type_codes\":[\"A\",\"B\",\"C\",\"D\"],\"award_amounts\":[{\"lower_bound\":100000}],\"naics_codes\":[\"561700\",\"561710\",\"561711\",\"561720\",\"561730\",\"561740\",\"561790\"]},\"fields\":[\"Award ID\",\"Description\",\"Awarding Agency\",\"Award Amount\",\"naics_code\",\"Base Obligation Date\"],\"limit\":100,\"offset\":0}",
+        "options": {}
+      }
+    },
+    {
+      "id": "parse-and-score",
+      "name": "Parse & Score Awards",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst awards = data.results || [];\n\nconst results = [];\nfor (const award of awards) {\n  const naicsCode = (award.naics_code || '').toString();\n  const awardAmount = award['Award Amount'] || 0;\n  const postedDate = award['Base Obligation Date'] || new Date().toISOString().split('T')[0];\n  const internalId = award.generated_internal_id || Math.random().toString(36).slice(2);\n\n  let score = 50;\n  if (naicsCode === '561700' || naicsCode.startsWith('5617')) score += 30;\n  if (awardAmount >= 500000) score += 20;\n  else if (awardAmount >= 100000) score += 10;\n  score += 10;\n  const daysOld = Math.floor((Date.now() - new Date(postedDate).getTime()) / 86400000);\n  if (daysOld <= 7) score += 15;\n  else if (daysOld <= 30) score += 5;\n  score = Math.min(100, score);\n\n  if (score >= 50) {\n    results.push({\n      json: {\n        opportunity_id: `usaspending-${internalId}`,\n        title: (award['Description'] || 'Federal Contract Award').substring(0, 200),\n        description: (award['Description'] || '').substring(0, 1000),\n        source: 'usaspending',\n        event_date: postedDate,\n        total_obligated_amount: typeof awardAmount === 'number' ? awardAmount : parseFloat(awardAmount) || 0,\n        url: `https://usaspending.gov/award/${internalId}`,\n        naics_codes: naicsCode,\n        place_of_performance: '',\n        set_asides: '',\n        url_hash: `usa-${internalId}`,\n        source_data: JSON.stringify(award).substring(0, 500),\n        award_score: score\n      }\n    });\n  }\n}\n\nif (results.length === 0) {\n  return [{ json: { _empty: true, total: 0, message: 'No awards found above threshold', award_score: 0 } }];\n}\n\nreturn results;"
+      }
+    },
+    {
+      "id": "save-to-airtable",
+      "name": "Save to Airtable Intelligence",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "jH32sh2RD7tyRyqR",
+          "name": "Airtable API Key"
+        }
+      },
+      "parameters": {
+        "operation": "create",
+        "base": { "__rl": true, "value": "appZhXnyFiKbnOZLr", "mode": "id" },
+        "table": { "__rl": true, "value": "Intelligence", "mode": "name" },
+        "fieldsUi": {
+          "values": [
+            { "fieldName": "opportunity_id", "fieldValue": "={{ $json.opportunity_id }}" },
+            { "fieldName": "title", "fieldValue": "={{ $json.title }}" },
+            { "fieldName": "description", "fieldValue": "={{ $json.description }}" },
+            { "fieldName": "source", "fieldValue": "={{ $json.source }}" },
+            { "fieldName": "event_date", "fieldValue": "={{ $json.event_date }}" },
+            { "fieldName": "total_obligated_amount", "fieldValue": "={{ $json.total_obligated_amount }}" },
+            { "fieldName": "url", "fieldValue": "={{ $json.url }}" },
+            { "fieldName": "naics_codes", "fieldValue": "={{ $json.naics_codes }}" },
+            { "fieldName": "place_of_performance", "fieldValue": "={{ $json.place_of_performance }}" },
+            { "fieldName": "set_asides", "fieldValue": "={{ $json.set_asides }}" },
+            { "fieldName": "url_hash", "fieldValue": "={{ $json.url_hash }}" },
+            { "fieldName": "source_data", "fieldValue": "={{ $json.source_data }}" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "build-slack-report",
+      "name": "Build Slack Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst total = items.length;\nconst highScore = items.filter(i => (i.json.award_score || 0) >= 80).length;\nconst avgScore = total > 0 ? Math.round(items.reduce((s, i) => s + (i.json.award_score || 0), 0) / total) : 0;\n\nconst topAwards = items\n  .sort((a, b) => (b.json.award_score || 0) - (a.json.award_score || 0))\n  .slice(0, 5)\n  .map(i => `• [${i.json.award_score}pts] ${(i.json.title || 'Unknown').substring(0, 80)} — $${((i.json.total_obligated_amount || 0)/1000).toFixed(0)}K`)\n  .join('\\n');\n\nconst today = new Date().toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});\n\nreturn [{\n  json: {\n    text: `*Phase 5 Contract Intelligence — ${today}*\\n\\n📊 *${total}* NAICS 5617xx contracts found | 🎯 *${highScore}* score ≥80 | avg score *${avgScore}*\\n\\n*Top Awards:*\\n${topAwards || 'None found'}\\n\\n_USASpending.gov • NAICS 561700-561790_`\n  }\n}];"
+      }
+    },
+    {
+      "id": "notify-slack",
+      "name": "Notify Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/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",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ text: $json.text }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Daily 7AM Trigger": {
+      "main": [[{"node": "Query USASpending API", "type": "main", "index": 0}]]
+    },
+    "Query USASpending API": {
+      "main": [[{"node": "Parse & Score Awards", "type": "main", "index": 0}]]
+    },
+    "Parse & Score Awards": {
+      "main": [[{"node": "Save to Airtable Intelligence", "type": "main", "index": 0}]]
+    },
+    "Save to Airtable Intelligence": {
+      "main": [[{"node": "Build Slack Report", "type": "main", "index": 0}]]
+    },
+    "Build Slack Report": {
+      "main": [[{"node": "Notify Slack", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "timezone": "America/New_York",
+    "errorWorkflow": ""
+  },
+  "staticData": null
+}

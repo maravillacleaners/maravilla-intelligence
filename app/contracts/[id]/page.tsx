@@ -1,384 +1,691 @@
 'use client'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 
-import { useState } from 'react'
+const C = {
+  accent: '#3B82F6',
+  accentLight: '#EFF6FF',
+  accentBorder: '#BFDBFE',
+  green: '#16A34A',
+  greenLight: '#F0FDF4',
+  greenBorder: '#BBF7D0',
+  red: '#DC2626',
+  redLight: '#FEF2F2',
+  redBorder: '#FECACA',
+  amber: '#D97706',
+  amberLight: '#FFFBEB',
+  amberBorder: '#FDE68A',
+  purple: '#7C3AED',
+  purpleLight: '#F5F3FF',
+  purpleBorder: '#DDD6FE',
+  teal: '#0D9488',
+  tealLight: '#F0FDFA',
+  tealBorder: '#99F6E4',
+  indigo: '#4338CA',
+  indigoLight: '#EEF2FF',
+  indigoBorder: '#C7D2FE',
+  text: '#1C1917',
+  muted: '#78716C',
+  border: '#E7E5E4',
+  bg: '#FAFAF9',
+  card: '#FFFFFF',
+  surface: '#F5F5F4',
+}
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function Chip({ children, tone = 'neutral', size = 'md' }: any) {
-  const tones: any = {
-    neutral: { bg: '#F5F5F4', fg: '#44403C', bd: '#E7E5E4' },
-    indigo: { bg: '#EEF2FF', fg: '#4338CA', bd: '#E0E7FF' },
-    emerald: { bg: '#ECFDF5', fg: '#047857', bd: '#D1FAE5' },
-    amber: { bg: '#FFFBEB', fg: '#B45309', bd: '#FDE68A' },
-    red: { bg: '#FEF2F2', fg: '#B91C1C', bd: '#FECACA' },
-    blue: { bg: '#EFF6FF', fg: '#1D4ED8', bd: '#DBEAFE' },
+interface ContractData {
+  contract: {
+    award_id: string
+    generated_id: string
+    description: string
+    total_obligation: number
+    base_and_all_options: number
+    date_signed: string
+    start_date: string
+    end_date: string
+    awarding_agency: string
+    awarding_subtier: string
+    funding_agency: string
+    recipient_name: string
+    recipient_duns: string
+    recipient_city: string
+    recipient_state: string
+    place_city: string
+    place_state: string
+    place_state_name: string
+    naics: string
+    naics_description: string
+    psc: string
+    psc_description: string
+    pricing_type: string
+    competed: string
+    set_aside: string
+    subaward_count: number
+    total_subaward_amount: number
+    award_type: string
+    subcontracting_angle: string
   }
-  const t = tones[tone] || tones.neutral
-  const s = size === 'sm' ? { px: 6, py: 2, fs: 10.5 } : size === 'lg' ? { px: 10, py: 5, fs: 12.5 } : { px: 8, py: 3, fs: 11.5 }
+  recompete: { days: number; urgency: string; label: string }
+  score: number
+  ai: {
+    why_matters: string
+    opportunity_signals: string[]
+    subcontracting_angle: string
+    recompete_strategy: string
+    recommended_action: string
+    next_best_action: string
+    teaming_approach: string
+  }
+  related_contracts: Array<{
+    Award_ID: string
+    Recipient_Name: string
+    Award_Amount: number
+    Awarding_Agency: string
+    Start_Date: string
+    End_Date: string
+    generated_internal_id: string
+    Description: string
+  }>
+  airtable_opportunities: Array<Record<string, unknown>>
+  airtable_intel: Array<Record<string, unknown>>
+  usaspending_url: string
+  sam_url: string
+}
+
+function fmt(n: number) {
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`
+  if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}K`
+  return `$${n.toFixed(0)}`
+}
+
+function fmtDate(d: string) {
+  if (!d) return '—'
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+function ScoreRing({ score }: { score: number }) {
+  const r = 28
+  const circ = 2 * Math.PI * r
+  const fill = (score / 100) * circ
+  const color = score >= 70 ? C.green : score >= 45 ? C.amber : C.red
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: t.bg, color: t.fg, border: `1px solid ${t.bd}`, padding: `${s.py}px ${s.px}px`, fontSize: s.fs, fontWeight: 500, borderRadius: 5, whiteSpace: 'nowrap' }}>
+    <div style={{ position: 'relative', width: 72, height: 72 }}>
+      <svg width={72} height={72} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={36} cy={36} r={r} fill="none" stroke={C.border} strokeWidth={6} />
+        <circle cx={36} cy={36} r={r} fill="none" stroke={color} strokeWidth={6}
+          strokeDasharray={`${fill} ${circ}`} strokeLinecap="round" />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 16, fontWeight: 700, color, lineHeight: 1 }}>{score}</span>
+        <span style={{ fontSize: 9, color: C.muted }}>SCORE</span>
+      </div>
+    </div>
+  )
+}
+
+function MetricCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 18px', minWidth: 0 }}>
+      <div style={{ fontSize: 11, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: color || C.text, lineHeight: 1.1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{sub}</div>}
+    </div>
+  )
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
       {children}
-    </span>
-  )
-}
-
-function Card({ children, pad = 20, style = {} }: any) {
-  return (
-    <div style={{ background: '#FFF', border: '1px solid #E7E5E4', borderRadius: 10, padding: pad, ...style }}>
-      {children}
     </div>
   )
 }
 
-function KV({ k, v, mono = false }: any) {
+function UrgencyBar({ urgency, days }: { urgency: string; days: number }) {
+  const pct = urgency === 'expired' ? 100 : urgency === 'high' ? 85 : urgency === 'medium' ? 50 : urgency === 'low' ? 20 : 0
+  const color = urgency === 'expired' || urgency === 'high' ? C.red : urgency === 'medium' ? C.amber : C.green
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px dashed #F5F5F4', gap: 16 }}>
-      <span style={{ fontSize: 12, color: '#78716C' }}>{k}</span>
-      <span style={{ fontSize: 13, color: '#1C1917', fontFamily: mono ? 'JetBrains Mono, monospace' : 'inherit', fontWeight: mono ? 500 : 400, textAlign: 'right' }}>{v || '—'}</span>
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color }}>
+          {urgency === 'expired' ? 'EXPIRED' : urgency === 'high' ? 'HIGH URGENCY' : urgency === 'medium' ? 'MEDIUM' : urgency === 'low' ? 'LOW' : 'UNKNOWN'}
+        </span>
+        <span style={{ fontSize: 12, color: C.muted }}>
+          {urgency === 'expired' ? `${Math.abs(days)}d ago` : days < 9999 ? `${days}d left` : ''}
+        </span>
+      </div>
+      <div style={{ height: 8, background: C.surface, borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 4, transition: 'width 0.6s ease' }} />
+      </div>
     </div>
   )
 }
 
-function Bar({ value, max = 100, tone = 'indigo', height = 6 }: any) {
-  const colors: any = { indigo: '#4F46E5', emerald: '#059669', amber: '#D97706', red: '#DC2626' }
+function CtaButton({ label, onClick, primary, danger }: { label: string; onClick: () => void; primary?: boolean; danger?: boolean }) {
+  const [hov, setHov] = useState(false)
+  const bg = primary ? (hov ? '#2563EB' : C.accent) : danger ? (hov ? '#B91C1C' : C.red) : (hov ? C.surface : C.card)
+  const col = primary || danger ? '#fff' : C.text
   return (
-    <div style={{ width: '100%', height, background: '#F5F5F4', borderRadius: 999 }}>
-      <div style={{ width: `${Math.min(100, (value / max) * 100)}%`, height: '100%', background: colors[tone] || '#4F46E5', borderRadius: 999 }} />
-    </div>
+    <button onClick={onClick}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ padding: '8px 14px', background: bg, color: col, border: `1px solid ${primary ? C.accent : danger ? C.red : C.border}`, borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
+      {label}
+    </button>
   )
 }
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
+export default function ContractPage() {
+  const params = useParams()
+  const id = decodeURIComponent(params.id as string)
 
-const CONTRACT = {
-  id: 'C-2026-0098',
-  prime: 'ABM Industries',
-  agency: 'VA Medical Center Miami',
-  amount: 3210000,
-  periodStart: '2026-04-01',
-  periodEnd: '2028-03-15',
-  naics: '561720',
-  naicsDesc: 'Janitorial Services',
-  setAside: 'Small Business',
-  obligated: 1740000,
-  type: 'Definitive contract · FFP',
-  sowSummary: 'Janitorial, custodial and floor-care services for VA Medical Center Miami (287,000 sqft) and 4 satellite outpatient clinics. Nightly, 7 days/week.',
-  scope: {
-    estSqft: 287000,
-    frequency: 'Nightly · 7d/wk',
-    ourSubValue: { low: 420000, high: 560000, mid: 490000 },
-    pWin: 0.42,
-  },
-  capture: {
-    pWin: 0.42,
-    competitors: [
-      { name: 'ABM Industries (incumbent)', pastWins: 8, threat: 'high' },
-      { name: 'ServiceMaster FL Inc.', pastWins: 3, threat: 'medium' },
-    ],
-    colorReviews: [
-      { name: 'Pink team', date: '2026-06-12', status: 'scheduled' },
-      { name: 'Red team', date: '2026-06-26', status: 'pending' },
-    ],
-    gaps: [
-      { area: 'HIPAA training docs', status: 'in-progress', owner: 'compliance' },
-      { area: 'Past performance · VA work', status: 'blocked', owner: 'sarah.k' },
-    ],
-  },
-}
-
-const TABS = ['Overview', 'Capture', 'Scope', 'Subs', 'Teaming']
-
-// ─── Cost breakdown mock ─────────────────────────────────────────────────────
-const COST_BREAKDOWN = [
-  { label: 'Direct Labor', amount: 294000, pct: 60 },
-  { label: 'Fringe (28%)', amount: 82320, pct: 16.8 },
-  { label: 'Overhead (12%)', amount: 45336, pct: 9.2 },
-  { label: 'G&A (8%)', amount: 33650, pct: 6.9 },
-  { label: 'Fee / Profit (7%)', amount: 34694, pct: 7.1 },
-]
-
-const SUBS_AVAILABLE = [
-  { name: 'Costa Janitorial Services LLC', county: 'Miami-Dade', capacity: 'High', avgPrice: '$1.85/sqft/mo', status: 'Active' },
-  { name: 'Cleantech Solutions Inc.', county: 'Miami-Dade', capacity: 'Medium', avgPrice: '$1.92/sqft/mo', status: 'Prospect' },
-  { name: 'ProClean Commercial FL', county: 'Broward', capacity: 'Low', avgPrice: '$2.10/sqft/mo', status: 'Prospect' },
-]
-
-// ─── Page ────────────────────────────────────────────────────────────────────
-
-export default function ContractProfilePage() {
-  const [activeTab, setActiveTab] = useState('Overview')
+  const [data, setData] = useState<ContractData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [tab, setTab] = useState<'overview' | 'subcontracting' | 'recompete' | 'relationships'>('overview')
+  const [monitored, setMonitored] = useState(false)
+  const [inPipeline, setInPipeline] = useState(false)
   const [toast, setToast] = useState('')
+
+  useEffect(() => {
+    fetch(`/api/contracts/${encodeURIComponent(id)}`)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false) })
+      .catch(() => { setError('Failed to load contract'); setLoading(false) })
+
+    const stored = JSON.parse(localStorage.getItem('monitored_contracts') || '[]')
+    setMonitored(stored.includes(id))
+  }, [id])
 
   function showToast(msg: string) {
     setToast(msg)
-    setTimeout(() => setToast(''), 3000)
+    setTimeout(() => setToast(''), 2800)
   }
 
-  const pWinPct = Math.round(CONTRACT.capture.pWin * 100)
+  function toggleMonitor() {
+    const stored: string[] = JSON.parse(localStorage.getItem('monitored_contracts') || '[]')
+    const next = monitored ? stored.filter(x => x !== id) : [...stored, id]
+    localStorage.setItem('monitored_contracts', JSON.stringify(next))
+    setMonitored(!monitored)
+    showToast(monitored ? 'Removed from monitoring' : 'Contract monitoring enabled')
+  }
 
-  return (
-    <div style={{ background: '#FAFAF9', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      {/* Header */}
-      <div style={{ background: '#FFF', borderBottom: '1px solid #E7E5E4', padding: '20px 80px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#78716C', fontFamily: 'JetBrains Mono, monospace' }}>{CONTRACT.id}</span>
-              <Chip tone="blue" size="sm">{CONTRACT.naics}</Chip>
-              <Chip tone="indigo" size="sm">{CONTRACT.setAside}</Chip>
-            </div>
-            <div style={{ fontSize: 15, color: '#78716C', marginBottom: 4 }}>{CONTRACT.agency}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#1C1917', fontFamily: 'JetBrains Mono, monospace' }}>
-              ${(CONTRACT.amount / 1000000).toFixed(2)}M
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={() => showToast('Generating bid package...')}
-              style={{ background: '#4F46E5', color: '#FFF', border: 'none', borderRadius: 7, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-            >
-              Generate bid
-            </button>
-            <button
-              onClick={() => showToast('Added to active capture')}
-              style={{ background: '#FFF', color: '#1C1917', border: '1px solid #E7E5E4', borderRadius: 7, padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
-            >
-              Add to capture
-            </button>
-          </div>
-        </div>
+  async function addToPipeline() {
+    if (!data) return
+    try {
+      await fetch('/api/opportunities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Name: `${data.contract.award_id} — ${data.contract.recipient_name}`,
+          Agency: data.contract.awarding_agency,
+          Value: data.contract.total_obligation,
+          Status: 'Qualifying',
+          Notes: `Contract profile imported. NAICS: ${data.contract.naics}. End: ${data.contract.end_date}.`
+        })
+      })
+      setInPipeline(true)
+      showToast('Added to opportunities pipeline')
+    } catch { showToast('Could not add to pipeline') }
+  }
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 0, marginTop: 20, borderBottom: '1px solid #E7E5E4' }}>
-          {TABS.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                background: 'none',
-                border: 'none',
-                borderBottom: activeTab === tab ? '2px solid #4F46E5' : '2px solid transparent',
-                color: activeTab === tab ? '#4F46E5' : '#78716C',
-                padding: '8px 16px',
-                fontSize: 13,
-                fontWeight: activeTab === tab ? 600 : 400,
-                cursor: 'pointer',
-                marginBottom: -1,
-              }}
-            >
-              {tab}
-            </button>
+  function startTeaming() {
+    if (!data) return
+    localStorage.setItem('outreach_target', JSON.stringify({
+      company: data.contract.recipient_name,
+      context: `Subcontracting under ${data.contract.award_id}`,
+      agency: data.contract.awarding_agency
+    }))
+    showToast('Outreach context saved — navigate to Outreach')
+  }
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 12 }}>
+          {[0,1,2].map(i => (
+            <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: C.accent, animation: `pulseDot 1.2s ease-in-out ${i * 0.2}s infinite` }} />
           ))}
         </div>
+        <div style={{ color: C.muted, fontSize: 14 }}>Loading contract intelligence...</div>
       </div>
+    </div>
+  )
 
-      {/* Content */}
-      <div style={{ padding: '28px 80px' }}>
-
-        {/* ── Overview ── */}
-        {activeTab === 'Overview' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <Card>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 10 }}>Contract Details</div>
-                <KV k="Prime Contractor" v={CONTRACT.prime} />
-                <KV k="Agency" v={CONTRACT.agency} />
-                <KV k="Period" v={`${CONTRACT.periodStart} → ${CONTRACT.periodEnd}`} />
-                <KV k="NAICS" v={`${CONTRACT.naics} — ${CONTRACT.naicsDesc}`} mono />
-                <KV k="Set-Aside" v={CONTRACT.setAside} />
-                <KV k="Type" v={CONTRACT.type} />
-                <KV k="Obligated" v={`$${(CONTRACT.obligated / 1000000).toFixed(2)}M`} />
-              </Card>
-
-              <Card>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 10 }}>SOW Summary</div>
-                <p style={{ fontSize: 13, color: '#1C1917', lineHeight: 1.6 }}>{CONTRACT.sowSummary}</p>
-              </Card>
-            </div>
-
-            {/* pWin Gauge */}
-            <div>
-              <Card>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 16 }}>Win Probability</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
-                  {/* Simple circular gauge via SVG */}
-                  <svg width={96} height={96} viewBox="0 0 96 96">
-                    <circle cx={48} cy={48} r={40} fill="none" stroke="#F5F5F4" strokeWidth={10} />
-                    <circle
-                      cx={48} cy={48} r={40}
-                      fill="none"
-                      stroke="#4F46E5"
-                      strokeWidth={10}
-                      strokeDasharray={`${(pWinPct / 100) * 251.2} 251.2`}
-                      strokeLinecap="round"
-                      transform="rotate(-90 48 48)"
-                    />
-                    <text x={48} y={53} textAnchor="middle" fontSize={18} fontWeight={700} fill="#1C1917">
-                      {pWinPct}%
-                    </text>
-                  </svg>
-                  <div>
-                    <div style={{ fontSize: 13, color: '#78716C', marginBottom: 4 }}>Estimated probability of winning this contract based on incumbent threat, certifications, and past performance.</div>
-                    <Chip tone={pWinPct >= 50 ? 'emerald' : pWinPct >= 30 ? 'amber' : 'red'}>
-                      {pWinPct >= 50 ? 'Strong' : pWinPct >= 30 ? 'Moderate' : 'Low'} confidence
-                    </Chip>
-                  </div>
-                </div>
-                <div style={{ marginTop: 8 }}>
-                  <Bar value={pWinPct} tone={pWinPct >= 50 ? 'emerald' : pWinPct >= 30 ? 'amber' : 'red'} height={8} />
-                </div>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* ── Capture ── */}
-        {activeTab === 'Capture' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {/* Competitors */}
-            <Card>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 14 }}>Competitors</div>
-              {CONTRACT.capture.competitors.map((c, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px dashed #F5F5F4' }}>
-                  <div style={{ fontSize: 13, color: '#1C1917', fontWeight: 500 }}>{c.name}</div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: '#78716C' }}>{c.pastWins} prior wins</span>
-                    <Chip tone={c.threat === 'high' ? 'red' : c.threat === 'medium' ? 'amber' : 'neutral'} size="sm">
-                      {c.threat} threat
-                    </Chip>
-                  </div>
-                </div>
-              ))}
-            </Card>
-
-            {/* Color Reviews */}
-            <Card>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 14 }}>Color Reviews</div>
-              {CONTRACT.capture.colorReviews.map((r, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px dashed #F5F5F4' }}>
-                  <div>
-                    <div style={{ fontSize: 13, color: '#1C1917', fontWeight: 500 }}>{r.name}</div>
-                    <div style={{ fontSize: 11, color: '#A8A29E', marginTop: 2 }}>{r.date}</div>
-                  </div>
-                  <Chip tone={r.status === 'scheduled' ? 'blue' : r.status === 'complete' ? 'emerald' : 'neutral'} size="sm">
-                    {r.status}
-                  </Chip>
-                </div>
-              ))}
-            </Card>
-
-            {/* Capability Gaps */}
-            <Card>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 14 }}>Capability Gaps</div>
-              {CONTRACT.capture.gaps.map((g, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px dashed #F5F5F4' }}>
-                  <div>
-                    <div style={{ fontSize: 13, color: '#1C1917', fontWeight: 500 }}>{g.area}</div>
-                    <div style={{ fontSize: 11, color: '#A8A29E', marginTop: 2 }}>Owner: {g.owner}</div>
-                  </div>
-                  <Chip tone={g.status === 'in-progress' ? 'amber' : g.status === 'blocked' ? 'red' : 'emerald'} size="sm">
-                    {g.status}
-                  </Chip>
-                </div>
-              ))}
-            </Card>
-          </div>
-        )}
-
-        {/* ── Scope ── */}
-        {activeTab === 'Scope' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-            <Card>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 10 }}>Scope Details</div>
-              <KV k="Est. Square Footage" v={`${CONTRACT.scope.estSqft.toLocaleString()} sqft`} />
-              <KV k="Frequency" v={CONTRACT.scope.frequency} />
-              <KV k="Sub Value (Low)" v={`$${(CONTRACT.scope.ourSubValue.low / 1000).toFixed(0)}K`} />
-              <KV k="Sub Value (Mid)" v={`$${(CONTRACT.scope.ourSubValue.mid / 1000).toFixed(0)}K`} />
-              <KV k="Sub Value (High)" v={`$${(CONTRACT.scope.ourSubValue.high / 1000).toFixed(0)}K`} />
-
-              <div style={{ marginTop: 14, padding: '12px', background: '#EEF2FF', borderRadius: 7 }}>
-                <div style={{ fontSize: 11, color: '#4338CA', fontWeight: 600, marginBottom: 4 }}>Estimated Sub Value Range</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#4338CA', fontFamily: 'JetBrains Mono, monospace' }}>
-                  ${(CONTRACT.scope.ourSubValue.low / 1000).toFixed(0)}K – ${(CONTRACT.scope.ourSubValue.high / 1000).toFixed(0)}K
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 14 }}>Cost Breakdown (Mid Estimate)</div>
-              {COST_BREAKDOWN.map((row, i) => (
-                <div key={i} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, color: '#78716C' }}>{row.label}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#1C1917', fontFamily: 'JetBrains Mono, monospace' }}>
-                      ${row.amount.toLocaleString()} <span style={{ color: '#A8A29E', fontWeight: 400 }}>({row.pct}%)</span>
-                    </span>
-                  </div>
-                  <Bar value={row.pct} tone="indigo" height={4} />
-                </div>
-              ))}
-            </Card>
-          </div>
-        )}
-
-        {/* ── Subs ── */}
-        {activeTab === 'Subs' && (
-          <Card>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 16 }}>Available Subcontractors</div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #E7E5E4' }}>
-                  {['Name', 'County', 'Capacity', 'Avg Price', 'Status'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontSize: 11, fontWeight: 600, color: '#78716C', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {SUBS_AVAILABLE.map((sub, i) => (
-                  <tr key={i} style={{ borderBottom: '1px dashed #F5F5F4' }}>
-                    <td style={{ padding: '10px 12px', color: '#1C1917', fontWeight: 500 }}>{sub.name}</td>
-                    <td style={{ padding: '10px 12px', color: '#78716C' }}>{sub.county}</td>
-                    <td style={{ padding: '10px 12px' }}>
-                      <Chip tone={sub.capacity === 'High' ? 'emerald' : sub.capacity === 'Medium' ? 'amber' : 'red'} size="sm">{sub.capacity}</Chip>
-                    </td>
-                    <td style={{ padding: '10px 12px', color: '#1C1917', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>{sub.avgPrice}</td>
-                    <td style={{ padding: '10px 12px' }}>
-                      <Chip tone={sub.status === 'Active' ? 'emerald' : 'neutral'} size="sm">{sub.status}</Chip>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-        )}
-
-        {/* ── Teaming ── */}
-        {activeTab === 'Teaming' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => showToast('Teaming request sent')}
-                style={{ background: '#4F46E5', color: '#FFF', border: 'none', borderRadius: 7, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Request teaming
-              </button>
-            </div>
-            <Card>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 14 }}>Existing Teaming Relationships</div>
-              <div style={{ padding: '24px 0', textAlign: 'center', color: '#A8A29E', fontSize: 13 }}>
-                No teaming relationships established yet for this contract.
-              </div>
-            </Card>
-          </div>
-        )}
+  if (error || !data) return (
+    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center', padding: 40 }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+        <div style={{ fontSize: 18, fontWeight: 600, color: C.text, marginBottom: 8 }}>Contract Not Found</div>
+        <div style={{ color: C.muted, marginBottom: 20 }}>Could not locate award: {id}</div>
+        <button onClick={() => window.history.back()} style={{ padding: '8px 18px', background: C.accent, color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 14 }}>Go Back</button>
       </div>
+    </div>
+  )
 
-      {/* Toast */}
+  const { contract, recompete, score, ai } = data
+  const isJanitorial = contract.naics.startsWith('561')
+  const isFL = contract.place_state === 'FL'
+  const urgencyColor = recompete.urgency === 'expired' || recompete.urgency === 'high' ? C.red : recompete.urgency === 'medium' ? C.amber : C.green
+  const aiTheme = isJanitorial ? { bg: C.greenLight, border: C.greenBorder, color: C.green } : { bg: C.purpleLight, border: C.purpleBorder, color: C.purple }
+
+  const tabs: Array<{ key: typeof tab; label: string }> = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'subcontracting', label: 'Subcontracting' },
+    { key: 'recompete', label: 'Recompete' },
+    { key: 'relationships', label: 'Relationships' },
+  ]
+
+  return (
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif' }}>
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#1C1917', color: '#FFF', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 500, zIndex: 9999, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: '#1C1917', color: '#fff', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
           {toast}
         </div>
       )}
+
+      {/* nav */}
+      <div style={{ background: C.card, borderBottom: `1px solid ${C.border}`, padding: '12px 32px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button onClick={() => window.history.back()} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 13, padding: '4px 0' }}>← Back</button>
+        <span style={{ color: C.border }}>·</span>
+        <span style={{ fontSize: 13, color: C.muted }}>Contract Intelligence</span>
+        <span style={{ color: C.border }}>·</span>
+        <span style={{ fontSize: 13, color: C.text, fontFamily: 'JetBrains Mono, monospace' }}>{contract.award_id}</span>
+      </div>
+
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 32px' }}>
+        {/* header */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
+            <ScoreRing score={score} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+                <span style={{ fontSize: 13, fontFamily: 'JetBrains Mono, monospace', color: C.muted, background: C.surface, padding: '3px 8px', borderRadius: 5 }}>
+                  {contract.award_id}
+                </span>
+                {isJanitorial && (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.green, background: C.greenLight, border: `1px solid ${C.greenBorder}`, padding: '2px 8px', borderRadius: 4 }}>
+                    ★ JANITORIAL
+                  </span>
+                )}
+                {isFL && (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, background: C.accentLight, border: `1px solid ${C.accentBorder}`, padding: '2px 8px', borderRadius: 4 }}>
+                    FLORIDA
+                  </span>
+                )}
+                <span style={{ fontSize: 11, fontWeight: 700, color: urgencyColor, background: recompete.urgency === 'expired' || recompete.urgency === 'high' ? C.redLight : recompete.urgency === 'medium' ? C.amberLight : C.greenLight, border: `1px solid ${urgencyColor}40`, padding: '2px 8px', borderRadius: 4 }}>
+                  {recompete.label}
+                </span>
+              </div>
+              <h1 style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 10, lineHeight: 1.3 }}>
+                {contract.description || `Federal Contract ${contract.award_id}`}
+              </h1>
+              <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+                <div>
+                  <span style={{ fontSize: 11, color: C.muted }}>Agency</span>
+                  <div>
+                    <button onClick={() => window.location.href = `/agencies/${encodeURIComponent(contract.awarding_agency)}`}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: C.purple, textDecoration: 'underline' }}>
+                      {contract.awarding_agency}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <span style={{ fontSize: 11, color: C.muted }}>Prime Contractor</span>
+                  <div>
+                    <button onClick={() => window.location.href = `/companies/${encodeURIComponent(contract.recipient_name)}`}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: C.accent, textDecoration: 'underline' }}>
+                      {contract.recipient_name || '—'}
+                    </button>
+                  </div>
+                </div>
+                {contract.naics && (
+                  <div>
+                    <span style={{ fontSize: 11, color: C.muted }}>NAICS</span>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: isJanitorial ? C.green : C.text }}>
+                      {contract.naics} — {contract.naics_description || 'Services'}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+              <CtaButton label={inPipeline ? '✓ In Pipeline' : 'Add to Pipeline'} onClick={addToPipeline} primary />
+              <CtaButton label={monitored ? '★ Monitoring' : 'Monitor Recompete'} onClick={toggleMonitor} />
+            </div>
+          </div>
+        </div>
+
+        {/* metrics */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+          <MetricCard label="Contract Value" value={fmt(contract.total_obligation)} sub={contract.award_type} color={C.accent} />
+          <MetricCard label="End Date" value={fmtDate(contract.end_date)} sub={recompete.label} color={urgencyColor} />
+          <MetricCard label="Subawards" value={contract.subaward_count.toString()} sub={contract.subaward_count > 0 ? fmt(contract.total_subaward_amount) + ' total' : 'None reported'} />
+          <MetricCard label="Performance" value={contract.place_state || '—'} sub={contract.place_city || contract.place_state_name} color={isFL ? C.accent : C.text} />
+        </div>
+
+        {/* AI panel */}
+        <div style={{ background: aiTheme.bg, border: `1px solid ${aiTheme.border}`, borderRadius: 12, padding: 20, marginBottom: 20 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: aiTheme.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              {isJanitorial ? '★ Janitorial Intelligence' : 'AI Analysis'}
+            </span>
+          </div>
+          <p style={{ fontSize: 14, color: C.text, lineHeight: 1.6, marginBottom: 16 }}>{ai.why_matters}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div>
+              <SectionLabel>Opportunity Signals</SectionLabel>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {ai.opportunity_signals.map((sig, i) => (
+                  <div key={i} style={{ fontSize: 13, color: C.text, display: 'flex', gap: 6 }}>
+                    <span style={{ color: C.green, fontWeight: 700 }}>+</span>
+                    <span>{sig}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <SectionLabel>Subcontracting Angle</SectionLabel>
+              <p style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{ai.subcontracting_angle}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* tabs */}
+        <div style={{ display: 'flex', gap: 2, marginBottom: 20, background: C.surface, borderRadius: 10, padding: 4 }}>
+          {tabs.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              style={{ flex: 1, padding: '8px 16px', background: tab === t.key ? C.card : 'transparent', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: tab === t.key ? 600 : 400, color: tab === t.key ? C.text : C.muted, cursor: 'pointer', transition: 'all 0.15s', boxShadow: tab === t.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20 }}>
+          {/* main tab content */}
+          <div>
+            {tab === 'overview' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
+                  <SectionLabel>Contract Details</SectionLabel>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px' }}>
+                    {[
+                      ['Award ID', contract.award_id],
+                      ['Date Signed', fmtDate(contract.date_signed)],
+                      ['Start Date', fmtDate(contract.start_date)],
+                      ['End Date', fmtDate(contract.end_date)],
+                      ['Total Obligation', fmt(contract.total_obligation)],
+                      ['Base + All Options', fmt(contract.base_and_all_options)],
+                      ['PSC Code', contract.psc ? `${contract.psc} — ${contract.psc_description}` : '—'],
+                      ['Pricing Type', contract.pricing_type || '—'],
+                      ['Competition', contract.competed || '—'],
+                      ['Set Aside', contract.set_aside || 'None'],
+                      ['Place of Performance', contract.place_city ? `${contract.place_city}, ${contract.place_state}` : contract.place_state || '—'],
+                      ['Funding Agency', contract.funding_agency || contract.awarding_agency],
+                    ].map(([k, v]) => (
+                      <div key={k}>
+                        <div style={{ fontSize: 11, color: C.muted, marginBottom: 2 }}>{k}</div>
+                        <div style={{ fontSize: 13, color: C.text, fontWeight: 500 }}>{v || '—'}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {data.related_contracts.length > 0 && (
+                  <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
+                    <SectionLabel>Related Contracts — Same Prime</SectionLabel>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {data.related_contracts.map((r, i) => (
+                        <div key={i} onClick={() => window.location.href = `/contracts/${encodeURIComponent(r.Award_ID)}`}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: C.surface, borderRadius: 8, cursor: 'pointer', border: `1px solid transparent`, transition: 'all 0.15s' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = C.accentBorder; (e.currentTarget as HTMLDivElement).style.background = C.accentLight }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'transparent'; (e.currentTarget as HTMLDivElement).style.background = C.surface }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: C.accent, fontFamily: 'JetBrains Mono, monospace' }}>{r.Award_ID}</div>
+                            <div style={{ fontSize: 12, color: C.muted }}>{r.Awarding_Agency}</div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{fmt(r.Award_Amount)}</div>
+                            <div style={{ fontSize: 11, color: C.muted }}>{r.End_Date ? fmtDate(r.End_Date) : '—'}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {data.airtable_intel.length > 0 && (
+                  <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
+                    <SectionLabel>Pipeline Intelligence</SectionLabel>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {data.airtable_intel.map((r: Record<string, unknown>, i: number) => (
+                        <div key={i} style={{ padding: '10px 14px', background: C.indigoLight, border: `1px solid ${C.indigoBorder}`, borderRadius: 8 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{String(r.Company || '')}</div>
+                          <div style={{ fontSize: 12, color: C.muted }}>{String(r.Notes || r.Status || '')}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === 'subcontracting' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
+                  <SectionLabel>Subcontracting Analysis</SectionLabel>
+                  <div style={{ background: C.tealLight, border: `1px solid ${C.tealBorder}`, borderRadius: 8, padding: 14, marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.teal, marginBottom: 4 }}>{contract.subcontracting_angle}</div>
+                    <p style={{ fontSize: 13, color: C.text, lineHeight: 1.5, margin: 0 }}>{ai.subcontracting_angle}</p>
+                  </div>
+                  <SectionLabel>Teaming Approach</SectionLabel>
+                  <p style={{ fontSize: 14, color: C.text, lineHeight: 1.6, marginBottom: 16 }}>{ai.teaming_approach}</p>
+                  <SectionLabel>4-Step Approach</SectionLabel>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[
+                      { step: 1, color: C.accent, title: 'Identify Prime Contact', detail: `Research ${contract.recipient_name} business development team on LinkedIn and SAM.gov` },
+                      { step: 2, color: C.teal, title: 'Prepare Capability Statement', detail: 'One-page document: NAICS 561720, FL experience, bonded/insured, references, DUNS/UEI' },
+                      { step: 3, color: C.amber, title: 'Initiate Outreach', detail: 'Email BD lead: introduce Maravilla, janitorial capability, FL presence, availability for subcontracting' },
+                      { step: 4, color: C.green, title: 'Register on SAM.gov', detail: "Ensure active SAM.gov registration. Search for this contract's solicitation history for agency contacts" },
+                    ].map(({ step, color, title, detail }) => (
+                      <div key={step} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', background: C.surface, borderRadius: 8 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{step}</div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 3 }}>{title}</div>
+                          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{detail}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <CtaButton label="Find Prime Contacts" onClick={() => window.location.href = `/companies/${encodeURIComponent(contract.recipient_name)}`} primary />
+                  <CtaButton label="Start Teaming Outreach" onClick={startTeaming} />
+                  <CtaButton label="Search SAM.gov" onClick={() => window.open(data.sam_url, '_blank')} />
+                </div>
+              </div>
+            )}
+
+            {tab === 'recompete' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
+                  <SectionLabel>Recompete Status</SectionLabel>
+                  <div style={{ marginBottom: 20 }}>
+                    <UrgencyBar urgency={recompete.urgency} days={recompete.days} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', marginBottom: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.muted, marginBottom: 2 }}>Contract Start</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{fmtDate(contract.start_date)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.muted, marginBottom: 2 }}>Contract End</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: urgencyColor }}>{fmtDate(contract.end_date)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.muted, marginBottom: 2 }}>Days Remaining</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: urgencyColor }}>
+                        {recompete.days < 9999 ? (recompete.days < 0 ? `${Math.abs(recompete.days)}d expired` : `${recompete.days}d`) : 'Unknown'}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.muted, marginBottom: 2 }}>Urgency Level</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: urgencyColor, textTransform: 'capitalize' }}>{recompete.urgency}</div>
+                    </div>
+                  </div>
+                  <SectionLabel>Recompete Strategy</SectionLabel>
+                  <p style={{ fontSize: 14, color: C.text, lineHeight: 1.6, marginBottom: 16 }}>{ai.recompete_strategy}</p>
+                  <SectionLabel>Action Checklist</SectionLabel>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {[
+                      'Register on SAM.gov (active registration required)',
+                      'Search SAM.gov for solicitation history of this contract',
+                      'Identify Contracting Officer (CO) from USASpending.gov records',
+                      'Request Sources Sought notice response window',
+                      'Submit capability statement to agency small business office',
+                      'Contact prime contractor for teaming introduction',
+                      'Set calendar alert 180 days before end date',
+                      'Monitor FedBizOpps for recompete solicitation posting',
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 12px', background: C.surface, borderRadius: 6 }}>
+                        <input type="checkbox" style={{ accentColor: C.accent }} />
+                        <span style={{ fontSize: 13, color: C.text }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <CtaButton label={monitored ? '★ Monitoring Active' : 'Monitor Recompete'} onClick={toggleMonitor} primary={!monitored} />
+                  <CtaButton label="View on USASpending" onClick={() => window.open(data.usaspending_url, '_blank')} />
+                  <CtaButton label="Search SAM.gov" onClick={() => window.open(data.sam_url, '_blank')} />
+                </div>
+              </div>
+            )}
+
+            {tab === 'relationships' && (
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 24 }}>
+                <SectionLabel>Relationship Graph</SectionLabel>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, padding: '20px 0', overflowX: 'auto' }}>
+                  {/* Agency node */}
+                  <button onClick={() => window.location.href = `/agencies/${encodeURIComponent(contract.awarding_agency)}`}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '14px 16px', background: C.purpleLight, border: `2px solid ${C.purple}`, borderRadius: 10, cursor: 'pointer', minWidth: 120, maxWidth: 150 }}>
+                    <span style={{ fontSize: 18 }}>🏛️</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.purple, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Agency</span>
+                    <span style={{ fontSize: 12, color: C.text, textAlign: 'center', lineHeight: 1.3 }}>{contract.awarding_agency.split(' ').slice(0, 3).join(' ')}</span>
+                  </button>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 8px' }}>
+                    <div style={{ width: 40, height: 2, background: `linear-gradient(90deg, ${C.purple}, ${isJanitorial ? C.green : C.indigo})` }} />
+                    <span style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>awards</span>
+                  </div>
+
+                  {/* Contract node */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '14px 16px', background: isJanitorial ? C.greenLight : C.indigoLight, border: `2px solid ${isJanitorial ? C.green : C.indigo}`, borderRadius: 10, minWidth: 120, maxWidth: 160 }}>
+                    <span style={{ fontSize: 18 }}>📄</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: isJanitorial ? C.green : C.indigo, textTransform: 'uppercase' }}>Contract</span>
+                    <span style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: C.text }}>{contract.award_id}</span>
+                    <span style={{ fontSize: 11, color: C.muted }}>{fmt(contract.total_obligation)}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 8px' }}>
+                    <div style={{ width: 40, height: 2, background: `linear-gradient(90deg, ${isJanitorial ? C.green : C.indigo}, ${C.amber})` }} />
+                    <span style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>prime</span>
+                  </div>
+
+                  {/* Prime node */}
+                  <button onClick={() => window.location.href = `/companies/${encodeURIComponent(contract.recipient_name)}`}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '14px 16px', background: C.amberLight, border: `2px solid ${C.amber}`, borderRadius: 10, cursor: 'pointer', minWidth: 120, maxWidth: 150 }}>
+                    <span style={{ fontSize: 18 }}>🏢</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.amber, textTransform: 'uppercase' }}>Prime</span>
+                    <span style={{ fontSize: 12, color: C.text, textAlign: 'center', lineHeight: 1.3 }}>{(contract.recipient_name || 'Unknown').split(' ').slice(0, 3).join(' ')}</span>
+                  </button>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 8px' }}>
+                    <div style={{ width: 40, borderTop: `2px dashed ${C.indigo}`, marginTop: 0 }} />
+                    <span style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>teaming</span>
+                  </div>
+
+                  {/* Maravilla node */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '14px 16px', background: C.indigoLight, border: `2px dashed ${C.indigo}`, borderRadius: 10, minWidth: 120 }}>
+                    <span style={{ fontSize: 18 }}>✨</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.indigo, textTransform: 'uppercase' }}>Maravilla</span>
+                    <span style={{ fontSize: 12, color: C.text, textAlign: 'center' }}>Sub Target</span>
+                  </div>
+                </div>
+                <div style={{ marginTop: 20, padding: '12px 16px', background: C.surface, borderRadius: 8 }}>
+                  <SectionLabel>Next Best Action</SectionLabel>
+                  <p style={{ fontSize: 14, color: C.text, lineHeight: 1.5, margin: 0 }}>{ai.next_best_action}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18 }}>
+              <SectionLabel>Contract Summary</SectionLabel>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  ['Value', fmt(contract.total_obligation)],
+                  ['Agency', contract.awarding_agency.split(' ').slice(0, 3).join(' ')],
+                  ['Prime', (contract.recipient_name || '—').split(' ').slice(0, 3).join(' ')],
+                  ['NAICS', contract.naics || '—'],
+                  ['State', contract.place_state || '—'],
+                  ['End Date', fmtDate(contract.end_date)],
+                  ['Subawards', contract.subaward_count.toString()],
+                  ['Score', `${score}/100`],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: C.muted }}>{k}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18 }}>
+              <SectionLabel>External Links</SectionLabel>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button onClick={() => window.open(data.usaspending_url, '_blank')}
+                  style={{ width: '100%', padding: '9px 14px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 13, color: C.text, cursor: 'pointer', textAlign: 'left' }}>
+                  View on USASpending →
+                </button>
+                <button onClick={() => window.open(data.sam_url, '_blank')}
+                  style={{ width: '100%', padding: '9px 14px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 13, color: C.text, cursor: 'pointer', textAlign: 'left' }}>
+                  Search SAM.gov →
+                </button>
+                <button onClick={() => window.location.href = `/agencies/${encodeURIComponent(contract.awarding_agency)}`}
+                  style={{ width: '100%', padding: '9px 14px', background: C.purpleLight, border: `1px solid ${C.purpleBorder}`, borderRadius: 7, fontSize: 13, color: C.purple, cursor: 'pointer', textAlign: 'left', fontWeight: 600 }}>
+                  Agency Profile →
+                </button>
+                <button onClick={() => window.location.href = `/companies/${encodeURIComponent(contract.recipient_name)}`}
+                  style={{ width: '100%', padding: '9px 14px', background: C.accentLight, border: `1px solid ${C.accentBorder}`, borderRadius: 7, fontSize: 13, color: C.accent, cursor: 'pointer', textAlign: 'left', fontWeight: 600 }}>
+                  Prime Profile →
+                </button>
+              </div>
+            </div>
+
+            {data.airtable_opportunities.length > 0 && (
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18 }}>
+                <SectionLabel>Pipeline Opportunities</SectionLabel>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {data.airtable_opportunities.map((opp: Record<string, unknown>, i: number) => (
+                    <div key={i} style={{ padding: '10px 12px', background: C.greenLight, border: `1px solid ${C.greenBorder}`, borderRadius: 7 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{String(opp.Name || opp.Agency || '')}</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>{String(opp.Status || '')}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ background: C.amberLight, border: `1px solid ${C.amberBorder}`, borderRadius: 12, padding: 18 }}>
+              <SectionLabel>Next Best Action</SectionLabel>
+              <p style={{ fontSize: 13, color: C.text, lineHeight: 1.5, margin: '0 0 12px' }}>{ai.recommended_action}</p>
+              <CtaButton label="Add to Pipeline" onClick={addToPipeline} primary />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

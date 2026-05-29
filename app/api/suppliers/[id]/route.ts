@@ -1,4 +1,4 @@
-import { getSupplierById, updateSupplier } from '@/lib/suppliers-client'
+import { getSupplierById, updateSupplier, getOpportunitiesForSupplier, getApplicationsForSupplier } from '@/lib/suppliers-client'
 import { getSupplierFromRequest } from '@/lib/suppliers-auth'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -18,6 +18,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return Response.json({ error: 'Supplier not found' }, { status: 404 })
     }
 
+    const [opportunities, applications] = await Promise.all([
+      getOpportunitiesForSupplier(id).catch(() => []),
+      getApplicationsForSupplier(id).catch(() => []),
+    ])
+
     return Response.json(
       {
         success: true,
@@ -31,6 +36,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           notes: data.notes,
           registration_status: data.registration_status,
         },
+        opportunities,
+        applications,
       },
       { status: 200 }
     )

@@ -1,0 +1,112 @@
+{
+  "name": "Auto Supplier Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "operator": "every",
+              "value": 6
+            }
+          ]
+        }
+      },
+      "name": "6-Hour Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/suppliers/opportunities/new",
+        "method": "GET"
+      },
+      "name": "Fetch New Opportunities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "expression": "={\n  newOpportunities: $input.json.opportunities || [],\n  timestamp: $now.toISO8601()\n}"
+      },
+      "name": "Prepare Notifications",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/notifications/send",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "body": {
+          "opportunities": "={{ $input.json.newOpportunities }}",
+          "type": "new_opportunity"
+        }
+      },
+      "name": "Send Email Notifications",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "expression": "={\n  notificationsSent: $input.json.sent || 0,\n  timestamp: $now.toISO8601(),\n  status: 'complete'\n}"
+      },
+      "name": "Log Notification Results",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "6-Hour Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch New Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch New Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Prepare Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Notifications": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Notifications": {
+      "main": [
+        [
+          {
+            "node": "Log Notification Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

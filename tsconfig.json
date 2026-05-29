@@ -38,5 +38,11 @@
   "exclude": [
     "node_modules",
     "scripts"
-  ]
+  ],
+  "ts-node": {
+    "esm": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "transpileOnly": true
+  }
 }

@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { NotificationBell, type Notification } from './notifications'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -19,15 +20,16 @@ interface TopBarProps {
 // ─── Nav config ───────────────────────────────────────────────────────────────
 
 const NAV_TABS = [
-  { label: 'Discovery', href: '/discovery' },
-  { label: 'Awards', href: '/awards' },
-  { label: 'Queue', href: '/queue' },
-  { label: 'Prospect', href: '/prospects' },
-  { label: 'Find subs', href: '/find-subs' },
-  { label: 'Subs', href: '/subs' },
+  { label: 'Leads', href: '/leads' },
+  { label: 'Contacts', href: '/contacts' },
+  { label: 'Tasks', href: '/tasks' },
+  { label: 'Daily Brief', href: '/daily-brief' },
+  { label: 'Activity', href: '/activity' },
+  { label: 'Intelligence', href: '/intelligence' },
+  { label: 'Opportunities', href: '/opportunities' },
   { label: 'Contracts', href: '/contracts' },
-  { label: 'Sequences', href: '/sequences' },
-  { label: 'Insights', href: '/analytics' },
+  { label: 'Outreach', href: '/outreach' },
+  { label: 'Settings', href: '/settings' },
 ]
 
 // ─── Breadcrumb helper ────────────────────────────────────────────────────────
@@ -145,14 +147,50 @@ function CopilotTrigger({ onClick }: { onClick: () => void }) {
 export default function TopBar({
   screen,
   prospectName,
-  notifications,
+  notifications: propNotifs = [],
   onMarkAllRead,
   onClickNotif,
   onOpenCopilot,
   onOpenCmdK,
 }: TopBarProps) {
   const pathname = usePathname()
+  const router   = useRouter()
   const breadcrumbs = buildBreadcrumb(pathname, prospectName)
+
+  const [liveNotifs, setLiveNotifs] = useState<Notification[]>([])
+
+  useEffect(() => {
+    if (propNotifs.length > 0) return
+    fetch('/api/today', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => {
+        const s = data.summary || {}
+        const notifs: Notification[] = []
+        const now = new Date()
+        if (s.overdue_tasks > 0)
+          notifs.push({ id: 'overdue', type: 'system', title: `${s.overdue_tasks} overdue task${s.overdue_tasks > 1 ? 's' : ''}`, body: 'Needs immediate attention', timestamp: now, read: false, priority: 'high' })
+        if (s.stuck_leads > 0)
+          notifs.push({ id: 'stuck', type: 'subgap', title: `${s.stuck_leads} leads stalled`, body: 'No activity in 7+ days', timestamp: now, read: false, priority: 'high' })
+        if (s.new_leads_7d > 0)
+          notifs.push({ id: 'leads', type: 'building', title: `${s.new_leads_7d} new leads this week`, body: 'SAM.gov + USASpending', timestamp: now, read: false })
+        if (s.new_buyers_7d > 0)
+          notifs.push({ id: 'buyers', type: 'contract', title: `${s.new_buyers_7d} new contacts`, body: 'Added via HigherGov sync', timestamp: now, read: false })
+        if (s.email_signals_24h > 0)
+          notifs.push({ id: 'email', type: 'reply', title: `${s.email_signals_24h} email signals`, body: 'Procurement keywords detected', timestamp: now, read: false })
+        if (s.contracts_expiring_30d > 0)
+          notifs.push({ id: 'expiring', type: 'contract', title: `${s.contracts_expiring_30d} contracts expiring`, body: 'Within the next 30 days', timestamp: now, read: false })
+        setLiveNotifs(notifs)
+      })
+      .catch(() => {})
+  }, [propNotifs.length])
+
+  const notifications = propNotifs.length > 0 ? propNotifs : liveNotifs
+  const handleMarkAllRead = propNotifs.length > 0 ? onMarkAllRead : () => setLiveNotifs(prev => prev.map(n => ({ ...n, read: true })))
+  const handleClickNotif  = propNotifs.length > 0 ? onClickNotif : (n: Notification) => {
+    setLiveNotifs(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
+    if (n.id === 'overdue' || n.id === 'leads' || n.id === 'stuck') router.push('/tasks')
+    if (n.id === 'leads' || n.id === 'buyers') router.push('/leads')
+  }
 
   return (
     <header
@@ -301,8 +339,8 @@ export default function TopBar({
 
         <NotificationBell
           notifications={notifications}
-          onMarkAllRead={onMarkAllRead}
-          onClickNotif={onClickNotif}
+          onMarkAllRead={handleMarkAllRead}
+          onClickNotif={handleClickNotif}
         />
 
         <div

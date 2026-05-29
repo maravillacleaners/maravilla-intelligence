@@ -531,6 +531,44 @@ const SAVED_VIEWS = [
   'Healthcare · pending review',
 ]
 
+// ─── Intelligence Winner type ─────────────────────────────────────────────────
+
+interface IntelWinner {
+  id: string
+  company: string
+  naics: string
+  naics_desc: string
+  contract_value: number
+  agency: string
+  state: string
+  date: string
+  uei: string
+  angle: string
+  reason: string
+}
+
+// ─── Priority score from contract value ───────────────────────────────────────
+
+function contractScore(value: number): number {
+  if (value > 2_000_000) return 85
+  if (value >= 500_000) return 70
+  if (value >= 100_000) return 55
+  return 40
+}
+
+function scoreTone(score: number): ChipTone {
+  if (score >= 80) return 'indigo'
+  if (score >= 65) return 'blue'
+  if (score >= 50) return 'amber'
+  return 'neutral'
+}
+
+function fmtValue(v: number): string {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`
+  if (v >= 1_000) return `$${Math.round(v / 1_000)}K`
+  return `$${v}`
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function QueuePage() {
@@ -548,6 +586,23 @@ export default function QueuePage() {
   const [filterCounty, setFilterCounty] = useState('all')
   const [filterScore, setFilterScore] = useState('all')
   const [activeView, setActiveView] = useState(0)
+
+  // Intelligence Queue state
+  const [intelWinners, setIntelWinners] = useState<IntelWinner[]>([])
+  const [intelLoading, setIntelLoading] = useState(true)
+  const [movedToCRM, setMovedToCRM] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    fetch('/api/intelligence/winners?limit=10')
+      .then(r => r.json())
+      .then(d => setIntelWinners(d.winners || []))
+      .catch(() => {})
+      .finally(() => setIntelLoading(false))
+  }, [])
+
+  function handleMoveToCRM(winner: IntelWinner) {
+    setMovedToCRM(prev => new Set(prev).add(winner.id))
+  }
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -761,6 +816,78 @@ export default function QueuePage() {
             sub="From visible prospects"
             tone="indigo"
           />
+        </div>
+
+        {/* Intelligence Queue */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: 0 }}>Intelligence Queue</h2>
+              <Chip tone="indigo" size="xs">Live</Chip>
+            </div>
+            <span style={{ fontSize: 11, color: C.vMuted }}>Contract winners from federal data — potential subcontract clients</span>
+          </div>
+          {intelLoading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} style={{ border: '1px solid #E7E5E4', borderRadius: 10, padding: 16, height: 110,
+                  background: 'linear-gradient(90deg, #F5F5F4 25%, #EEEEEC 50%, #F5F5F4 75%)',
+                  backgroundSize: '200% 100%', animation: 'skeleton-pulse 1.4s ease infinite' }} />
+              ))}
+            </div>
+          ) : intelWinners.length === 0 ? (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E7E5E4', borderRadius: 10, padding: '24px 20px', textAlign: 'center', color: C.muted, fontSize: 13 }}>
+              No intelligence data available — check connection to /api/intelligence/winners
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
+              {intelWinners.map(winner => {
+                const score = contractScore(winner.contract_value)
+                const moved = movedToCRM.has(winner.id)
+                return (
+                  <div
+                    key={winner.id}
+                    style={{
+                      background: moved ? '#F0FDF4' : '#FFFFFF',
+                      border: `1px solid ${moved ? '#BBF7D0' : '#E7E5E4'}`,
+                      borderRadius: 10, padding: 14,
+                      display: 'flex', flexDirection: 'column', gap: 8,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <p
+                          style={{ fontSize: 13, fontWeight: 600, color: '#4F46E5', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                          onClick={(e) => { e.stopPropagation(); window.location.href = `/companies/${encodeURIComponent(winner.company)}` }}
+                        >{winner.company}</p>
+                        <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{winner.state} · {winner.agency.split(',')[0]}</p>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                        <Chip tone={scoreTone(score)} size="xs">Score {score}</Chip>
+                        <Chip tone="blue" size="xs">New Lead</Chip>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: C.indigo, fontFamily: C.mono }}>{fmtValue(winner.contract_value)}</span>
+                      <button
+                        disabled={moved}
+                        onClick={() => handleMoveToCRM(winner)}
+                        style={{
+                          padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: moved ? 'default' : 'pointer',
+                          border: `1px solid ${moved ? '#BBF7D0' : C.primary}`,
+                          background: moved ? '#F0FDF4' : C.primary,
+                          color: moved ? C.green : '#FFFFFF',
+                          transition: 'all 150ms',
+                        }}
+                      >
+                        {moved ? 'Added to CRM' : 'Move to CRM'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Filters row */}

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import GlobalSearch from './components/GlobalSearch'
 
 export const metadata: Metadata = {
   title: 'Maravilla Intelligence Dashboard',
@@ -64,6 +65,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <GlobalSearch />
       </body>
     </html>
   )

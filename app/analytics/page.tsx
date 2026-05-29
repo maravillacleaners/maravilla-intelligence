@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -134,10 +134,51 @@ function StatCard({ label, value, sub, tone = 'indigo' }: any) {
   )
 }
 
+// ─── Analytics API types ─────────────────────────────────────────────────────
+
+interface AnalyticsData {
+  totalProspects: number
+  totalContracts: number
+  totalSubs: number
+  averageScore: number
+  scoreDistribution: { high: number; medium: number; low: number }
+  bySegment: { [key: string]: number }
+  byStatus: { [key: string]: number }
+  topOpportunities: Array<{ name: string; value: number; agency?: string }>
+}
+
+const INITIAL_ANALYTICS: AnalyticsData = {
+  totalProspects: 3,
+  totalContracts: 0,
+  totalSubs: 0,
+  averageScore: 78,
+  scoreDistribution: { high: 1, medium: 1, low: 1 },
+  bySegment: { Federal: 1, State: 1, Local: 1 },
+  byStatus: { qualified: 1, interested: 1, pending: 1 },
+  topOpportunities: [],
+}
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
-  const [_] = useState(null)
+  const [analytics, setAnalytics] = useState<AnalyticsData>(INITIAL_ANALYTICS)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/analytics')
+      .then((res) => res.json())
+      .then((json: any) => {
+        if (json.success && json.data) {
+          setAnalytics(json.data)
+        }
+      })
+      .catch((err) => {
+        console.warn('[Analytics] fetch failed, using mock data', err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
 
   const totalWeightedMrr = INSIGHTS.pipeline.reduce((sum, row) => sum + row.mrr * row.prob, 0)
   const totalPipelineMrr = INSIGHTS.pipeline.reduce((sum, row) => sum + row.mrr, 0)
@@ -149,16 +190,19 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div style={{ background: '#FFF', borderBottom: '1px solid #E7E5E4', padding: '20px 80px' }}>
         <h1 style={{ fontSize: 20, fontWeight: 700, color: '#1C1917', margin: 0, marginBottom: 4 }}>Insights Dashboard</h1>
-        <div style={{ fontSize: 13, color: '#78716C' }}>Pipeline analytics, team performance, and market intelligence</div>
+        <div style={{ fontSize: 13, color: '#78716C' }}>
+          Pipeline analytics, team performance, and market intelligence
+          {loading && <span style={{ marginLeft: 10, color: '#A8A29E' }}>Loading real data…</span>}
+        </div>
       </div>
 
       <div style={{ padding: '28px 80px', display: 'flex', flexDirection: 'column', gap: 28 }}>
 
         {/* KPI Row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-          <StatCard label="Weighted MRR" value={`$${(totalWeightedMrr / 1000).toFixed(1)}K`} sub="probability-adjusted" tone="indigo" />
-          <StatCard label="Pipeline MRR" value={`$${(totalPipelineMrr / 1000).toFixed(0)}K`} sub="all stages" tone="blue" />
-          <StatCard label="Top Rep" value={topLeader.name.split(' ')[0]} sub={`${Math.round(topLeader.convRate * 100)}% conv rate`} tone="emerald" />
+          <StatCard label="Total Prospects" value={analytics.totalProspects} sub={`avg score ${analytics.averageScore}`} tone="indigo" />
+          <StatCard label="Total Contracts" value={analytics.totalContracts} sub="active contracts" tone="blue" />
+          <StatCard label="Total Subs" value={analytics.totalSubs} sub="subcontractors" tone="emerald" />
           <StatCard label="Recompetes" value={INSIGHTS.recompetes.length} sub="contracts expiring soon" tone="amber" />
         </div>
 
@@ -353,6 +397,89 @@ export default function AnalyticsPage() {
             </div>
           </Card>
         </div>
+
+        {/* ── Score Distribution (real API data) ── */}
+        <Card>
+          <SectionHeader>Score Distribution</SectionHeader>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: '#059669', fontFamily: 'JetBrains Mono, monospace' }}>{analytics.scoreDistribution.high}</div>
+              <div style={{ fontSize: 11, color: '#78716C', marginTop: 4 }}>High (≥75)</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: '#D97706', fontFamily: 'JetBrains Mono, monospace' }}>{analytics.scoreDistribution.medium}</div>
+              <div style={{ fontSize: 11, color: '#78716C', marginTop: 4 }}>Medium (50–74)</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: '#DC2626', fontFamily: 'JetBrains Mono, monospace' }}>{analytics.scoreDistribution.low}</div>
+              <div style={{ fontSize: 11, color: '#78716C', marginTop: 4 }}>Low (&lt;50)</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* ── Segment & Status Breakdown (real API data) ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <Card>
+            <SectionHeader>By Segment</SectionHeader>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {Object.entries(analytics.bySegment).map(([seg, count], i) => {
+                const maxCount = Math.max(...Object.values(analytics.bySegment))
+                return (
+                  <div key={i}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, color: '#1C1917', fontWeight: 500 }}>{seg}</span>
+                      <span style={{ fontSize: 11, color: '#78716C', fontFamily: 'JetBrains Mono, monospace' }}>{count}</span>
+                    </div>
+                    <Bar value={count} max={maxCount || 1} tone="indigo" height={6} />
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+
+          <Card>
+            <SectionHeader>By Status</SectionHeader>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {Object.entries(analytics.byStatus).map(([status, count], i) => {
+                const maxCount = Math.max(...Object.values(analytics.byStatus))
+                return (
+                  <div key={i}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, color: '#1C1917', fontWeight: 500, textTransform: 'capitalize' }}>{status}</span>
+                      <span style={{ fontSize: 11, color: '#78716C', fontFamily: 'JetBrains Mono, monospace' }}>{count}</span>
+                    </div>
+                    <Bar value={count} max={maxCount || 1} tone="blue" height={6} />
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+        </div>
+
+        {/* ── Top Opportunities (real API data) ── */}
+        {analytics.topOpportunities.length > 0 && (
+          <Card>
+            <SectionHeader>Top Opportunities</SectionHeader>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <Th>Company</Th>
+                  <Th>Agency</Th>
+                  <Th>Contract Value</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.topOpportunities.map((opp, i) => (
+                  <tr key={i}>
+                    <Td><span style={{ fontWeight: 500 }}>{opp.name}</span></Td>
+                    <Td>{opp.agency || '—'}</Td>
+                    <Td mono><span style={{ fontWeight: 700, color: '#4F46E5' }}>${opp.value.toLocaleString()}</span></Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        )}
 
       </div>
     </div>

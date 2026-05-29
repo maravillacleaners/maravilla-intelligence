@@ -98,7 +98,7 @@ async function ingestIntelligence(dry_run: boolean): Promise<{ created: number; 
       if (!dry_run && score > existing.score) {
         await atPatch(TBL_LEADS, existing.id, {
           Priority_Score: score,
-          Last_Seen: new Date().toISOString().split('T')[0],
+          Signal_Date: new Date().toISOString().split('T')[0],
           Source_Record_ID: f.usaspending_id || f.id || rec.id,
         })
         stats.updated++
@@ -131,7 +131,7 @@ async function ingestIntelligence(dry_run: boolean): Promise<{ created: number; 
           Description:       String(f.description || f.opportunity_title || '').slice(0, 500),
           Enrichment_Needed: true,
           Contactable:       false,
-          Last_Seen:         new Date().toISOString().split('T')[0],
+          Signal_Date:       new Date().toISOString().split('T')[0],
         })
 
         // Event for high-value new leads
@@ -192,7 +192,7 @@ async function ingestAvatars(dry_run: boolean): Promise<{ created: number; updat
           Decision_Maker_Email: f.Email || '',
           Decision_Maker_Phone: f.Phone || '',
           Contactable:       !!(f.Email),
-          Last_Seen:         new Date().toISOString().split('T')[0],
+          Signal_Date:       new Date().toISOString().split('T')[0],
         })
         stats.updated++
       } else {
@@ -218,7 +218,7 @@ async function ingestAvatars(dry_run: boolean): Promise<{ created: number; updat
           Contactable:          !!(f.Email),
           Enrichment_Needed:    !(f.Email),
           Avatar_Count:         1,
-          Last_Seen:            new Date().toISOString().split('T')[0],
+          Signal_Date:          new Date().toISOString().split('T')[0],
         })
 
         // Create outreach task if we have a contactable lead
@@ -277,7 +277,7 @@ async function ingestSam(dry_run: boolean): Promise<{ created: number; updated: 
       if (!dry_run && score > existing.score) {
         await atPatch(TBL_LEADS, existing.id, {
           Priority_Score:   score,
-          Last_Seen:        new Date().toISOString().split('T')[0],
+          Signal_Date:      new Date().toISOString().split('T')[0],
           Source_Record_ID: opp.noticeId,
         })
         stats.updated++
@@ -314,7 +314,7 @@ async function ingestSam(dry_run: boolean): Promise<{ created: number; updated: 
           Decision_Maker_Phone: primaryPoc?.phone || '',
           Contactable:          !!(primaryPoc?.email),
           Enrichment_Needed:    !(primaryPoc?.email),
-          Last_Seen:            new Date().toISOString().split('T')[0],
+          Signal_Date:          new Date().toISOString().split('T')[0],
         })
 
         if (score >= 70) {
@@ -358,10 +358,34 @@ async function ingestSam(dry_run: boolean): Promise<{ created: number; updated: 
   return stats
 }
 
+// ── Source: USASpending ────────────────────────────────────────────────────────
+async function ingestUSASpending(dry_run: boolean): Promise<{ created: number; updated: number; skipped: number; errors: string[] }> {
+  const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  try {
+    const res = await fetch(`${base}/api/sources/usaspending`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dry_run }),
+    })
+    if (!res.ok) {
+      return { created: 0, updated: 0, skipped: 0, errors: [`USASpending error: ${res.status}`] }
+    }
+    const data = await res.json()
+    return {
+      created: data.leads_created || 0,
+      updated: 0,
+      skipped: data.leads_skipped || 0,
+      errors: data.errors || [],
+    }
+  } catch (err: any) {
+    return { created: 0, updated: 0, skipped: 0, errors: [`USASpending fetch failed: ${err.message}`] }
+  }
+}
+
 // ── POST handler ───────────────────────────────────────────────────────────────
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
-  const { dry_run = false, sources = ['intelligence', 'avatars', 'sam'] } = body
+  const { dry_run = false, sources = ['intelligence', 'avatars', 'sam', 'usaspending'] } = body
 
   const today = new Date().toISOString().split('T')[0]
   let total_created = 0
@@ -406,6 +430,18 @@ export async function POST(request: Request) {
     errors.push(...s.errors)
   }
 
+  if (sources.includes('usaspending')) {
+    const s = await ingestUSASpending(dry_run).catch(e => {
+      errors.push(`usaspending: ${e.message}`)
+      return { created: 0, updated: 0, skipped: 0, errors: [] }
+    })
+    total_created += s.created
+    total_updated += s.updated
+    total_skipped += s.skipped
+    source_summary.usaspending = s.created
+    errors.push(...s.errors)
+  }
+
   return NextResponse.json({
     ok: true,
     dry_run,
@@ -428,9 +464,10 @@ export async function POST(request: Request) {
 
 export async function GET() {
   return NextResponse.json({
-    description: 'POST /api/leads/intake — ingest leads from Intelligence + Avatars + SAM.gov',
-    params: { sources: ['intelligence', 'avatars', 'sam'], dry_run: false },
+    description: 'POST /api/leads/intake — ingest leads from Intelligence + Avatars + SAM.gov + USASpending',
+    params: { sources: ['intelligence', 'avatars', 'sam', 'usaspending'], dry_run: false },
     sam_configured: !!((process.env.SAM_GOV_API_KEY?.length ?? 0) >= 8),
+    usaspending_configured: true,
     tables: { reads: [TBL_INTEL, TBL_AVATARS], writes: [TBL_LEADS, TBL_EVENTS, TBL_TASKS] },
   })
 }

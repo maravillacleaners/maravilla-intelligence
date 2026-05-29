@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import TopBar from '@/components/crm/top-bar'
+import { InvestigationModal } from '@/components/crm/investigation-modal'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -149,6 +151,7 @@ function LeadPanel({
   const [toast, setToast]         = useState<{ msg: string; ok: boolean } | null>(null)
   const [notes, setNotes]         = useState('')
   const [activeTab, setActiveTab] = useState<'timeline' | 'tasks' | 'contact'>('timeline')
+  const [showInvestigation, setShowInvestigation] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -280,6 +283,21 @@ function LeadPanel({
             <div style={{ padding: '14px 16px 0' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: C.vMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Actions</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {lead.enrichment_needed && (
+                  <button
+                    onClick={() => setShowInvestigation(true)}
+                    title="Research company and decision makers from 5 sources"
+                    style={{
+                      padding: '6px 12px', borderRadius: 7, border: '1px solid #4F46E522',
+                      background: '#F3F3FF',
+                      color: '#4F46E5',
+                      fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      transition: 'all 150ms',
+                    }}
+                  >
+                    🔍 Investigate
+                  </button>
+                )}
                 {ACTION_BUTTONS.map(btn => (
                   <button
                     key={btn.id}
@@ -417,6 +435,20 @@ function LeadPanel({
                 </div>
               )}
             </div>
+            {showInvestigation && (
+              <InvestigationModal
+                leadId={lead.id}
+                entityName={lead.entity_name}
+                domain={lead.notes && lead.notes.includes('domain:') ? lead.notes.split('domain:')[1].trim().split(' ')[0] : ''}
+                onClose={() => setShowInvestigation(false)}
+                onComplete={(profile) => {
+                  // Refresh lead data after investigation
+                  fetch(`/api/leads/${lead.id}`).then(r => r.json()).then(data => {
+                    setDetail(data.lead ? data : { lead: data, events: data.events || [], tasks: data.tasks || [] })
+                  }).catch(() => {})
+                }}
+              />
+            )}
           </>
         )}
       </div>
@@ -447,6 +479,7 @@ export default function LeadsPage() {
   const [stageFilter, setStageFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [notifs, setNotifs] = useState<any[]>([])
 
   const fetchLeads = useCallback(async () => {
     setLoading(true)
@@ -504,6 +537,7 @@ export default function LeadsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <TopBar screen="Leads" notifications={notifs} onMarkAllRead={() => setNotifs([])} onClickNotif={() => {}} onOpenCopilot={() => {}} onOpenCmdK={() => {}} />
       {/* Toast */}
       {toast && (
         <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: '#1C1917', color: '#fff', padding: '12px 20px', borderRadius: 10, fontSize: 13, maxWidth: 480, boxShadow: '0 4px 24px rgba(0,0,0,0.2)', lineHeight: 1.5 }}>
@@ -552,7 +586,7 @@ export default function LeadsPage() {
 
         {/* Stats bar */}
         {!loading && total > 0 && (
-          <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
             {[
               { label: 'Total', value: total,      color: C.muted   },
               { label: 'Contactable', value: contactable, color: C.green   },
@@ -566,6 +600,41 @@ export default function LeadsPage() {
             ))}
           </div>
         )}
+
+        {/* Data provenance row */}
+        {!loading && total > 0 && (() => {
+          const srcCounts: Record<string, number> = {}
+          leads.forEach(l => { const s = l.source || 'unknown'; srcCounts[s] = (srcCounts[s] || 0) + 1 })
+          const SRC_LABELS: Record<string, { icon: string; label: string; color: string }> = {
+            'sam.gov':     { icon: '🏛️', label: 'SAM.gov',     color: '#2563EB' },
+            'intelligence':{ icon: '📊', label: 'Intelligence', color: '#7C3AED' },
+            'highergov':   { icon: '🔍', label: 'HigherGov',   color: '#059669' },
+            'avatars':     { icon: '👤', label: 'Avatars',      color: '#D97706' },
+            'gmail':       { icon: '📧', label: 'Gmail',        color: '#DC2626' },
+            'manual':      { icon: '✏️', label: 'Manual',      color: '#78716C' },
+          }
+          return (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: 11, color: C.xmuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sources:</span>
+              {Object.entries(srcCounts).sort((a,b) => b[1]-a[1]).map(([src, count]) => {
+                const s = SRC_LABELS[src] || { icon: '📌', label: src, color: C.muted }
+                return (
+                  <button key={src} onClick={() => setSourceFilter(src === sourceFilter ? '' : src)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px',
+                      background: sourceFilter === src ? '#EEF2FF' : '#FFF',
+                      border: `1px solid ${sourceFilter === src ? '#C7D2FE' : C.border}`,
+                      borderRadius: 99, fontSize: 11, fontWeight: 500, cursor: 'pointer',
+                      color: sourceFilter === src ? '#4F46E5' : C.muted,
+                    }}>
+                    <span>{s.icon}</span>
+                    <span style={{ color: sourceFilter === src ? '#4F46E5' : s.color, fontWeight: 600 }}>{s.label}</span>
+                    <span style={{ background: '#F5F5F4', color: C.muted, padding: '0 5px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>{count}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })()}
 
         {/* Table */}
         <div style={{ background: '#FFF', border: C.border, borderRadius: 12, overflow: 'hidden' }}>

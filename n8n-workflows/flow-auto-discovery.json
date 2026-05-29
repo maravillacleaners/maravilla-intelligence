@@ -1,0 +1,111 @@
+{
+  "name": "Auto Contract Discovery",
+  "nodes": [
+    {
+      "parameters": {
+        "expression": "={\n  timestamp: $now.toISO8601(),\n  status: 'running'\n}"
+      },
+      "name": "Trigger Discovery",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/scrapers/sam-gov",
+        "method": "POST",
+        "sendBody": true,
+        "body": {
+          "source": "sam-gov"
+        }
+      },
+      "name": "SAM.gov Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/scrapers/usaspending",
+        "method": "POST",
+        "sendBody": true,
+        "body": {
+          "source": "usaspending"
+        }
+      },
+      "name": "USASpending Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/contracts/auto-match",
+        "method": "POST",
+        "sendBody": true,
+        "body": {
+          "action": "match"
+        }
+      },
+      "name": "Auto Match Contracts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "expression": "={\n  workflow: 'auto-discovery',\n  timestamp: $now.toISO8601(),\n  status: 'completed',\n  itemsProcessed: $input.length\n}"
+      },
+      "name": "Log Completion",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Trigger Discovery": {
+      "main": [
+        [
+          {
+            "node": "SAM.gov Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SAM.gov Scraper": {
+      "main": [
+        [
+          {
+            "node": "USASpending Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "USASpending Scraper": {
+      "main": [
+        [
+          {
+            "node": "Auto Match Contracts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto Match Contracts": {
+      "main": [
+        [
+          {
+            "node": "Log Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

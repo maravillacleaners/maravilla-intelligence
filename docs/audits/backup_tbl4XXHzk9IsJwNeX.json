@@ -1,0 +1,363 @@
+{
+  "records": [
+    {
+      "id": "rec01O5pwFxsWu6So",
+      "createdTime": "2025-12-12T18:08:05Z",
+      "fields": {
+        "DO NOT USE": "City of Greenacres",
+        "County": "Palm Beach",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "Greenacres",
+        "State": "Florida",
+        "Procurement Site Name": "City of Greenacres",
+        "Username": "n/a",
+        "Created On": "2025-12-12T18:08:05Z",
+        "Notes": "No registration needed to view open bids. Another site to consider: <https://greenacresfl.gov/rfps>\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://greenacresfl.gov/purchasing/page/solicitations",
+        "Password": "n/a"
+      }
+    },
+    {
+      "id": "rec01oCvto6WPqjcP",
+      "createdTime": "2026-01-03T22:46:11Z",
+      "fields": {
+        "DO NOT USE": "Dale County, AL",
+        "County": "Dale",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "State": "Alabama",
+        "Procurement Site Name": "Dale County, AL",
+        "Username": "maravillacleaners",
+        "Created On": "2026-01-03T22:46:11Z",
+        "Notes": "Registered thru PublicPurchase\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.publicpurchase.com/gems/buyer/public/home?syndicatedOrgId=49233&region=AL"
+      }
+    },
+    {
+      "id": "rec049lxhzlp8dJ8X",
+      "createdTime": "2025-12-17T21:42:39Z",
+      "fields": {
+        "DO NOT USE": "City of St. Cloud",
+        "County": "Osceola",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "St. Cloud",
+        "State": "Florida",
+        "Procurement Site Name": "City of St. Cloud",
+        "Username": "govcon@maravillacleaners.com",
+        "Created On": "2025-12-17T21:42:39Z",
+        "Notes": "\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://procurement.opengov.com/portal/stcloud",
+        "Password": "sitepassword"
+      }
+    },
+    {
+      "id": "rec06I2xnsHwFQE9m",
+      "createdTime": "2026-01-03T15:37:57Z",
+      "fields": {
+        "DO NOT USE": "Leon County - Purchasing Division Procurement - Bids & RFPs | OpenBids",
+        "County": "Leon",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "State": "Florida",
+        "Procurement Site Name": "Leon County - Purchasing Division Procurement - Bids & RFPs | OpenBids",
+        "Username": "govcon@maravillacleaners.com",
+        "Created On": "2026-01-03T15:37:57Z",
+        "Notes": "Password savd in lastpass\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.demandstar.com/app/agencies/florida/leon-county---purchasing-division/procurement-opportunities/d5862bb7-6ad3-490c-89ba-a90ed87e48ef/",
+        "Password": "sitepassword"
+      }
+    },
+    {
+      "id": "rec06Id0TdPeF8fmL",
+      "createdTime": "2026-01-10T21:37:36Z",
+      "fields": {
+        "DO NOT USE": "Stevenson | Jackson County, AL",
+        "County": "Jackson",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "Stevenson",
+        "State": "Alabama",
+        "Procurement Site Name": "Stevenson | Jackson County, AL",
+        "Username": "govcon@maravillacleaners.com",
+        "Created On": "2026-01-10T21:37:36Z",
+        "Notes": "\tRegister4d thru CivicPlus | Bid/RFPs list available\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.jacksoncountyal.gov/161/Stevenson",
+        "Password": "dHo$QSzbH8aHuQw2"
+      }
+    },
+    {
+      "id": "rec06f43ltS8hNUgU",
+      "createdTime": "2025-12-27T13:47:00Z",
+      "fields": {
+        "DO NOT USE": "City of Statham",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "Statham",
+        "State": "Georgia",
+        "Procurement Site Name": "City of Statham",
+        "Created On": "2025-12-27T13:47:00Z",
+        "Notes": "Registration in progress. \n",
+        "Registration Status": "In Progress",
+        "Site URL": "https://stathamga.sophicity.com/Assets/Files/BidsRFPs/VENDOR%20REGISTRATION%20FORMS.pdf"
+      }
+    },
+    {
+      "id": "rec06oQokxD57YQ7d",
+      "createdTime": "2026-01-03T19:40:43Z",
+      "fields": {
+        "DO NOT USE": "Bid in Baldwin County (AL)",
+        "County": "Baldwin",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "State": "Alabama",
+        "Procurement Site Name": "Bid in Baldwin County (AL)",
+        "Created On": "2026-01-03T19:40:43Z",
+        "Notes": "No USA found in their registration portal but bids list is available\n",
+        "Registration Status": "Stuck",
+        "Site URL": "https://iq.govwin.com/neo/public/pop/Baldwin%20County%20%28AL%29"
+      }
+    },
+    {
+      "id": "rec09LbA275E6Y9FU",
+      "createdTime": "2026-01-06T22:37:16Z",
+      "fields": {
+        "DO NOT USE": "City Of Florence, AL",
+        "County": "Lauderdale",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "Florence",
+        "State": "Alabama",
+        "Procurement Site Name": "City Of Florence, AL",
+        "Created On": "2026-01-06T22:37:16Z",
+        "Notes": "Bid/RFPs list available | No registration required \n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://florenceal.org/procurement/"
+      }
+    },
+    {
+      "id": "rec09m9zik8641BXw",
+      "createdTime": "2025-12-30T17:55:23Z",
+      "fields": {
+        "DO NOT USE": "Wilkinson County",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "State": "Georgia",
+        "Procurement Site Name": "Wilkinson County",
+        "Created On": "2025-12-30T17:55:23Z",
+        "Notes": "Bids and RFPS list available. No registration needed. | Alternative site: <https://www.wilkinsoncounty.net/category/bids/>\n\n\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.wilkinsoncounty.net/bids/"
+      }
+    },
+    {
+      "id": "rec0AiDBbYmM2RC1f",
+      "createdTime": "2025-12-17T22:47:56Z",
+      "fields": {
+        "DO NOT USE": "City of Satellite Beach Procurement - Bids & RFPs | OpenBids",
+        "County": "Brevard",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "Satellite Beach",
+        "State": "Florida",
+        "Procurement Site Name": "City of Satellite Beach Procurement - Bids & RFPs | OpenBids",
+        "Username": "govcon@maravillacleaners.com",
+        "Created On": "2025-12-17T22:47:56Z",
+        "Notes": "\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.demandstar.com/app/agencies/florida/city-of-satellite-beach/procurement-opportunities/565ccf27-962e-4c0a-a8f5-15fd51043445/",
+        "Password": "sitepassword"
+      }
+    },
+    {
+      "id": "rec0BRgvQzW7ZdXJx",
+      "createdTime": "2025-12-27T16:56:38Z",
+      "fields": {
+        "DO NOT USE": "City of Ringgold",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "Ringgold",
+        "State": "Georgia",
+        "Procurement Site Name": "City of Ringgold",
+        "Created On": "2025-12-27T16:56:38Z",
+        "Notes": "Bids and RFPS list available. No registration needed\t\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.cityofringgoldga.gov/BIDAdvertisements.aspx"
+      }
+    },
+    {
+      "id": "rec0C3AWcNwpG7ml0",
+      "createdTime": "2026-01-07T17:02:51Z",
+      "fields": {
+        "DO NOT USE": "City of Homewood",
+        "County": "Jefferson",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "Homewood",
+        "State": "Alabama",
+        "Procurement Site Name": "City of Homewood",
+        "Created On": "2026-01-07T17:02:51Z",
+        "Notes": "Bid/RFPs list available | No registration required \n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.cityofhomewood.com/project-bidding"
+      }
+    },
+    {
+      "id": "rec0CqQ7mj3SBjj7B",
+      "createdTime": "2025-12-27T17:25:01Z",
+      "fields": {
+        "DO NOT USE": "Spalding County",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "State": "Georgia",
+        "Procurement Site Name": "Spalding County",
+        "Created On": "2025-12-27T17:25:01Z",
+        "Notes": "Bids and RFPS list available. No registration needed\t\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.spaldingcounty.com/business/bid-opportunities"
+      }
+    },
+    {
+      "id": "rec0DncryIvpTTRFO",
+      "createdTime": "2026-01-04T20:46:36Z",
+      "fields": {
+        "DO NOT USE": "Athens City Schools",
+        "County": "Limestone",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "Athens",
+        "State": "Alabama",
+        "Procurement Site Name": "Athens City Schools",
+        "Created On": "2026-01-04T20:46:36Z",
+        "Notes": "Bid/RFPs list available | No registration required \n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.acs-k12.org/departments/business-finance/invitation-to-bid"
+      }
+    },
+    {
+      "id": "rec0DytOhScheKdcL",
+      "createdTime": "2025-12-19T20:20:37Z",
+      "fields": {
+        "DO NOT USE": "Hall County Library ",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "State": "Georgia",
+        "Procurement Site Name": "Hall County Library ",
+        "Created On": "2025-12-19T20:20:37Z",
+        "Notes": "RFPs list only.\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.hallcountylibrary.org/information/bid_opportunities.php"
+      }
+    },
+    {
+      "id": "rec0E8jTqP06V0t11",
+      "createdTime": "2025-12-08T17:50:39Z",
+      "fields": {
+        "DO NOT USE": "Integrated Laboratory Systems, Inc.",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "State": "Manufacturer Portal Logins",
+        "Procurement Site Name": "Integrated Laboratory Systems, Inc.",
+        "Created On": "2025-12-08T17:50:39Z",
+        "Registration Status": "Stuck",
+        "Site URL": "https://www.inotiv.com/ils"
+      }
+    },
+    {
+      "id": "rec0FTlUkjVMTiD2o",
+      "createdTime": "2025-12-18T18:21:25Z",
+      "fields": {
+        "DO NOT USE": "Gadsden County School District Procurement - Bids & RFPs | OpenBids",
+        "County": "Gadsden",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "State": "Florida",
+        "Procurement Site Name": "Gadsden County School District Procurement - Bids & RFPs | OpenBids",
+        "Username": "govcon@maravillacleaners.com",
+        "Created On": "2025-12-18T18:21:25Z",
+        "Notes": "\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.demandstar.com/app/agencies/florida/gadsden-county-school-district/procurement-opportunities/01cdd2fb-1341-4928-9c93-cebd8eacb3c7/",
+        "Password": "sitepassword"
+      }
+    },
+    {
+      "id": "rec0GBbmr3f84I9VZ",
+      "createdTime": "2026-01-10T21:37:36Z",
+      "fields": {
+        "DO NOT USE": "City of Springville",
+        "County": "St. Clair",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "City": "Springville",
+        "State": "Alabama",
+        "Procurement Site Name": "City of Springville",
+        "Username": "govcon@maravillacleaners.com",
+        "Created On": "2026-01-10T21:37:36Z",
+        "Notes": "Registered thru Bonfire\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://utah.bonfirehub.com/portal/?tab=openOpportunities",
+        "Password": "0HyefAGO3l@IDrZI"
+      }
+    },
+    {
+      "id": "rec0GQdqbAYWMnt0s",
+      "createdTime": "2025-12-30T13:45:53Z",
+      "fields": {
+        "DO NOT USE": "Jeff Davis County, Georgia",
+        "Registered By": [
+          "recAsb3ehtjLwR1k9"
+        ],
+        "State": "Georgia",
+        "Procurement Site Name": "Jeff Davis County, Georgia",
+        "Created On": "2025-12-30T13:45:53Z",
+        "Notes": "Bids and RFPS list available. No registration needed. \n\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://jeffdaviscountyga.gov/open-bids%2Fproposals"
+      }
+    },
+    {
+      "id": "rec0K3QlgWrKr0bdu",
+      "createdTime": "2024-05-16T22:12:44Z",
+      "fields": {
+        "DO NOT USE": "Sumter County - Purchasing Division",
+        "County": "Sumter",
+        "Registered By": [
+          "recfEmRJhbKhl8dBF"
+        ],
+        "Population": 137231,
+        "State": "Florida",
+        "Procurement Site Name": "Sumter County - Purchasing Division",
+        "Avg Household Income": 67420,
+        "Created On": "2024-05-16T22:12:44Z",
+        "Notes": "\n",
+        "Registration Status": "Registration Complete",
+        "Site URL": "https://www.sumtercountyfl.gov/93/Purchasing"
+      }
+    }
+  ]
+}
