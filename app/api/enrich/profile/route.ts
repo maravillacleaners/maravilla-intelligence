@@ -301,7 +301,10 @@ async function saveToAirtable(
       },
     }
 
-    await fetch(`${AIRTABLE_API_URL}/appTjW3FwMPLQrw2t/Prospects/${leadId}`, {
+    const baseId = process.env.AIRTABLE_BASE_ID || 'appZhXnyFiKbnOZLr'
+    const tableId = 'tblja2oeA4oNEjioT' // Leads table
+
+    await fetch(`${AIRTABLE_API_URL}/${baseId}/${tableId}/${leadId}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${AIRTABLE_API_KEY}`,

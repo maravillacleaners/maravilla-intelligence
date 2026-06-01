@@ -14,6 +14,7 @@ const HDR  = () => ({ Authorization: `Bearer ${KEY}` })
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const stage  = searchParams.get('stage') || ''
+  const source = searchParams.get('source') || ''
   const limit  = Math.min(Number(searchParams.get('limit') || 50), 100)
   const offset = searchParams.get('offset') || ''
   const sort   = searchParams.get('sort') || 'Priority_Score'
@@ -28,6 +29,7 @@ export async function GET(request: Request) {
 
   const filters: string[] = []
   if (stage) filters.push(`{Stage}="${stage}"`)
+  if (source) filters.push(`{Source}="${source}"`)
   if (q)     filters.push(`OR(SEARCH(LOWER("${q.toLowerCase()}"),LOWER({Entity_Name}))>0,SEARCH(LOWER("${q.toLowerCase()}"),LOWER({Agency}))>0)`)
   if (filters.length) parts.push(`filterByFormula=${encodeURIComponent(`AND(${filters.join(',')})`)}`)
   if (offset) parts.push(`offset=${encodeURIComponent(offset)}`)
