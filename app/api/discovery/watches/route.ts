@@ -222,3 +222,129 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+async function updateWatch(id: string, watch: Partial<Watch>) {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return { id, ...watch }
+  }
+
+  try {
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${AIRTABLE_BASE_ID}/Watches/${id}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fields: Object.fromEntries(
+            Object.entries(watch).map(([key, value]) => {
+              // Convert camelCase to snake_case
+              const snakeKey = key.replace(/[A-Z]/g, (match) => `_${match.toLowerCase()}`)
+              return [snakeKey, value]
+            })
+          ),
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Airtable update failed')
+    }
+
+    const data = await response.json()
+    return {
+      id: data.id,
+      ...data.fields,
+    }
+  } catch (error) {
+    console.error('Discovery update watch error:', error)
+    throw error
+  }
+}
+
+async function deleteWatch(id: string) {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return { success: true, id }
+  }
+
+  try {
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${AIRTABLE_BASE_ID}/Watches/${id}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` },
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Airtable delete failed')
+    }
+
+    return { success: true, id }
+  } catch (error) {
+    console.error('Discovery delete watch error:', error)
+    throw error
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const auth = await readAuth(request)
+    if (!auth) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { id, ...updates } = body
+
+    if (!id) {
+      return Response.json({ error: 'Watch ID required' }, { status: 400 })
+    }
+
+    const updated = await updateWatch(id, updates)
+
+    return Response.json({
+      success: true,
+      data: updated,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('[API /discovery/watches] PATCH error:', error)
+    return Response.json(
+      { error: 'Failed to update watch', details: String(error) },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const auth = await readAuth(request)
+    if (!auth) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { id } = body
+
+    if (!id) {
+      return Response.json({ error: 'Watch ID required' }, { status: 400 })
+    }
+
+    const result = await deleteWatch(id)
+
+    return Response.json({
+      success: true,
+      data: result,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('[API /discovery/watches] DELETE error:', error)
+    return Response.json(
+      { error: 'Failed to delete watch', details: String(error) },
+      { status: 500 }
+    )
+  }
+}

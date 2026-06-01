@@ -1,0 +1,207 @@
+[
+  {
+    "code": "531120",
+    "title": "Lessors of Nonresidential Buildings (except Miniwarehouse)",
+    "description": "Commercial office buildings, retail spaces, industrial properties"
+  },
+  {
+    "code": "531130",
+    "title": "Lessors of Miniwarehouses and Self-Storage Units",
+    "description": "Small storage units, climate-controlled storage facilities"
+  },
+  {
+    "code": "531311",
+    "title": "Residential Property Managers",
+    "description": "Property management for apartment buildings, condos, residential complexes"
+  },
+  {
+    "code": "531312",
+    "title": "Nonresidential Property Managers",
+    "description": "Property management for office buildings, industrial, mixed-use developments"
+  },
+  {
+    "code": "531320",
+    "title": "Offices of Real Estate Agents and Brokers",
+    "description": "Real estate agencies, brokerage offices"
+  },
+  {
+    "code": "531390",
+    "title": "Other Real Estate Activities",
+    "description": "Real estate consultants, appraisers, title agents"
+  },
+  {
+    "code": "561720",
+    "title": "Janitorial Services",
+    "description": "Commercial cleaning, office cleaning, building maintenance"
+  },
+  {
+    "code": "561730",
+    "title": "Landscaping Services",
+    "description": "Lawn care, grounds keeping, landscaping"
+  },
+  {
+    "code": "561740",
+    "title": "Carpet and Upholstery Cleaning Services",
+    "description": "Carpet cleaning, upholstery cleaning, fabric restoration"
+  },
+  {
+    "code": "561910",
+    "title": "Packaging and Labeling Services",
+    "description": "Contract packaging, labeling services"
+  },
+  {
+    "code": "561990",
+    "title": "Other Support Services",
+    "description": "Miscellaneous administrative and support services"
+  },
+  {
+    "code": "621210",
+    "title": "Offices of Physicians",
+    "description": "Medical offices, doctor's offices, physician practices"
+  },
+  {
+    "code": "621310",
+    "title": "Offices of Dentists",
+    "description": "Dental offices, dentist practices"
+  },
+  {
+    "code": "621320",
+    "title": "Offices of Optometrists",
+    "description": "Optometry offices, eye care practices"
+  },
+  {
+    "code": "621330",
+    "title": "Offices of Mental Health Practitioners",
+    "description": "Psychiatry offices, psychology practices, counseling offices"
+  },
+  {
+    "code": "621340",
+    "title": "Offices of Physical, Occupational and Speech Therapists",
+    "description": "Physical therapy offices, occupational therapy, speech therapy"
+  },
+  {
+    "code": "621399",
+    "title": "Offices of All Other Miscellaneous Health Practitioners",
+    "description": "Chiropractors, acupuncturists, alternative medicine practitioners"
+  },
+  {
+    "code": "621410",
+    "title": "Family Planning Centers",
+    "description": "Family planning clinics, reproductive health centers"
+  },
+  {
+    "code": "621420",
+    "title": "Outpatient Mental Health and Substance Abuse Centers",
+    "description": "Mental health clinics, addiction treatment centers"
+  },
+  {
+    "code": "621491",
+    "title": "HMO Medical Centers",
+    "description": "Health maintenance organization facilities"
+  },
+  {
+    "code": "621492",
+    "title": "Urgent Care Centers",
+    "description": "Walk-in clinics, urgent care facilities"
+  },
+  {
+    "code": "621498",
+    "title": "All Other Outpatient Care Centers",
+    "description": "Specialty care clinics, diagnostic centers, rehabilitation facilities"
+  },
+  {
+    "code": "621610",
+    "title": "Home Health Care Services",
+    "description": "In-home nursing care, home health aides"
+  },
+  {
+    "code": "621910",
+    "title": "Ambulance Services",
+    "description": "Medical transport, ambulance providers"
+  },
+  {
+    "code": "622110",
+    "title": "General Medical and Surgical Hospitals",
+    "description": "Acute care hospitals, general hospitals"
+  },
+  {
+    "code": "622210",
+    "title": "Psychiatric and Substance Abuse Hospitals",
+    "description": "Mental health hospitals, psychiatric facilities"
+  },
+  {
+    "code": "622310",
+    "title": "Specialty (Except Psychiatric and Substance Abuse) Hospitals",
+    "description": "Specialized hospitals (orthopedic, cancer, etc.)"
+  },
+  {
+    "code": "623110",
+    "title": "Nursing Care Facilities (Skilled Nursing Facilities)",
+    "description": "Skilled nursing homes, long-term care facilities"
+  },
+  {
+    "code": "623210",
+    "title": "Residential Intellectual and Developmental Disability, Mental Health, and Substance Abuse Facilities",
+    "description": "Group homes, residential treatment facilities"
+  },
+  {
+    "code": "623311",
+    "title": "Continuing Care Retirement Communities",
+    "description": "CCRC facilities, senior living communities"
+  },
+  {
+    "code": "623312",
+    "title": "Assisted Living Facilities for the Elderly",
+    "description": "Senior assisted living facilities"
+  },
+  {
+    "code": "713940",
+    "title": "Fitness and Recreational Sports Centers",
+    "description": "Gym memberships, fitness centers, sports clubs"
+  },
+  {
+    "code": "813110",
+    "title": "Religious Organizations",
+    "description": "Churches, synagogues, mosques, temples"
+  },
+  {
+    "code": "813210",
+    "title": "Grantmaking and Giving Services",
+    "description": "Foundations, trusts, charitable organizations"
+  },
+  {
+    "code": "813311",
+    "title": "Human Rights Organizations",
+    "description": "Civil rights organizations, advocacy groups"
+  },
+  {
+    "code": "813410",
+    "title": "Civic and Social Organizations",
+    "description": "Community organizations, civic clubs"
+  },
+  {
+    "code": "813990",
+    "title": "Other Similar Organizations (except Business, Professional, Labor, and Political Organizations)",
+    "description": "Miscellaneous membership organizations"
+  },
+  {
+    "code": "814110",
+    "title": "Private Households",
+    "description": "Domestic employment, household staff"
+  },
+  {
+    "code": "922110",
+    "title": "Federal Agencies",
+    "description": "U.S. federal government agencies"
+  },
+  {
+    "code": "922120",
+    "title": "State Government Agencies",
+    "description": "State government departments, agencies"
+  },
+  {
+    "code": "922130",
+    "title": "Local Government Agencies",
+    "description": "County, municipal, city government agencies"
+  }
+]

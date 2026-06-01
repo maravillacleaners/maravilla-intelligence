@@ -1,78 +1,296 @@
-import { NextResponse } from 'next/server'
+import { readAuth } from "@/lib/auth"
+import { NextRequest } from "next/server"
 
-const BASE_ID = process.env.AIRTABLE_BASE_ID || 'appZhXnyFiKbnOZLr'
-const TABLE_ID = 'tbl3qWHqunA0eERE2'
-const API_KEY = process.env.AIRTABLE_API_KEY
+const AIRTABLE_API_URL = "https://api.airtable.com/v0"
+const AIRTABLE_API_KEY = process.env.NEXT_PUBLIC_AIRTABLE_API_KEY
+const AIRTABLE_BASE_ID = process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID
 
-export async function GET() {
+interface Match {
+  id: string
+  legalName: string
+  naics: string
+  county: string
+  state: string
+  days: number
+  registrationDate: string
+  predictedScore: number
+  action: "auto-approve" | "queue" | "drop"
+  watchId: string
+  matchedFields: string[]
+}
+
+interface Watch {
+  id: string
+  name: string
+  active: boolean
+  naics: string[]
+  counties: string[]
+  zips: string[]
+  entityType: string[]
+  ageMin: number
+  ageMax: number
+  scoreTemplate: string
+  autoApproveThreshold: number
+  queueThreshold: number
+}
+
+async function getIntelligenceRecords() {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return getMockIntelligenceRecords()
+  }
+
   try {
-    const fields = [
-      'legal_name', 'opportunity_title', 'naics_code', 'county', 'place_of_performance',
-      'discovery_date', 'score', 'pipeline_status', 'business_email',
-      'record_type', 'source', 'segment', 'awarded_contractor', 'award_amount',
-    ].map((f) => `fields[]=${encodeURIComponent(f)}`).join('&')
-
-    // Show all records with a discovery_date — no score filter since scoring is async
-    const filter = encodeURIComponent(`NOT({discovery_date}='')`)
-    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?${fields}&filterByFormula=${filter}&pageSize=100&sort[0][field]=discovery_date&sort[0][direction]=desc`
-
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${API_KEY}` },
-      next: { revalidate: 60 },
-    })
-
-    if (!res.ok) throw new Error(`Airtable error ${res.status}`)
-    const data = await res.json()
-
-    const matches = (data.records || []).map((rec: any) => {
-      const f = rec.fields
-      const ps = f['pipeline_status']
-      const psName = typeof ps === 'object' ? ps?.name : (ps || 'New Lead')
-      const discoveryDate = f['discovery_date']
-      const days = discoveryDate
-        ? Math.floor((Date.now() - new Date(discoveryDate).getTime()) / 86400000)
-        : 0
-
-      // Use best available name field
-      const legalName =
-        f['legal_name'] ||
-        f['awarded_contractor'] ||
-        f['opportunity_title'] ||
-        'Unknown'
-
-      const score = f['score'] || 0
-      const awardAmount = f['award_amount'] || 0
-      // Map score to routing action (pipeline_status may not be set yet)
-      let action: 'auto-approve' | 'queue' | 'drop'
-      if (score >= 80) action = 'auto-approve'
-      else if (score >= 55) action = 'queue'
-      else action = 'drop'
-
-      // Parse place_of_performance "City, ST" or just "FL"
-      const rawPlace = f['place_of_performance'] || f['county'] || 'FL'
-      const placeParts = rawPlace.split(',').map((s: string) => s.trim())
-      const city = placeParts.length > 1 ? placeParts[0] : ''
-      const state = placeParts.length > 1 ? placeParts[1] : placeParts[0]
-
-      return {
-        id: rec.id,
-        legalName,
-        naics: f['naics_code'] || '561720',
-        county: city || state || 'FL',
-        days,
-        predictedScore: score,
-        action,
-        email: !!(f['business_email']),
-        award_amount: awardAmount,
-        place: { city, state },
-        pipelineStatus: psName,
-        current: days <= 30,
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${AIRTABLE_BASE_ID}/Intelligence?pageSize=100&filterByFormula=AND({record_type}="prospect",{score}>50)`,
+      {
+        headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` },
       }
-    })
+    )
 
-    return NextResponse.json({ matches })
-  } catch (err) {
-    console.error('[/api/discovery/matches]', err)
-    return NextResponse.json({ matches: [] }, { status: 500 })
+    if (!response.ok) {
+      return getMockIntelligenceRecords()
+    }
+
+    const data = await response.json()
+    const records = data.records || []
+
+    return records.map((r: any) => ({
+      id: r.id,
+      legalName: r.fields.legal_name,
+      naics: r.fields.naics,
+      county: r.fields.county,
+      state: r.fields.state,
+      registrationDate: r.fields.registration_date,
+      score: r.fields.score || 50,
+      entityType: r.fields.entity_type,
+    }))
+  } catch (error) {
+    console.warn("Discovery: Intelligence fetch failed")
+    return getMockIntelligenceRecords()
+  }
+}
+
+async function getActiveWatches() {
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    return getMockWatches()
+  }
+
+  try {
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${AIRTABLE_BASE_ID}/Watches?pageSize=50&filterByFormula={active}=TRUE()`,
+      {
+        headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` },
+      }
+    )
+
+    if (!response.ok) {
+      return getMockWatches()
+    }
+
+    const data = await response.json()
+    const records = data.records || []
+
+    return records.map((r: any) => ({
+      id: r.id,
+      name: r.fields.name,
+      active: true,
+      naics: r.fields.naics || [],
+      counties: r.fields.counties || [],
+      zips: r.fields.zips || [],
+      entityType: r.fields.entity_type || [],
+      ageMin: r.fields.age_min || 0,
+      ageMax: r.fields.age_max || 365,
+      scoreTemplate: r.fields.score_template || "default",
+      autoApproveThreshold: r.fields.auto_approve_threshold || 75,
+      queueThreshold: r.fields.queue_threshold || 55,
+    }))
+  } catch (error) {
+    console.warn("Discovery: Watches fetch failed")
+    return getMockWatches()
+  }
+}
+
+function scoreMatch(prospect: any, watch: Watch): number {
+  let score = 50
+
+  if (watch.naics.includes(prospect.naics)) {
+    score += 35
+  } else if (prospect.naics) {
+    const prospectNaicsPrefix = prospect.naics.substring(0, 4)
+    if (watch.naics.some((n) => n.startsWith(prospectNaicsPrefix))) {
+      score += 15
+    }
+  }
+
+  if (watch.counties.includes(prospect.county)) {
+    score += 20
+  }
+
+  const daysOld = Math.ceil(
+    (Date.now() - new Date(prospect.registrationDate).getTime()) / (1000 * 60 * 60 * 24)
+  )
+  if (daysOld >= watch.ageMin && daysOld <= watch.ageMax) {
+    score += 10
+  }
+
+  if (watch.entityType.length > 0 && prospect.entityType) {
+    if (watch.entityType.includes(prospect.entityType)) {
+      score += 10
+    }
+  }
+
+  if (prospect.score && prospect.score > 50) {
+    score = Math.min(prospect.score + (score - 50), 100)
+  }
+
+  return Math.min(score, 100)
+}
+
+function getMockIntelligenceRecords() {
+  return [
+    {
+      id: "p1",
+      legalName: "Brickell Property Group LLC",
+      naics: "531311",
+      county: "Miami-Dade",
+      state: "FL",
+      registrationDate: new Date(Date.now() - 23 * 24 * 3600000).toISOString(),
+      score: 85,
+      entityType: "LLC",
+    },
+    {
+      id: "p2",
+      legalName: "Edgewater Living LLC",
+      naics: "531311",
+      county: "Miami-Dade",
+      state: "FL",
+      registrationDate: new Date(Date.now() - 41 * 24 * 3600000).toISOString(),
+      score: 82,
+      entityType: "LLC",
+    },
+    {
+      id: "p3",
+      legalName: "Bayfront Dental Group",
+      naics: "621210",
+      county: "Miami-Dade",
+      state: "FL",
+      registrationDate: new Date(Date.now() - 22 * 24 * 3600000).toISOString(),
+      score: 75,
+      entityType: "PA",
+    },
+  ]
+}
+
+function getMockWatches() {
+  return [
+    {
+      id: "w1",
+      name: "FL Property Managers · 0–30d",
+      active: true,
+      naics: ["531311", "531312"],
+      counties: ["Miami-Dade", "Broward"],
+      zips: ["33131", "33132"],
+      entityType: ["LLC", "Inc"],
+      ageMin: 0,
+      ageMax: 30,
+      scoreTemplate: "property-manager-scoring",
+      autoApproveThreshold: 80,
+      queueThreshold: 60,
+    },
+    {
+      id: "w2",
+      name: "Healthcare · Miami-Dade",
+      active: true,
+      naics: ["621210", "621498"],
+      counties: ["Miami-Dade"],
+      zips: [],
+      entityType: ["LLC", "PA", "PLLC"],
+      ageMin: 0,
+      ageMax: 60,
+      scoreTemplate: "healthcare-scoring",
+      autoApproveThreshold: 75,
+      queueThreshold: 55,
+    },
+  ]
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const auth = await readAuth(request)
+    if (!auth) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const searchParams = request.nextUrl.searchParams
+    const watchId = searchParams.get("watchId")
+    const action = searchParams.get("action")
+
+    const watches = await getActiveWatches()
+    const prospects = await getIntelligenceRecords()
+
+    const matches: Match[] = []
+
+    for (const prospect of prospects) {
+      for (const watch of watches) {
+        const score = scoreMatch(prospect, watch)
+        const prospectAction =
+          score >= watch.autoApproveThreshold
+            ? "auto-approve"
+            : score >= watch.queueThreshold
+              ? "queue"
+              : "drop"
+
+        const daysOld = Math.ceil(
+          (Date.now() - new Date(prospect.registrationDate).getTime()) / (1000 * 60 * 60 * 24)
+        )
+
+        matches.push({
+          id: `${prospect.id}-${watch.id}`,
+          legalName: prospect.legalName,
+          naics: prospect.naics,
+          county: prospect.county,
+          state: prospect.state,
+          days: daysOld,
+          registrationDate: prospect.registrationDate,
+          predictedScore: score,
+          action: prospectAction,
+          watchId: watch.id,
+          matchedFields: [
+            watch.naics.includes(prospect.naics) && "naics",
+            watch.counties.includes(prospect.county) && "county",
+            daysOld >= watch.ageMin && daysOld <= watch.ageMax && "age",
+          ].filter(Boolean) as string[],
+        })
+      }
+    }
+
+    let filtered = matches
+    if (watchId) {
+      filtered = matches.filter((m) => m.watchId === watchId)
+    }
+
+    if (action && ["auto-approve", "queue", "drop"].includes(action)) {
+      filtered = filtered.filter((m) => m.action === action)
+    }
+
+    filtered.sort((a, b) => b.predictedScore - a.predictedScore)
+
+    return Response.json({
+      success: true,
+      data: filtered,
+      summary: {
+        total: filtered.length,
+        autoApprove: filtered.filter((m) => m.action === "auto-approve").length,
+        queue: filtered.filter((m) => m.action === "queue").length,
+        drop: filtered.filter((m) => m.action === "drop").length,
+      },
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error("[API /discovery/matches] GET error:", error)
+    return Response.json(
+      { error: "Failed to fetch matches", details: String(error) },
+      { status: 500 }
+    )
   }
 }
