@@ -19,6 +19,15 @@ interface Analytics {
     value: number
     agency?: string
   }>
+  pipelineStages?: Array<{
+    stage: string
+    count: number
+    mrr: number
+  }>
+  lastSyncIntel?: string
+  lastSyncOpp?: string
+  totalIntelRecords?: number
+  totalOppRecords?: number
 }
 
 async function getAnalytics(): Promise<Analytics> {
@@ -30,27 +39,38 @@ async function getAnalytics(): Promise<Analytics> {
   }
 
   try {
-    const response = await fetch(
-      `https://api.airtable.com/v0/${baseId}/Intelligence`,
+    // Fetch Intelligence table for prospects/contracts/subs
+    const intelResponse = await fetch(
+      `https://api.airtable.com/v0/${baseId}/Intelligence?pageSize=100`,
       {
         headers: { Authorization: `Bearer ${apiKey}` },
       }
     )
 
-    if (!response.ok) {
+    // Fetch Opportunities table for pipeline metrics
+    const oppResponse = await fetch(
+      `https://api.airtable.com/v0/${baseId}/Opportunities?pageSize=100`,
+      {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      }
+    )
+
+    if (!intelResponse.ok || !oppResponse.ok) {
       console.warn('Analytics: Airtable fetch failed')
       return getMockAnalytics()
     }
 
-    const data = await response.json()
-    const records = data.records || []
+    const intelData = await intelResponse.json()
+    const oppData = await oppResponse.json()
+    const intelRecords = intelData.records || []
+    const oppRecords = oppData.records || []
 
-    // Process records
-    const prospects = records.filter((r: any) => r.fields.record_type === 'prospect')
-    const contracts = records.filter((r: any) => r.fields.record_type === 'contract')
-    const subs = records.filter((r: any) => r.fields.record_type === 'sub')
+    // Process Intelligence records
+    const prospects = intelRecords.filter((r: any) => r.fields.record_type === 'prospect')
+    const contracts = intelRecords.filter((r: any) => r.fields.record_type === 'contract')
+    const subs = intelRecords.filter((r: any) => r.fields.record_type === 'sub')
 
-    const allScores = records
+    const allScores = intelRecords
       .map((r: any) => r.fields.score || 0)
       .filter((score: number) => score > 0)
     const averageScore =
@@ -61,8 +81,7 @@ async function getAnalytics(): Promise<Analytics> {
     // Score distribution
     const scoreDistribution = {
       high: prospects.filter((r: any) => (r.fields.score || 0) >= 75).length,
-      medium: prospects.filter((r: any) => (r.fields.score || 0) >= 50 && (r.fields.score || 0) < 75)
-        .length,
+      medium: prospects.filter((r: any) => (r.fields.score || 0) >= 50 && (r.fields.score || 0) < 75).length,
       low: prospects.filter((r: any) => (r.fields.score || 0) < 50).length,
     }
 
@@ -90,6 +109,33 @@ async function getAnalytics(): Promise<Analytics> {
         agency: r.fields.agency,
       }))
 
+    // Pipeline stages from Opportunities
+    const pipelineStages: { [key: string]: { count: number; mrr: number } } = {}
+    oppRecords.forEach((r: any) => {
+      const stage = r.fields.stage || 'Pending'
+      const amount = r.fields.estimated_amount || 0
+      if (!pipelineStages[stage]) {
+        pipelineStages[stage] = { count: 0, mrr: 0 }
+      }
+      pipelineStages[stage].count += 1
+      pipelineStages[stage].mrr += amount
+    })
+
+    const pipelineArray = Object.entries(pipelineStages).map(([stage, data]) => ({
+      stage,
+      count: data.count,
+      mrr: Math.round(data.mrr / 1000), // Convert to thousands (MRR)
+    }))
+
+    // Get last sync times
+    const lastSyncIntel = intelRecords.length > 0
+      ? new Date(Math.max(...intelRecords.map((r: any) => new Date(r.createdTime).getTime()))).toISOString().split('T')[0]
+      : 'Never'
+
+    const lastSyncOpp = oppRecords.length > 0
+      ? new Date(Math.max(...oppRecords.map((r: any) => new Date(r.createdTime).getTime()))).toISOString().split('T')[0]
+      : 'Never'
+
     return {
       totalProspects: prospects.length,
       totalContracts: contracts.length,
@@ -99,6 +145,11 @@ async function getAnalytics(): Promise<Analytics> {
       bySegment,
       byStatus,
       topOpportunities,
+      pipelineStages: pipelineArray,
+      lastSyncIntel,
+      lastSyncOpp,
+      totalIntelRecords: intelRecords.length,
+      totalOppRecords: oppRecords.length,
     }
   } catch (error) {
     console.warn('Analytics error:', error)

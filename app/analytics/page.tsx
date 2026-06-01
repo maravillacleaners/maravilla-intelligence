@@ -145,6 +145,11 @@ interface AnalyticsData {
   bySegment: { [key: string]: number }
   byStatus: { [key: string]: number }
   topOpportunities: Array<{ name: string; value: number; agency?: string }>
+  pipelineStages?: Array<{ stage: string; count: number; mrr: number }>
+  lastSyncIntel?: string
+  lastSyncOpp?: string
+  totalIntelRecords?: number
+  totalOppRecords?: number
 }
 
 const INITIAL_ANALYTICS: AnalyticsData = {
@@ -199,12 +204,50 @@ export default function AnalyticsPage() {
       <div style={{ padding: '28px 80px', display: 'flex', flexDirection: 'column', gap: 28 }}>
 
         {/* KPI Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 14 }}>
           <StatCard label="Total Prospects" value={analytics.totalProspects} sub={`avg score ${analytics.averageScore}`} tone="indigo" />
           <StatCard label="Total Contracts" value={analytics.totalContracts} sub="active contracts" tone="blue" />
           <StatCard label="Total Subs" value={analytics.totalSubs} sub="subcontractors" tone="emerald" />
+          <StatCard label="Intelligence Recs" value={analytics.totalIntelRecords || 0} sub={`last sync ${analytics.lastSyncIntel}`} tone="indigo" />
+          <StatCard label="Opportunities" value={analytics.totalOppRecords || 0} sub={`last sync ${analytics.lastSyncOpp}`} tone="blue" />
           <StatCard label="Recompetes" value={INSIGHTS.recompetes.length} sub="contracts expiring soon" tone="amber" />
         </div>
+
+        {/* Pipeline Stages (Real Data) */}
+        {analytics.pipelineStages && analytics.pipelineStages.length > 0 && (
+          <Card>
+            <SectionHeader>Real-Time Pipeline — Opportunities by Stage</SectionHeader>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <Th>Stage</Th>
+                  <Th>Count</Th>
+                  <Th>Total MRR ($K)</Th>
+                  <Th>% of Total</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.pipelineStages.map((row, i) => {
+                  const totalMrr = analytics.pipelineStages!.reduce((sum, s) => sum + s.mrr, 0)
+                  const pct = totalMrr > 0 ? Math.round((row.mrr / totalMrr) * 100) : 0
+                  return (
+                    <tr key={i}>
+                      <Td><Chip tone="indigo" size="sm">{row.stage}</Chip></Td>
+                      <Td mono>{row.count}</Td>
+                      <Td mono>${row.mrr.toLocaleString()}</Td>
+                      <Td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Bar value={pct} max={100} tone="indigo" height={5} />
+                          <span style={{ fontSize: 11, color: '#78716C', fontFamily: 'JetBrains Mono, monospace', flexShrink: 0 }}>{pct}%</span>
+                        </div>
+                      </Td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </Card>
+        )}
 
         {/* ── Revenue Forecast ── */}
         <Card>
