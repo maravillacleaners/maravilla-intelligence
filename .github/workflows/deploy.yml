@@ -1,11 +1,12 @@
-name: Deploy to Vercel
+name: Deploy to VPS
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
-  test-and-deploy:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,10 +14,47 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      
-      - run: npm ci
-      - run: npm run build
-      
-      - name: Deploy to Vercel
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+
+  deploy-vps:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 72.61.92.220 >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        run: |
+          ssh -i ~/.ssh/id_rsa root@72.61.92.220 << 'EOF'
+          cd /root/maravilla-intelligence
+          git fetch origin
+          git checkout main
+          git pull origin main
+          docker-compose down
+          docker-compose up -d
+          echo "✅ Deployment complete"
+          docker ps
+          EOF
+
+      - name: Verify endpoints
+        run: |
+          sleep 10
+          curl -s http://72.61.92.220:3002/api/discovery/naics?q=property | jq .success
+          curl -s http://72.61.92.220:3002/api/discovery/watches | jq .success
+        continue-on-error: true

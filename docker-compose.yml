@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  maravilla-intelligence:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maravilla-intelligence-phase7
+    restart: always
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_AIRTABLE_API_KEY: ${NEXT_PUBLIC_AIRTABLE_API_KEY}
+      NEXT_PUBLIC_AIRTABLE_BASE_ID: ${NEXT_PUBLIC_AIRTABLE_BASE_ID}
+      JWT_SECRET_SUPPLIER: ${JWT_SECRET_SUPPLIER}
+      SAM_GOV_API_KEY: ${SAM_GOV_API_KEY}
+      N8N_API_KEY: ${N8N_API_KEY}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+      LOG_LEVEL: info
+    labels:
+      - "com.maravilla.service=intelligence-portal"
+      - "com.maravilla.phase=7"
+      - "com.maravilla.version=production"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/api/discovery/naics?q=property"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
