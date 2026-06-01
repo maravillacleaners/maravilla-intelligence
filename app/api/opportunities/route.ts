@@ -76,6 +76,7 @@ function mapAirtableRecord(record: Record<string, unknown>): Opportunity {
 async function getHandler(req: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(req.url)
+    const search = searchParams.get('search') || searchParams.get('q') || ''
     const status = searchParams.get('status')
     const stateFilter = searchParams.get('state') || ''
     const deadlineFrom = searchParams.get('deadlineFrom') || ''
@@ -103,6 +104,10 @@ async function getHandler(req: NextRequest): Promise<NextResponse> {
     fields.forEach((f, i) => params.set(`fields[${i}]`, f))
 
     const filters: string[] = []
+    if (search) {
+      const searchLower = search.toLowerCase()
+      filters.push(`OR(SEARCH(LOWER("${searchLower}"),LOWER({title})),SEARCH(LOWER("${searchLower}"),LOWER({agency})),SEARCH(LOWER("${searchLower}"),LOWER({scope_summary})))`)
+    }
     if (status) filters.push(`{status}='${status}'`)
     if (stateFilter) filters.push(`{state}='${stateFilter}'`)
     if (deadlineFrom) filters.push(`{deadline}>='${deadlineFrom}'`)

@@ -25,7 +25,7 @@ async function handler(request: NextRequest) {
   const offset = searchParams.get('offset') || ''
   const sort   = searchParams.get('sort') || 'Priority_Score'
   const dir    = searchParams.get('dir') || 'desc'
-  const q      = searchParams.get('q') || ''
+  const search = searchParams.get('search') || searchParams.get('q') || ''
 
   const parts: string[] = [
     `pageSize=${limit}`,
@@ -40,7 +40,10 @@ async function handler(request: NextRequest) {
   if (scoreMax) filters.push(`{Priority_Score}<=${scoreMax}`)
   if (hasContact === 'yes') filters.push(`{Has_Decision_Maker}=TRUE()`)
   if (hasContact === 'no') filters.push(`{Has_Decision_Maker}=FALSE()`)
-  if (q)     filters.push(`OR(SEARCH(LOWER("${q.toLowerCase()}"),LOWER({Entity_Name}))>0,SEARCH(LOWER("${q.toLowerCase()}"),LOWER({Agency}))>0)`)
+  if (search) {
+    const searchLower = search.toLowerCase()
+    filters.push(`OR(SEARCH(LOWER("${searchLower}"),LOWER({Entity_Name}))>0,SEARCH(LOWER("${searchLower}"),LOWER({Agency}))>0,SEARCH(LOWER("${searchLower}"),LOWER({Location}))>0,SEARCH(LOWER("${searchLower}"),LOWER({NAICS_Codes}))>0)`)
+  }
   if (filters.length) parts.push(`filterByFormula=${encodeURIComponent(`AND(${filters.join(',')})`)}`)
   if (offset) parts.push(`offset=${encodeURIComponent(offset)}`)
 

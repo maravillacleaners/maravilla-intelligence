@@ -48,7 +48,7 @@ function mapContact(r: any) {
 
 async function getHandler(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const q           = searchParams.get('q') || ''
+  const search      = searchParams.get('search') || searchParams.get('q') || ''
   const source      = searchParams.get('source') || ''
   const avatarType  = searchParams.get('avatar_type') || ''
   const status      = searchParams.get('status') || ''
@@ -58,7 +58,10 @@ async function getHandler(req: NextRequest) {
   const offset      = parseInt(searchParams.get('offset') || '0', 10)
 
   const formulas: string[] = []
-  if (q) formulas.push(`OR(SEARCH(LOWER("${q}"),LOWER({Name})),SEARCH(LOWER("${q}"),LOWER({Organization})),SEARCH(LOWER("${q}"),LOWER({Email})))`)
+  if (search) {
+    const searchLower = search.toLowerCase()
+    formulas.push(`OR(SEARCH(LOWER("${searchLower}"),LOWER({Name})),SEARCH(LOWER("${searchLower}"),LOWER({Organization})),SEARCH(LOWER("${searchLower}"),LOWER({Email})))`)
+  }
   if (source) formulas.push(`{Source}="${source}"`)
   if (avatarType) formulas.push(`{Avatar_Type}="${avatarType}"`)
   if (status) formulas.push(`{Status}="${status}"`)

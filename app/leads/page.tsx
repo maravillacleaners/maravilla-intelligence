@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import TopBar from '@/components/crm/top-bar'
 import { InvestigationModal } from '@/components/crm/investigation-modal'
+import { getSavedFilters, saveFilter, deleteFilter, updateFilter, type SavedFilter } from '@/app/lib/storage'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -476,6 +477,7 @@ export default function LeadsPage() {
   const [loading, setLoading]       = useState(true)
   const [intaking, setIntaking]     = useState(false)
   const [toast, setToast]           = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [stageFilter, setStageFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
   const [scoreMin, setScoreMin]     = useState('')
@@ -483,11 +485,19 @@ export default function LeadsPage() {
   const [hasContactFilter, setHasContactFilter] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [notifs, setNotifs] = useState<any[]>([])
+  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set())
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkMenuOpen, setBulkMenuOpen] = useState(false)
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([])
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false)
+  const [saveFilterName, setSaveFilterName] = useState('')
+  const [showSaveFilter, setShowSaveFilter] = useState(false)
 
   const fetchLeads = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({ limit: '200', sort: 'Priority_Score', dir: 'desc' })
+      if (searchQuery) params.set('search', searchQuery)
       if (stageFilter) params.set('stage', stageFilter)
       if (sourceFilter) params.set('source', sourceFilter)
       if (scoreMin) params.set('scoreMin', scoreMin)
@@ -501,7 +511,7 @@ export default function LeadsPage() {
     } finally {
       setLoading(false)
     }
-  }, [stageFilter, sourceFilter, scoreMin, scoreMax, hasContactFilter])
+  }, [searchQuery, stageFilter, sourceFilter, scoreMin, scoreMax, hasContactFilter])
 
   async function runIntake() {
     setIntaking(true)
@@ -530,6 +540,100 @@ export default function LeadsPage() {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, stage: newStage } : l))
   }
 
+  function handleSaveFilter() {
+    if (!saveFilterName.trim()) {
+      showToast('Filter name required')
+      return
+    }
+    const filters = {
+      searchQuery,
+      stageFilter,
+      sourceFilter,
+      scoreMin,
+      scoreMax,
+      hasContactFilter,
+    }
+    saveFilter('leads', saveFilterName, filters)
+    setSaveFilterName('')
+    setShowSaveFilter(false)
+    setSavedFilters(getSavedFilters())
+    showToast(`✓ Saved filter "${saveFilterName}"`)
+  }
+
+  function handleLoadFilter(filter: SavedFilter) {
+    setSearchQuery(filter.filters.searchQuery || '')
+    setStageFilter(filter.filters.stageFilter || '')
+    setSourceFilter(filter.filters.sourceFilter || '')
+    setScoreMin(filter.filters.scoreMin || '')
+    setScoreMax(filter.filters.scoreMax || '')
+    setHasContactFilter(filter.filters.hasContactFilter || '')
+    setShowFilterDropdown(false)
+    showToast(`📌 Loaded "${filter.name}"`)
+  }
+
+  function handleDeleteFilter(id: string) {
+    deleteFilter(id)
+    setSavedFilters(getSavedFilters())
+    showToast('✓ Filter deleted')
+  }
+
+  function handleClearFilters() {
+    setSearchQuery('')
+    setStageFilter('')
+    setSourceFilter('')
+    setScoreMin('')
+    setScoreMax('')
+    setHasContactFilter('')
+  }
+
+  async function executeBulkAction(action: string, payload: any) {
+    if (selectedLeads.size === 0) return
+    setBulkLoading(true)
+    try {
+      const res = await fetch('/api/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: 'leads',
+          ids: Array.from(selectedLeads),
+          action,
+          payload,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast(`✓ ${action} — ${data.result.success} updated, ${data.result.failed} failed`)
+        setSelectedLeads(new Set())
+        setBulkMenuOpen(false)
+        fetchLeads()
+      } else {
+        showToast(`Error: ${data.error}`)
+      }
+    } catch (e: any) {
+      showToast(`Error: ${e.message}`)
+    } finally {
+      setBulkLoading(false)
+    }
+  }
+
+  function toggleLeadSelection(leadId: string) {
+    const newSelected = new Set(selectedLeads)
+    if (newSelected.has(leadId)) {
+      newSelected.delete(leadId)
+    } else {
+      newSelected.add(leadId)
+    }
+    setSelectedLeads(newSelected)
+  }
+
+  function toggleAllLeads() {
+    if (selectedLeads.size === leads.length) {
+      setSelectedLeads(new Set())
+    } else {
+      setSelectedLeads(new Set(leads.map(l => l.id)))
+    }
+  }
+
   function exportCSV() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : ''
     const params = new URLSearchParams()
@@ -541,6 +645,10 @@ export default function LeadsPage() {
   }
 
   useEffect(() => { fetchLeads() }, [fetchLeads])
+
+  useEffect(() => {
+    setSavedFilters(getSavedFilters().filter(f => f.table === 'leads'))
+  }, [])
 
   const stages  = ['', 'New Signal', 'Contact Found', 'Outreach Ready', 'In Conversation', 'Proposal Sent', 'Won', 'Lost', 'Monitor']
   const sources = ['', ...Array.from(new Set(leads.map(l => l.source).filter(Boolean)))]
@@ -574,13 +682,95 @@ export default function LeadsPage() {
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-          <div>
+          <div style={{ flex: 1, minWidth: 200 }}>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: 0 }}>Leads</h1>
             <p style={{ color: C.muted, fontSize: 14, margin: '4px 0 0' }}>
               {loading ? 'Loading…' : `${total} leads · SAM · Intelligence · Avatars`}
             </p>
           </div>
+
+          {/* Search bar */}
+          <input
+            type="text"
+            placeholder="Search by name, agency, NAICS, location…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') fetchLeads() }}
+            style={{
+              flex: '1 1 300px',
+              minWidth: 200,
+              height: 36,
+              padding: '0 12px',
+              border: C.border,
+              borderRadius: 7,
+              fontSize: 13,
+              color: C.text,
+              background: '#FFF',
+              fontFamily: 'inherit',
+            }}
+          />
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Filter dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                style={{
+                  height: 34, padding: '0 12px', border: C.border, borderRadius: 7, fontSize: 12,
+                  background: savedFilters.length > 0 ? '#EEF2FF' : '#FFF',
+                  color: savedFilters.length > 0 ? C.primary : C.text,
+                  cursor: 'pointer', fontWeight: 600,
+                }}
+              >
+                📌 Filters {savedFilters.length > 0 && <span style={{ marginLeft: 4, background: C.primary, color: '#fff', padding: '1px 6px', borderRadius: 99, fontSize: 10, fontWeight: 700 }}>{savedFilters.length}</span>}
+              </button>
+              {showFilterDropdown && (
+                <div style={{
+                  position: 'absolute', top: 40, left: 0, minWidth: 280, zIndex: 200,
+                  background: '#FFF', border: C.border, borderRadius: 8,
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.1)', overflow: 'hidden',
+                }}>
+                  {savedFilters.length === 0 ? (
+                    <div style={{ padding: '14px 16px', fontSize: 12, color: C.vMuted }}>No saved filters yet</div>
+                  ) : (
+                    savedFilters.map(f => (
+                      <div
+                        key={f.id}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '10px 14px', borderBottom: C.border,
+                          fontSize: 12, cursor: 'pointer',
+                        }}
+                      >
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleLoadFilter(f) }}
+                          style={{
+                            flex: 1, textAlign: 'left', background: 'none', border: 'none',
+                            cursor: 'pointer', color: C.text, padding: 0,
+                          }}
+                        >
+                          <div style={{ fontWeight: 500 }}>{f.name}</div>
+                          <div style={{ fontSize: 11, color: C.vMuted, marginTop: 2 }}>
+                            {f.lastUsedAt ? `Last: ${new Date(f.lastUsedAt).toLocaleDateString()}` : 'Never used'}
+                          </div>
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteFilter(f.id) }}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: C.red, fontSize: 14, padding: '4px 6px',
+                          }}
+                          title="Delete filter"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Filter inputs */}
             <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} style={{ height: 34, padding: '0 8px', border: C.border, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }}>
               {sources.map(s => <option key={s} value={s}>{s || 'All sources'}</option>)}
             </select>
@@ -611,6 +801,118 @@ export default function LeadsPage() {
             >
               📥 Export CSV
             </button>
+
+            {/* Save filter button */}
+            {(searchQuery || stageFilter || sourceFilter || scoreMin || scoreMax || hasContactFilter) && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowSaveFilter(!showSaveFilter)}
+                  style={{ height: 34, padding: '0 12px', border: C.border, borderRadius: 7, fontSize: 12, background: '#EEF2FF', color: C.primary, cursor: 'pointer', fontWeight: 600 }}
+                >
+                  💾 Save Filter
+                </button>
+                {showSaveFilter && (
+                  <div style={{
+                    position: 'absolute', top: 40, right: 0, minWidth: 200, zIndex: 200,
+                    background: '#FFF', border: C.border, borderRadius: 8,
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.1)', padding: '12px',
+                  }}>
+                    <input
+                      type="text"
+                      placeholder="Filter name (e.g., 'Hot Commercial')"
+                      value={saveFilterName}
+                      onChange={(e) => setSaveFilterName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleSaveFilter() }}
+                      style={{
+                        width: '100%', height: 32, padding: '0 8px',
+                        border: C.border, borderRadius: 6, fontSize: 12,
+                        marginBottom: 8, color: C.text, background: '#FFF',
+                      }}
+                      autoFocus
+                    />
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        onClick={handleSaveFilter}
+                        style={{
+                          flex: 1, height: 28, border: 'none', borderRadius: 6,
+                          background: C.primary, color: '#fff', fontSize: 12,
+                          fontWeight: 600, cursor: 'pointer',
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => { setShowSaveFilter(false); setSaveFilterName('') }}
+                        style={{
+                          flex: 1, height: 28, border: C.border, borderRadius: 6,
+                          background: '#FFF', color: C.text, fontSize: 12,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Clear filters button */}
+            {(searchQuery || stageFilter || sourceFilter || scoreMin || scoreMax || hasContactFilter) && (
+              <button
+                onClick={handleClearFilters}
+                style={{ height: 34, padding: '0 12px', border: C.border, borderRadius: 7, fontSize: 12, background: '#FFF', color: C.muted, cursor: 'pointer' }}
+              >
+                ✕ Clear
+              </button>
+            )}
+
+            {/* Bulk actions menu */}
+            {selectedLeads.size > 0 && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setBulkMenuOpen(!bulkMenuOpen)}
+                  disabled={bulkLoading}
+                  style={{
+                    height: 34, padding: '0 14px', borderRadius: 7, fontSize: 13, fontWeight: 600,
+                    border: 'none', background: '#DC2626', color: '#fff',
+                    cursor: bulkLoading ? 'not-allowed' : 'pointer',
+                    opacity: bulkLoading ? 0.7 : 1,
+                  }}
+                >
+                  ⚡ {selectedLeads.size} Selected
+                </button>
+                {bulkMenuOpen && (
+                  <div style={{
+                    position: 'absolute', top: 40, right: 0, minWidth: 200, zIndex: 200,
+                    background: '#FFF', border: C.border, borderRadius: 8,
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.1)', overflow: 'hidden',
+                  }}>
+                    <button
+                      onClick={() => executeBulkAction('updateStage', { stage: 'Outreach Ready' })}
+                      disabled={bulkLoading}
+                      style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, color: C.text, cursor: 'pointer', borderBottom: C.border, opacity: bulkLoading ? 0.6 : 1 }}
+                    >
+                      📤 Move to Outreach
+                    </button>
+                    <button
+                      onClick={() => executeBulkAction('updateStage', { stage: 'Monitor' })}
+                      disabled={bulkLoading}
+                      style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, color: C.text, cursor: 'pointer', borderBottom: C.border, opacity: bulkLoading ? 0.6 : 1 }}
+                    >
+                      👁️ Move to Monitor
+                    </button>
+                    <button
+                      onClick={() => executeBulkAction('updateStage', { stage: 'Lost' })}
+                      disabled={bulkLoading}
+                      style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, color: C.text, cursor: 'pointer', opacity: bulkLoading ? 0.6 : 1 }}
+                    >
+                      ❌ Mark as Lost
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -645,7 +947,7 @@ export default function LeadsPage() {
           }
           return (
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontSize: 11, color: C.xmuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sources:</span>
+              <span style={{ fontSize: 11, color: C.vMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sources:</span>
               {Object.entries(srcCounts).sort((a,b) => b[1]-a[1]).map(([src, count]) => {
                 const s = SRC_LABELS[src] || { icon: '📌', label: src, color: C.muted }
                 return (
@@ -683,6 +985,14 @@ export default function LeadsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#FAFAFB', borderBottom: C.border }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 600, fontSize: 11, color: C.muted, width: 40 }}>
+                    <input
+                      type="checkbox"
+                      checked={leads.length > 0 && selectedLeads.size === leads.length}
+                      onChange={toggleAllLeads}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </th>
                   {['Company', 'Stage', 'Score', 'Source', 'Agency / NAICS', 'Contact', 'Actions', 'Last Seen'].map(h => (
                     <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, fontSize: 11, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
@@ -694,6 +1004,8 @@ export default function LeadsPage() {
                     key={lead.id}
                     lead={lead}
                     isLast={i === leads.length - 1}
+                    isSelected={selectedLeads.has(lead.id)}
+                    onToggleSelection={() => toggleLeadSelection(lead.id)}
                     onSelect={() => setSelectedId(lead.id)}
                     onAction={async (action) => {
                       try {
@@ -727,11 +1039,15 @@ export default function LeadsPage() {
 function LeadRow({
   lead,
   isLast,
+  isSelected,
+  onToggleSelection,
   onSelect,
   onAction,
 }: {
   lead: Lead
   isLast: boolean
+  isSelected: boolean
+  onToggleSelection: () => void
   onSelect: () => void
   onAction: (action: string) => void
 }) {
@@ -750,10 +1066,21 @@ function LeadRow({
 
   return (
     <tr
-      style={{ borderBottom: isLast ? 'none' : '1px solid #F5F5F4', background: hover ? '#FAFAF9' : 'transparent', cursor: 'pointer' }}
+      style={{ borderBottom: isLast ? 'none' : '1px solid #F5F5F4', background: isSelected ? '#F3F3FF' : hover ? '#FAFAF9' : 'transparent', cursor: 'pointer' }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
+      {/* Checkbox */}
+      <td style={{ padding: '10px 12px', textAlign: 'center', width: 40 }} onClick={e => { e.stopPropagation(); onToggleSelection() }}>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onToggleSelection}
+          onClick={e => e.stopPropagation()}
+          style={{ cursor: 'pointer' }}
+        />
+      </td>
+
       {/* Company */}
       <td style={{ padding: '10px 12px', maxWidth: 200 }} onClick={onSelect}>
         <div style={{ fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.entity_name || '—'}</div>
