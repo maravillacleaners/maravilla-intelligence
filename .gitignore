@@ -36,3 +36,12 @@ temp/
 *.tmp
 .next/
 .next/
+
+# Build output
+.next/
+dist/
+build/
+out/
+
+# Cache
+.turbo/

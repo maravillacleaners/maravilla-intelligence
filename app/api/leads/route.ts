@@ -1,17 +1,20 @@
 /**
  * GET /api/leads — Paginated leads list from Leads table
  * Supports: ?stage=&limit=50&offset=0&sort=Priority_Score&dir=desc
+ * Requires: Valid auth token
  */
 
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
+import { credentials, airtableTables } from '@/app/lib/credentials'
+import { authMiddleware } from '@/app/lib/auth-middleware'
 
-const KEY  = process.env.AIRTABLE_API_KEY!
-const BASE = process.env.AIRTABLE_BASE_ID!
-const TBL  = 'tblja2oeA4oNEjioT'
+const KEY  = credentials.airtableApiKey
+const BASE = credentials.airtableBaseId
+const TBL  = airtableTables.leads
 const AT   = `https://api.airtable.com/v0/${BASE}`
 const HDR  = () => ({ Authorization: `Bearer ${KEY}` })
 
-export async function GET(request: Request) {
+async function handler(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const stage  = searchParams.get('stage') || ''
   const source = searchParams.get('source') || ''
@@ -64,10 +67,22 @@ export async function GET(request: Request) {
     created_time:    r.createdTime,
   }))
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     records,
     limit,
     offset:      data.offset || null,
     has_more:    !!data.offset,
   })
+  response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=600')
+  return response
+}
+
+export async function GET(request: NextRequest) {
+  // Check auth
+  const authError = await authMiddleware(request)
+  if (authError) {
+    return authError
+  }
+
+  return handler(request)
 }

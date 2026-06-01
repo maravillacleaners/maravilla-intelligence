@@ -3,14 +3,17 @@
  * Lists contacts (Avatars table) with filters: source, avatar_type, status, q
  * POST /api/contacts
  * Creates a new contact manually
+ * Requires: Valid auth token
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { credentials, airtableTables } from '@/app/lib/credentials'
+import { authMiddleware } from '@/app/lib/auth-middleware'
 
 export const dynamic = 'force-dynamic'
 
-const KEY  = process.env.AIRTABLE_API_KEY!
-const BASE = process.env.AIRTABLE_BASE_ID!
-const TBL  = 'tblrIv6lKjsMeUcyU'
+const KEY  = credentials.airtableApiKey
+const BASE = credentials.airtableBaseId
+const TBL  = airtableTables.contacts
 const AT   = `https://api.airtable.com/v0/${BASE}`
 const HDR  = () => ({ Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' })
 
@@ -43,13 +46,14 @@ function mapContact(r: any) {
   }
 }
 
-export async function GET(req: NextRequest) {
+async function getHandler(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const q           = searchParams.get('q') || ''
   const source      = searchParams.get('source') || ''
   const avatarType  = searchParams.get('avatar_type') || ''
   const status      = searchParams.get('status') || ''
-  const limit       = Math.min(parseInt(searchParams.get('limit') || '100'), 200)
+  const limit       = Math.min(parseInt(searchParams.get('limit') || '50'), 200)
+  const offset      = parseInt(searchParams.get('offset') || '0', 10)
 
   const formulas: string[] = []
   if (q) formulas.push(`OR(SEARCH(LOWER("${q}"),LOWER({Name})),SEARCH(LOWER("${q}"),LOWER({Organization})),SEARCH(LOWER("${q}"),LOWER({Email})))`)
@@ -62,8 +66,11 @@ export async function GET(req: NextRequest) {
   const params = new URLSearchParams({
     'sort[0][field]': 'Last_Seen',
     'sort[0][direction]': 'desc',
-    maxRecords: String(limit),
+    pageSize: String(limit),
   })
+  if (offset > 0) {
+    params.set('offset', String(offset))
+  }
   if (formula) params.set('filterByFormula', formula)
 
   try {
@@ -79,10 +86,22 @@ export async function GET(req: NextRequest) {
       typeCounts[c.avatar_type || 'unknown'] = (typeCounts[c.avatar_type || 'unknown'] || 0) + 1
     })
 
-    return NextResponse.json({ contacts, total: contacts.length, source_counts: srcCounts, type_counts: typeCounts })
+    const response = NextResponse.json({ contacts, total: contacts.length, source_counts: srcCounts, type_counts: typeCounts })
+    response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=600')
+    return response
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
+}
+
+export async function GET(req: NextRequest) {
+  // Check auth
+  const authError = await authMiddleware(req)
+  if (authError) {
+    return authError
+  }
+
+  return getHandler(req)
 }
 
 export async function POST(req: NextRequest) {

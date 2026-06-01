@@ -1,14 +1,17 @@
+import { credentials, airtableTables } from '@/app/lib/credentials'
+import { authMiddleware } from '@/app/lib/auth-middleware'
 /**
  * Opportunities API
  * GET  – List opportunities from Airtable with filter/sort/limit params
  * POST – Create a new opportunity in Airtable
+ * Requires: Valid auth token
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 
-const AIRTABLE_API_KEY = 'pat99rdlH4w13bxyF.b9d1c94b946e484274aef34315d7a8442fffa86237ee061faf96c2e0fb90ca92'
-const AIRTABLE_BASE_ID = 'appZhXnyFiKbnOZLr'
-const AIRTABLE_TABLE = 'tbldTDb1v79dVNCTQ'
+const AIRTABLE_API_KEY = credentials.airtableApiKey
+const AIRTABLE_BASE_ID = credentials.airtableBaseId
+const AIRTABLE_TABLE = airtableTables.opportunities
 const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE}`
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -67,81 +70,31 @@ function mapAirtableRecord(record: Record<string, unknown>): Opportunity {
   }
 }
 
-function getMockOpportunities(): Opportunity[] {
-  const now = new Date()
-  const future = (days: number) =>
-    new Date(now.getTime() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-
-  return [
-    {
-      id: 'mock-1',
-      bid_id: 'OPP-MOCK-001',
-      title: 'Janitorial Services - Broward County Schools Zone 3',
-      agency: 'Broward County School District',
-      state: 'FL',
-      deadline: future(30),
-      estimated_value: 485000,
-      source: 'sam.gov',
-      status: 'new',
-      score: 88,
-      signal_strength: 'high',
-      scope_summary: 'Comprehensive custodial services for 12 school facilities.',
-      cleaning_keywords: ['janitorial', 'custodial', 'floor care'],
-      naics_codes: ['561720'],
-      created_at: now.toISOString(),
-      days_until_deadline: 30,
-    },
-    {
-      id: 'mock-2',
-      bid_id: 'OPP-MOCK-002',
-      title: 'Custodial Services - Miami International Airport Terminals',
-      agency: 'Miami-Dade Aviation Department',
-      state: 'FL',
-      deadline: future(45),
-      estimated_value: 1200000,
-      source: 'opengov',
-      status: 'reviewing',
-      score: 75,
-      signal_strength: 'high',
-      scope_summary: 'Full custodial operations across 3 concourses, 24/7 coverage required.',
-      cleaning_keywords: ['custodial', 'sanitation', 'terminal cleaning'],
-      naics_codes: ['561720', '561790'],
-      created_at: now.toISOString(),
-      days_until_deadline: 45,
-    },
-    {
-      id: 'mock-3',
-      bid_id: 'OPP-MOCK-003',
-      title: 'Office Cleaning Services - City of Fort Lauderdale Municipal Buildings',
-      agency: 'City of Fort Lauderdale',
-      state: 'FL',
-      deadline: future(20),
-      estimated_value: 95000,
-      source: 'email',
-      status: 'bidding',
-      score: 62,
-      signal_strength: 'medium',
-      scope_summary: 'Routine office cleaning for 5 city-owned facilities, M-F schedule.',
-      cleaning_keywords: ['office cleaning', 'janitorial', 'trash removal'],
-      naics_codes: ['561720'],
-      created_at: now.toISOString(),
-      days_until_deadline: 20,
-    },
-  ]
-}
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 
-export async function GET(req: NextRequest): Promise<NextResponse> {
+async function getHandler(req: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
     const sort = searchParams.get('sort') || 'deadline'
     const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const offset = parseInt(searchParams.get('offset') || '0', 10)
 
     // Build Airtable query params
     const params = new URLSearchParams()
     params.set('pageSize', String(Math.min(limit, 100)))
+    if (offset > 0) {
+      params.set('offset', String(offset))
+    }
+
+    // Field selection optimization: only fetch necessary fields
+    const fields = [
+      'bid_id', 'title', 'agency', 'state', 'deadline', 'estimated_value',
+      'source', 'status', 'score', 'signal_strength', 'scope_summary',
+      'cleaning_keywords', 'naics_codes'
+    ]
+    fields.forEach((f, i) => params.set(`fields[${i}]`, f))
 
     if (status) {
       params.set('filterByFormula', `{status}='${status}'`)
@@ -165,40 +118,51 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     })
 
     if (!res.ok) {
-      console.warn('Airtable Opportunities fetch failed:', res.status)
-      const mockData = getMockOpportunities()
-      return NextResponse.json({
-        opportunities: mockData,
-        total: mockData.length,
-        filters: { status, sort, limit },
-        error: 'table_not_configured',
+      const errBody = await res.text()
+      console.error('❌ Airtable Opportunities fetch failed:', {
+        status: res.status,
+        error: errBody,
+        url: `${AIRTABLE_API_URL}?${params.toString()}`,
       })
+      return NextResponse.json(
+        { success: false, error: 'Airtable fetch failed', details: errBody },
+        { status: res.status }
+      )
     }
 
     const data = await res.json()
     const records: Record<string, unknown>[] = data?.records ?? []
     const opportunities = records.map(mapAirtableRecord)
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       opportunities,
       total: opportunities.length,
       filters: { status, sort, limit },
     })
+    response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=600')
+    return response
   } catch (err) {
     console.error('Opportunities GET error:', err)
-    const mockData = getMockOpportunities()
-    return NextResponse.json({
-      opportunities: mockData,
-      total: mockData.length,
-      filters: {},
-      error: 'table_not_configured',
-    })
+    return NextResponse.json(
+      { success: false, error: 'Internal server error', details: String(err) },
+      { status: 500 }
+    )
   }
+}
+
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  // Check auth
+  const authError = await authMiddleware(req)
+  if (authError) {
+    return authError
+  }
+
+  return getHandler(req)
 }
 
 // ── POST ──────────────────────────────────────────────────────────────────────
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
+async function postHandler(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json()
 
@@ -248,7 +212,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       source_url: source_url ?? '',
       contact_name: contact_name ?? '',
       contact_email: contact_email ?? '',
-      created_at: new Date().toISOString(),
     }
 
     const res = await fetch(AIRTABLE_API_URL, {
@@ -302,4 +265,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       { status: 500 }
     )
   }
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  // Check auth
+  const authError = await authMiddleware(req)
+  if (authError) {
+    return authError
+  }
+
+  return postHandler(req)
 }
