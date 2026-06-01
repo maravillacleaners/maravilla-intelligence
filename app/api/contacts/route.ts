@@ -52,6 +52,8 @@ async function getHandler(req: NextRequest) {
   const source      = searchParams.get('source') || ''
   const avatarType  = searchParams.get('avatar_type') || ''
   const status      = searchParams.get('status') || ''
+  const minInfluence = searchParams.get('minInfluence') || ''
+  const hasEmail = searchParams.get('hasEmail') || ''
   const limit       = Math.min(parseInt(searchParams.get('limit') || '50'), 200)
   const offset      = parseInt(searchParams.get('offset') || '0', 10)
 
@@ -60,6 +62,9 @@ async function getHandler(req: NextRequest) {
   if (source) formulas.push(`{Source}="${source}"`)
   if (avatarType) formulas.push(`{Avatar_Type}="${avatarType}"`)
   if (status) formulas.push(`{Status}="${status}"`)
+  if (minInfluence) formulas.push(`{Influence_Score}>=${minInfluence}`)
+  if (hasEmail === 'yes') formulas.push(`{Email}!=""`)
+  if (hasEmail === 'no') formulas.push(`{Email}=""`)
 
   const formula = formulas.length === 0 ? '' : formulas.length === 1 ? formulas[0] : `AND(${formulas.join(',')})`
 

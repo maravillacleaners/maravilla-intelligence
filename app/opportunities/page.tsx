@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import TopBar from '@/components/crm/top-bar'
 
 const C = {
@@ -585,41 +585,56 @@ export default function OpportunitiesPage() {
   const [scoreAllLoading, setScoreAllLoading] = useState(false)
   const [sortCol, setSortCol] = useState<'title' | 'agency' | 'deadline' | 'estimated_value' | 'status' | 'score'>('deadline')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [stateFilter, setStateFilter] = useState('')
+  const [deadlineFrom, setDeadlineFrom] = useState('')
+  const [deadlineTo, setDeadlineTo] = useState('')
+  const [valueMin, setValueMin] = useState('')
+  const [valueMax, setValueMax] = useState('')
+  const [scoreMin, setScoreMin] = useState('')
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true)
-      try {
-        const res = await fetch('/api/opportunities?limit=100')
-        const data = await res.json()
-        if (data.opportunities && data.opportunities.length > 0) {
-          setOpportunities(data.opportunities.map((o: any) => ({
-            id: o.id,
-            title: o.fields?.title || o.title || 'Untitled',
-            agency: o.fields?.agency || o.agency || '',
-            deadline: o.fields?.deadline || o.deadline || '',
-            estimated_value: o.fields?.estimated_value || o.estimated_value || 0,
-            status: o.fields?.status || o.status || 'New',
-            score: o.fields?.score || o.score || 0,
-            scope_summary: o.fields?.notes || o.scope_summary || '',
-            naics_code: o.fields?.naics_code || o.naics_code || '561720',
-            source: o.fields?.source || o.source || 'manual',
-            signal_strength: o.fields?.signal_strength || 'medium',
-          })))
-        }
-        // If Airtable empty, keep MOCK_OPPS as fallback so page isn't blank
-      } catch (e) {
-        console.error(e)
+  const fetchOpportunities = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({ limit: '100' })
+      if (filterStatus !== 'All') params.set('status', filterStatus)
+      if (stateFilter) params.set('state', stateFilter)
+      if (deadlineFrom) params.set('deadlineFrom', deadlineFrom)
+      if (deadlineTo) params.set('deadlineTo', deadlineTo)
+      if (valueMin) params.set('valueMin', valueMin)
+      if (valueMax) params.set('valueMax', valueMax)
+      if (scoreMin) params.set('scoreMin', scoreMin)
+      const res = await fetch(`/api/opportunities?${params}`)
+      const data = await res.json()
+      if (data.opportunities && data.opportunities.length > 0) {
+        setOpportunities(data.opportunities.map((o: any) => ({
+          id: o.id,
+          title: o.title || 'Untitled',
+          agency: o.agency || '',
+          deadline: o.deadline || '',
+          estimated_value: o.estimated_value || 0,
+          status: o.status || 'New',
+          score: o.score || 0,
+          scope_summary: o.scope_summary || '',
+          naics_code: o.naics_code || '561720',
+          source: o.source || 'manual',
+          signal_strength: o.signal_strength || 'medium',
+        })))
       }
+    } catch (e) {
+      console.error(e)
+    } finally {
       setLoading(false)
     }
-    load()
+  }, [filterStatus, stateFilter, deadlineFrom, deadlineTo, valueMin, valueMax, scoreMin])
+
+  useEffect(() => {
+    fetchOpportunities()
 
     // Also load OpenGov separately
     fetch('/api/browser-agent/opengov').then(r => r.json()).catch(() => ({})).then(govData => {
       if (Array.isArray(govData.opportunities) && govData.opportunities.length > 0) setOpengovOpps(govData.opportunities)
     })
-  }, [])
+  }, [fetchOpportunities])
 
   const handleScanOpenGov = async () => {
     setScanLoading(true)
@@ -720,6 +735,16 @@ export default function OpportunitiesPage() {
     else { setSortCol(col); setSortDir('asc') }
   }
 
+  const exportCSV = () => {
+    const token = localStorage.getItem('auth_token')
+    if (!token) {
+      setToast('Auth token not found')
+      return
+    }
+    const exportUrl = `/api/export/opportunities?token=${token}&status=${filterStatus !== 'All' ? filterStatus : ''}`
+    window.location.href = exportUrl
+  }
+
   const thStyle = (col: typeof sortCol) => ({
     textAlign: 'left' as const, padding: '10px 14px', fontSize: 11, fontWeight: 600,
     color: sortCol === col ? C.blue : C.muted, textTransform: 'uppercase' as const,
@@ -801,6 +826,16 @@ export default function OpportunitiesPage() {
             {scanLoading ? 'Scanning...' : 'Scan OpenGov'}
           </button>
           <button
+            onClick={exportCSV}
+            style={{
+              padding: '9px 16px', background: '#FFFFFF', border: `1px solid ${C.border}`,
+              borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              color: C.text, fontFamily: FF,
+            }}
+          >
+            Export CSV
+          </button>
+          <button
             onClick={() => { setAddModalStatus('New'); setShowAddModal(true) }}
             style={{
               padding: '9px 16px', background: C.blue, color: '#FFF',
@@ -811,6 +846,25 @@ export default function OpportunitiesPage() {
             + Add Opportunity
           </button>
         </div>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div style={{
+        borderBottom: `1px solid ${C.border}`, background: C.card,
+        padding: '12px 32px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+      }}>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as OppStatus | 'All')} style={{ height: 34, padding: '0 8px', border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }}>
+          {STATUSES.concat(['All']).map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <input type="text" placeholder="State" value={stateFilter} onChange={e => setStateFilter(e.target.value)} style={{ height: 34, padding: '0 8px', width: 80, border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF' }} />
+        <input type="date" placeholder="From" value={deadlineFrom} onChange={e => setDeadlineFrom(e.target.value)} style={{ height: 34, padding: '0 8px', border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF' }} />
+        <input type="date" placeholder="To" value={deadlineTo} onChange={e => setDeadlineTo(e.target.value)} style={{ height: 34, padding: '0 8px', border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF' }} />
+        <input type="number" min="0" placeholder="Min value" value={valueMin} onChange={e => setValueMin(e.target.value)} style={{ height: 34, padding: '0 8px', width: 100, border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF' }} />
+        <input type="number" min="0" placeholder="Max value" value={valueMax} onChange={e => setValueMax(e.target.value)} style={{ height: 34, padding: '0 8px', width: 100, border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF' }} />
+        <input type="number" min="0" max="100" placeholder="Min score" value={scoreMin} onChange={e => setScoreMin(e.target.value)} style={{ height: 34, padding: '0 8px', width: 100, border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF' }} />
+        <button onClick={fetchOpportunities} disabled={loading} style={{ height: 34, padding: '0 12px', border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, background: '#FFF', color: C.text, cursor: 'pointer' }}>
+          Refresh
+        </button>
       </div>
 
       {/* Body */}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { airtableTables } from '@/app/lib/credentials'
 
 const AIRTABLE_KEY = 'pat99rdlH4w13bxyF.b9d1c94b946e484274aef34315d7a8442fffa86237ee061faf96c2e0fb90ca92'
 const BASE = 'appZhXnyFiKbnOZLr'
@@ -273,6 +274,13 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  if (!airtableTables.companies) {
+    return NextResponse.json(
+      { error: 'Companies table not configured' },
+      { status: 501 }
+    )
+  }
+
   const name = decodeURIComponent(params.id).replace(/-/g, ' ')
   const nameSafe = name.replace(/"/g, '')
 

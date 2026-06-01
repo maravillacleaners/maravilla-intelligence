@@ -18,6 +18,9 @@ async function handler(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const stage  = searchParams.get('stage') || ''
   const source = searchParams.get('source') || ''
+  const scoreMin = searchParams.get('scoreMin') || ''
+  const scoreMax = searchParams.get('scoreMax') || ''
+  const hasContact = searchParams.get('hasContact') || ''
   const limit  = Math.min(Number(searchParams.get('limit') || 50), 100)
   const offset = searchParams.get('offset') || ''
   const sort   = searchParams.get('sort') || 'Priority_Score'
@@ -33,6 +36,10 @@ async function handler(request: NextRequest) {
   const filters: string[] = []
   if (stage) filters.push(`{Stage}="${stage}"`)
   if (source) filters.push(`{Source}="${source}"`)
+  if (scoreMin) filters.push(`{Priority_Score}>=${scoreMin}`)
+  if (scoreMax) filters.push(`{Priority_Score}<=${scoreMax}`)
+  if (hasContact === 'yes') filters.push(`{Has_Decision_Maker}=TRUE()`)
+  if (hasContact === 'no') filters.push(`{Has_Decision_Maker}=FALSE()`)
   if (q)     filters.push(`OR(SEARCH(LOWER("${q.toLowerCase()}"),LOWER({Entity_Name}))>0,SEARCH(LOWER("${q.toLowerCase()}"),LOWER({Agency}))>0)`)
   if (filters.length) parts.push(`filterByFormula=${encodeURIComponent(`AND(${filters.join(',')})`)}`)
   if (offset) parts.push(`offset=${encodeURIComponent(offset)}`)

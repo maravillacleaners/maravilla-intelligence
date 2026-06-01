@@ -1,19 +1,15 @@
+import { credentials, airtableTables } from '@/app/lib/credentials'
+
 interface Analytics {
-  totalProspects: number
-  totalContracts: number
-  totalSubs: number
+  totalLeads: number
   averageScore: number
   scoreDistribution: {
     high: number
     medium: number
     low: number
   }
-  bySegment: {
-    [key: string]: number
-  }
-  byStatus: {
-    [key: string]: number
-  }
+  byStage: Array<{ stage: string; count: number }>
+  bySource: Array<{ source: string; count: number }>
   topOpportunities: Array<{
     name: string
     value: number
@@ -22,56 +18,49 @@ interface Analytics {
   pipelineStages?: Array<{
     stage: string
     count: number
-    mrr: number
+    value: number
   }>
-  lastSyncIntel?: string
-  lastSyncOpp?: string
-  totalIntelRecords?: number
-  totalOppRecords?: number
+  opportunitiesByState?: Array<{ state: string; count: number; totalValue: number }>
+  scoreHistogram?: Array<{ bucket: string; count: number }>
+  pipelineFunnel?: Array<{ stage: string; count: number; value: number; pct: number }>
+  lastSync?: string
+  totalRecords?: number
 }
 
 async function getAnalytics(): Promise<Analytics> {
-  const apiKey = process.env.NEXT_PUBLIC_AIRTABLE_API_KEY
-  const baseId = process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID
+  const apiKey = credentials.airtableApiKey
+  const baseId = credentials.airtableBaseId
 
   if (!apiKey || !baseId) {
     return getMockAnalytics()
   }
 
   try {
-    // Fetch Intelligence table for prospects/contracts/subs
-    const intelResponse = await fetch(
-      `https://api.airtable.com/v0/${baseId}/Intelligence?pageSize=100`,
-      {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      }
-    )
+    const KEY = apiKey
+    const BASE = baseId
+    const TBL_LEADS = airtableTables.leads
+    const TBL_OPP = airtableTables.opportunities
+    const AT = `https://api.airtable.com/v0/${BASE}`
+    const HDR = { Authorization: `Bearer ${KEY}` }
 
-    // Fetch Opportunities table for pipeline metrics
-    const oppResponse = await fetch(
-      `https://api.airtable.com/v0/${baseId}/Opportunities?pageSize=100`,
-      {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      }
-    )
+    // Fetch Leads table
+    const leadsResponse = await fetch(`${AT}/${TBL_LEADS}?pageSize=100`, { headers: HDR })
+    // Fetch Opportunities table
+    const oppResponse = await fetch(`${AT}/${TBL_OPP}?pageSize=100`, { headers: HDR })
 
-    if (!intelResponse.ok || !oppResponse.ok) {
+    if (!leadsResponse.ok || !oppResponse.ok) {
       console.warn('Analytics: Airtable fetch failed')
       return getMockAnalytics()
     }
 
-    const intelData = await intelResponse.json()
+    const leadsData = await leadsResponse.json()
     const oppData = await oppResponse.json()
-    const intelRecords = intelData.records || []
+    const leadsRecords = leadsData.records || []
     const oppRecords = oppData.records || []
 
-    // Process Intelligence records
-    const prospects = intelRecords.filter((r: any) => r.fields.record_type === 'prospect')
-    const contracts = intelRecords.filter((r: any) => r.fields.record_type === 'contract')
-    const subs = intelRecords.filter((r: any) => r.fields.record_type === 'sub')
-
-    const allScores = intelRecords
-      .map((r: any) => r.fields.score || 0)
+    // Calculate lead metrics
+    const allScores = leadsRecords
+      .map((r: any) => r.fields.Priority_Score || 0)
       .filter((score: number) => score > 0)
     const averageScore =
       allScores.length > 0
@@ -80,76 +69,118 @@ async function getAnalytics(): Promise<Analytics> {
 
     // Score distribution
     const scoreDistribution = {
-      high: prospects.filter((r: any) => (r.fields.score || 0) >= 75).length,
-      medium: prospects.filter((r: any) => (r.fields.score || 0) >= 50 && (r.fields.score || 0) < 75).length,
-      low: prospects.filter((r: any) => (r.fields.score || 0) < 50).length,
+      high: leadsRecords.filter((r: any) => (r.fields.Priority_Score || 0) >= 75).length,
+      medium: leadsRecords.filter(
+        (r: any) =>
+          (r.fields.Priority_Score || 0) >= 50 && (r.fields.Priority_Score || 0) < 75
+      ).length,
+      low: leadsRecords.filter((r: any) => (r.fields.Priority_Score || 0) < 50).length,
     }
 
-    // By segment
-    const bySegment: { [key: string]: number } = {}
-    prospects.forEach((r: any) => {
-      const segment = r.fields.segment || 'Unknown'
-      bySegment[segment] = (bySegment[segment] || 0) + 1
+    // By stage
+    const stageMap: { [key: string]: number } = {}
+    leadsRecords.forEach((r: any) => {
+      const stage = r.fields.Stage || 'Unknown'
+      stageMap[stage] = (stageMap[stage] || 0) + 1
     })
+    const byStage = Object.entries(stageMap).map(([stage, count]) => ({ stage, count: count as number }))
 
-    // By status
-    const byStatus: { [key: string]: number } = {}
-    prospects.forEach((r: any) => {
-      const status = r.fields.pipeline_status || 'Unknown'
-      byStatus[status] = (byStatus[status] || 0) + 1
+    // By source
+    const sourceMap: { [key: string]: number } = {}
+    leadsRecords.forEach((r: any) => {
+      const source = r.fields.Source || 'Unknown'
+      sourceMap[source] = (sourceMap[source] || 0) + 1
     })
+    const bySource = Object.entries(sourceMap).map(([source, count]) => ({ source, count: count as number }))
 
-    // Top opportunities
-    const topOpportunities = contracts
-      .sort((a: any, b: any) => (b.fields.total_obligated_amount || 0) - (a.fields.total_obligated_amount || 0))
+    // Top opportunities by value
+    const topOpportunities = leadsRecords
+      .filter((r: any) => r.fields.Value)
+      .sort((a: any, b: any) => (b.fields.Value || 0) - (a.fields.Value || 0))
       .slice(0, 5)
       .map((r: any) => ({
-        name: r.fields.legal_name || 'Unknown',
-        value: r.fields.total_obligated_amount || 0,
-        agency: r.fields.agency,
+        name: r.fields.Entity_Name || 'Unknown',
+        value: r.fields.Value || 0,
+        agency: r.fields.Agency,
       }))
 
     // Pipeline stages from Opportunities
-    const pipelineStages: { [key: string]: { count: number; mrr: number } } = {}
+    const stageMetrics: {
+      [key: string]: { count: number; value: number }
+    } = {}
     oppRecords.forEach((r: any) => {
-      const stage = r.fields.stage || 'Pending'
-      const amount = r.fields.estimated_amount || 0
-      if (!pipelineStages[stage]) {
-        pipelineStages[stage] = { count: 0, mrr: 0 }
+      const stage = r.fields.status || 'Pending'
+      const value = r.fields.estimated_value || 0
+      if (!stageMetrics[stage]) {
+        stageMetrics[stage] = { count: 0, value: 0 }
       }
-      pipelineStages[stage].count += 1
-      pipelineStages[stage].mrr += amount
+      stageMetrics[stage].count += 1
+      stageMetrics[stage].value += value
     })
 
-    const pipelineArray = Object.entries(pipelineStages).map(([stage, data]) => ({
+    const pipelineStages = Object.entries(stageMetrics).map(([stage, data]) => ({
       stage,
       count: data.count,
-      mrr: Math.round(data.mrr / 1000), // Convert to thousands (MRR)
+      value: data.value,
     }))
 
-    // Get last sync times
-    const lastSyncIntel = intelRecords.length > 0
-      ? new Date(Math.max(...intelRecords.map((r: any) => new Date(r.createdTime).getTime()))).toISOString().split('T')[0]
-      : 'Never'
+    // Opportunities by state
+    const stateMap: { [key: string]: { count: number; totalValue: number } } = {}
+    oppRecords.forEach((r: any) => {
+      const state = r.fields.state || 'Unknown'
+      const value = r.fields.estimated_value || 0
+      if (!stateMap[state]) {
+        stateMap[state] = { count: 0, totalValue: 0 }
+      }
+      stateMap[state].count += 1
+      stateMap[state].totalValue += value
+    })
+    const opportunitiesByState = Object.entries(stateMap).map(([state, data]) => ({
+      state,
+      count: data.count,
+      totalValue: data.totalValue,
+    }))
 
-    const lastSyncOpp = oppRecords.length > 0
-      ? new Date(Math.max(...oppRecords.map((r: any) => new Date(r.createdTime).getTime()))).toISOString().split('T')[0]
+    // Score histogram
+    const scoreHistogramMap: { [key: string]: number } = {}
+    leadsRecords.forEach((r: any) => {
+      const score = r.fields.Priority_Score || 0
+      const bucket = `${Math.floor(score / 10) * 10}-${Math.floor(score / 10) * 10 + 10}`
+      scoreHistogramMap[bucket] = (scoreHistogramMap[bucket] || 0) + 1
+    })
+    const scoreHistogram = Object.entries(scoreHistogramMap).map(([bucket, count]) => ({
+      bucket,
+      count: count as number,
+    }))
+
+    // Pipeline funnel (same as pipelineStages but with percentage)
+    const totalPipelineValue = pipelineStages.reduce((sum, s) => sum + s.value, 0)
+    const pipelineFunnel = pipelineStages.map((stage) => ({
+      ...stage,
+      pct: totalPipelineValue > 0 ? Math.round((stage.value / totalPipelineValue) * 100) : 0,
+    }))
+
+    const lastSync = leadsRecords.length > 0
+      ? new Date(
+          Math.max(...leadsRecords.map((r: any) => new Date(r.createdTime).getTime()))
+        )
+          .toISOString()
+          .split('T')[0]
       : 'Never'
 
     return {
-      totalProspects: prospects.length,
-      totalContracts: contracts.length,
-      totalSubs: subs.length,
+      totalLeads: leadsRecords.length,
       averageScore,
       scoreDistribution,
-      bySegment,
-      byStatus,
+      byStage,
+      bySource,
       topOpportunities,
-      pipelineStages: pipelineArray,
-      lastSyncIntel,
-      lastSyncOpp,
-      totalIntelRecords: intelRecords.length,
-      totalOppRecords: oppRecords.length,
+      pipelineStages,
+      opportunitiesByState,
+      scoreHistogram,
+      pipelineFunnel,
+      lastSync,
+      totalRecords: leadsRecords.length,
     }
   } catch (error) {
     console.warn('Analytics error:', error)
@@ -159,26 +190,30 @@ async function getAnalytics(): Promise<Analytics> {
 
 function getMockAnalytics(): Analytics {
   return {
-    totalProspects: 3,
-    totalContracts: 0,
-    totalSubs: 0,
-    averageScore: 78,
+    totalLeads: 50,
+    averageScore: 68,
     scoreDistribution: {
-      high: 1,
-      medium: 1,
-      low: 1,
+      high: 12,
+      medium: 22,
+      low: 16,
     },
-    bySegment: {
-      Federal: 1,
-      State: 1,
-      Local: 1,
-    },
-    byStatus: {
-      qualified: 1,
-      interested: 1,
-      pending: 1,
-    },
+    byStage: [
+      { stage: 'New Signal', count: 20 },
+      { stage: 'Contact Found', count: 15 },
+      { stage: 'Outreach Ready', count: 10 },
+      { stage: 'In Conversation', count: 5 },
+    ],
+    bySource: [
+      { source: 'USASpending', count: 25 },
+      { source: 'SAM.gov', count: 15 },
+      { source: 'Email', count: 10 },
+    ],
     topOpportunities: [],
+    pipelineStages: [
+      { stage: 'New', count: 15, value: 500000 },
+      { stage: 'Reviewing', count: 8, value: 350000 },
+      { stage: 'Applying', count: 4, value: 250000 },
+    ],
   }
 }
 

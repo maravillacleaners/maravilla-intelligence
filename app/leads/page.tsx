@@ -478,6 +478,9 @@ export default function LeadsPage() {
   const [toast, setToast]           = useState<string | null>(null)
   const [stageFilter, setStageFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
+  const [scoreMin, setScoreMin]     = useState('')
+  const [scoreMax, setScoreMax]     = useState('')
+  const [hasContactFilter, setHasContactFilter] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [notifs, setNotifs] = useState<any[]>([])
 
@@ -487,6 +490,9 @@ export default function LeadsPage() {
       const params = new URLSearchParams({ limit: '200', sort: 'Priority_Score', dir: 'desc' })
       if (stageFilter) params.set('stage', stageFilter)
       if (sourceFilter) params.set('source', sourceFilter)
+      if (scoreMin) params.set('scoreMin', scoreMin)
+      if (scoreMax) params.set('scoreMax', scoreMax)
+      if (hasContactFilter) params.set('hasContact', hasContactFilter)
       const res  = await fetch(`/api/leads?${params}`)
       const data = await res.json()
       setLeads(data.records || [])
@@ -495,7 +501,7 @@ export default function LeadsPage() {
     } finally {
       setLoading(false)
     }
-  }, [stageFilter, sourceFilter])
+  }, [stageFilter, sourceFilter, scoreMin, scoreMax, hasContactFilter])
 
   async function runIntake() {
     setIntaking(true)
@@ -522,6 +528,16 @@ export default function LeadsPage() {
 
   function handleActionDone(leadId: string, newStage: string) {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, stage: newStage } : l))
+  }
+
+  function exportCSV() {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : ''
+    const params = new URLSearchParams()
+    if (stageFilter) params.set('stage', stageFilter)
+    if (sourceFilter) params.set('source', sourceFilter)
+    if (token) params.set('token', token)
+    const url = `/api/export/leads?${params}`
+    window.location.href = url
   }
 
   useEffect(() => { fetchLeads() }, [fetchLeads])
@@ -571,6 +587,13 @@ export default function LeadsPage() {
             <select value={stageFilter} onChange={e => setStageFilter(e.target.value)} style={{ height: 34, padding: '0 8px', border: C.border, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }}>
               {stages.map(s => <option key={s} value={s}>{s || 'All stages'}</option>)}
             </select>
+            <input type="number" min="0" max="100" placeholder="Min score" value={scoreMin} onChange={e => setScoreMin(e.target.value)} style={{ height: 34, padding: '0 8px', width: 100, border: C.border, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }} />
+            <input type="number" min="0" max="100" placeholder="Max score" value={scoreMax} onChange={e => setScoreMax(e.target.value)} style={{ height: 34, padding: '0 8px', width: 100, border: C.border, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }} />
+            <select value={hasContactFilter} onChange={e => setHasContactFilter(e.target.value)} style={{ height: 34, padding: '0 8px', border: C.border, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }}>
+              <option value="">All contacts</option>
+              <option value="yes">Has contact</option>
+              <option value="no">No contact</option>
+            </select>
             <button onClick={fetchLeads} disabled={loading} style={{ height: 34, padding: '0 12px', border: C.border, borderRadius: 7, fontSize: 12, background: '#FFF', color: C.text, cursor: 'pointer' }}>
               Refresh
             </button>
@@ -580,6 +603,13 @@ export default function LeadsPage() {
               style={{ height: 34, padding: '0 14px', borderRadius: 7, fontSize: 13, fontWeight: 600, border: 'none', background: intaking ? '#A5B4FC' : C.primary, color: '#fff', cursor: intaking ? 'not-allowed' : 'pointer' }}
             >
               {intaking ? '⟳ Running…' : '⬇ Run Intake'}
+            </button>
+            <button
+              onClick={exportCSV}
+              style={{ height: 34, padding: '0 12px', border: C.border, borderRadius: 7, fontSize: 12, background: '#FFF', color: C.text, cursor: 'pointer' }}
+              title="Download all leads as CSV"
+            >
+              📥 Export CSV
             </button>
           </div>
         </div>

@@ -77,6 +77,12 @@ async function getHandler(req: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
+    const stateFilter = searchParams.get('state') || ''
+    const deadlineFrom = searchParams.get('deadlineFrom') || ''
+    const deadlineTo = searchParams.get('deadlineTo') || ''
+    const valueMin = searchParams.get('valueMin') || ''
+    const valueMax = searchParams.get('valueMax') || ''
+    const scoreMin = searchParams.get('scoreMin') || ''
     const sort = searchParams.get('sort') || 'deadline'
     const limit = parseInt(searchParams.get('limit') || '50', 10)
     const offset = parseInt(searchParams.get('offset') || '0', 10)
@@ -96,8 +102,18 @@ async function getHandler(req: NextRequest): Promise<NextResponse> {
     ]
     fields.forEach((f, i) => params.set(`fields[${i}]`, f))
 
-    if (status) {
-      params.set('filterByFormula', `{status}='${status}'`)
+    const filters: string[] = []
+    if (status) filters.push(`{status}='${status}'`)
+    if (stateFilter) filters.push(`{state}='${stateFilter}'`)
+    if (deadlineFrom) filters.push(`{deadline}>='${deadlineFrom}'`)
+    if (deadlineTo) filters.push(`{deadline}<='${deadlineTo}'`)
+    if (valueMin) filters.push(`{estimated_value}>=${valueMin}`)
+    if (valueMax) filters.push(`{estimated_value}<=${valueMax}`)
+    if (scoreMin) filters.push(`{score}>=${scoreMin}`)
+
+    const formula = filters.length === 0 ? '' : filters.length === 1 ? filters[0] : `AND(${filters.join(',')})`
+    if (formula) {
+      params.set('filterByFormula', formula)
     }
 
     if (sort === 'deadline') {

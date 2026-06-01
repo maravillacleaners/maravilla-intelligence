@@ -85,6 +85,9 @@ export default function ContactsPage() {
   const [q, setQ]               = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
   const [typeFilter, setTypeFilter]     = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [minInfluence, setMinInfluence] = useState('')
+  const [hasEmailFilter, setHasEmailFilter] = useState('')
   const [srcCounts, setSrcCounts]       = useState<Record<string, number>>({})
   const [typeCounts, setTypeCounts]     = useState<Record<string, number>>({})
   const [selected, setSelected]         = useState<any | null>(null)
@@ -100,6 +103,9 @@ export default function ContactsPage() {
       if (q) params.set('q', q)
       if (sourceFilter) params.set('source', sourceFilter)
       if (typeFilter) params.set('avatar_type', typeFilter)
+      if (statusFilter) params.set('status', statusFilter)
+      if (minInfluence) params.set('minInfluence', minInfluence)
+      if (hasEmailFilter) params.set('hasEmail', hasEmailFilter)
       const res = await fetch(`/api/contacts?${params}`)
       const data = await res.json()
       setContacts(data.contacts || [])
@@ -107,7 +113,7 @@ export default function ContactsPage() {
       setTypeCounts(data.type_counts || {})
     } catch { setContacts([]) }
     setLoading(false)
-  }, [q, sourceFilter, typeFilter])
+  }, [q, sourceFilter, typeFilter, statusFilter, minInfluence, hasEmailFilter])
 
   useEffect(() => { fetchContacts() }, [fetchContacts])
 
@@ -126,6 +132,16 @@ export default function ContactsPage() {
       }
     } catch { /* noop */ }
     setSaving(false)
+  }
+
+  function exportCSV() {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : ''
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    if (sourceFilter) params.set('source', sourceFilter)
+    if (token) params.set('token', token)
+    const url = `/api/export/contacts?${params}`
+    window.location.href = url
   }
 
   const withEmail = contacts.filter(c => c.email).length
@@ -147,12 +163,21 @@ export default function ContactsPage() {
                 {loading ? 'Loading…' : `${total} contacts · ${withEmail} with email · ${govContacts} gov buyers`}
               </div>
             </div>
-            <button
-              onClick={() => setShowAdd(true)}
-              style={{ padding: '9px 16px', background: C.indigo, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-            >
-              + Add Contact
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={exportCSV}
+                style={{ padding: '9px 14px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, cursor: 'pointer' }}
+                title="Download all contacts as CSV"
+              >
+                📥 Export CSV
+              </button>
+              <button
+                onClick={() => setShowAdd(true)}
+                style={{ padding: '9px 16px', background: C.indigo, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              >
+                + Add Contact
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
@@ -198,6 +223,25 @@ export default function ContactsPage() {
               placeholder="Search by name, organization, email…"
               style={{ width: '100%', height: 38, padding: '0 14px', border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, color: C.text, background: C.surface, boxSizing: 'border-box' }}
             />
+          </div>
+
+          {/* Advanced filters */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ height: 34, padding: '0 8px', border: C.border, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }}>
+              <option value="">All statuses</option>
+              <option value="engaged">Engaged</option>
+              <option value="interested">Interested</option>
+              <option value="contacted">Contacted</option>
+            </select>
+            <input type="number" min="0" max="100" placeholder="Min influence" value={minInfluence} onChange={e => setMinInfluence(e.target.value)} style={{ height: 34, padding: '0 8px', width: 120, border: C.border, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }} />
+            <select value={hasEmailFilter} onChange={e => setHasEmailFilter(e.target.value)} style={{ height: 34, padding: '0 8px', border: C.border, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }}>
+              <option value="">All contacts</option>
+              <option value="yes">Has email</option>
+              <option value="no">No email</option>
+            </select>
+            <button onClick={fetchContacts} disabled={loading} style={{ height: 34, padding: '0 12px', border: C.border, borderRadius: 7, fontSize: 12, background: '#FFF', color: C.text, cursor: 'pointer' }}>
+              Refresh
+            </button>
           </div>
 
           {/* List */}

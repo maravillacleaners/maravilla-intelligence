@@ -1,0 +1,20 @@
+{
+  "runs": [
+    {
+      "timestamp": "2026-06-01T18:40:01.139Z",
+      "name": "intelligence",
+      "endpoint": "/api/sync/national?pages=1",
+      "success": false,
+      "error": "fetch failed",
+      "duration_ms": 2
+    },
+    {
+      "timestamp": "2026-06-01T18:40:01.136Z",
+      "name": "opportunities",
+      "endpoint": "/api/sync/opportunities?pages=2&days=90",
+      "success": false,
+      "error": "fetch failed",
+      "duration_ms": 74
+    }
+  ]
+}

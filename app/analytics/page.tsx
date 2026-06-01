@@ -134,6 +134,126 @@ function StatCard({ label, value, sub, tone = 'indigo' }: any) {
   )
 }
 
+// ─── SVG Chart Components ────────────────────────────────────────────────────
+
+function FunnelChart({ data }: any) {
+  if (!data || data.length === 0) return <div style={{ color: '#A8A29E', fontSize: 12 }}>No data</div>
+  const h = 200
+  const w = 300
+  const stages = data
+  const maxCount = Math.max(...stages.map((s: any) => s.count || 0))
+
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ marginBottom: 12 }}>
+      {stages.map((stage: any, i: number) => {
+        const progress = (stage.count || 0) / maxCount
+        const y = (h / stages.length) * i
+        const stageH = h / stages.length
+        const widthPercent = 80 - (i * (20 / stages.length))
+        const x1 = (w * (100 - widthPercent)) / 200
+        const x2 = w - x1
+
+        return (
+          <g key={i}>
+            <polygon points={`${x1},${y} ${x2},${y} ${x2 - 10},${y + stageH} ${x1 + 10},${y + stageH}`} fill="#4F46E5" opacity={0.3 + progress * 0.7} />
+            <text x={w / 2} y={y + stageH / 2 + 5} textAnchor="middle" fontSize={11} fontWeight={600} fill="#1C1917">{stage.stage}</text>
+            <text x={w / 2} y={y + stageH / 2 + 18} textAnchor="middle" fontSize={10} fill="#78716C">{stage.count}</text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+function DonutChart({ data, avgScore }: any) {
+  const total = (data?.high || 0) + (data?.medium || 0) + (data?.low || 0)
+  if (total === 0) return <div style={{ color: '#A8A29E', fontSize: 12 }}>No data</div>
+
+  const highPct = ((data?.high || 0) / total) * 360
+  const medPct = ((data?.medium || 0) / total) * 360
+  const cx = 75, cy = 75, r = 60, innerR = 40
+
+  const colors = { high: '#059669', medium: '#D97706', low: '#DC2626' }
+  const slices = [
+    { label: 'High', value: data?.high || 0, color: colors.high, pct: highPct },
+    { label: 'Medium', value: data?.medium || 0, color: colors.medium, pct: medPct },
+    { label: 'Low', value: data?.low || 0, color: colors.low, pct: 360 - highPct - medPct }
+  ]
+
+  let startAngle = 0
+  const paths = slices.map((slice, i) => {
+    const endAngle = startAngle + (slice.pct * Math.PI) / 180
+    const x1 = cx + r * Math.cos((startAngle * Math.PI) / 180)
+    const y1 = cy + r * Math.sin((startAngle * Math.PI) / 180)
+    const x2 = cx + r * Math.cos(endAngle)
+    const y2 = cy + r * Math.sin(endAngle)
+    const largeArc = slice.pct > 180 ? 1 : 0
+    const ix1 = cx + innerR * Math.cos((startAngle * Math.PI) / 180)
+    const iy1 = cy + innerR * Math.sin((startAngle * Math.PI) / 180)
+    const ix2 = cx + innerR * Math.cos(endAngle)
+    const iy2 = cy + innerR * Math.sin(endAngle)
+    const path = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${innerR} ${innerR} 0 ${largeArc} 0 ${ix1} ${iy1} Z`
+    startAngle = endAngle * 180 / Math.PI
+    return { path, color: slice.color, key: i }
+  })
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+      <svg width={150} height={150} viewBox="0 0 150 150">
+        {paths.map((p: any) => <path key={p.key} d={p.path} fill={p.color} stroke="#FFF" strokeWidth={2} />)}
+        <circle cx={cx} cy={cy} r={innerR} fill="#FFF" />
+        <text x={cx} y={cy - 8} textAnchor="middle" fontSize={24} fontWeight={700} fill="#4F46E5" fontFamily="JetBrains Mono">{Math.round(avgScore || 0)}</text>
+        <text x={cx} y={cy + 12} textAnchor="middle" fontSize={10} fill="#78716C">avg score</text>
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {slices.map((s, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 12, height: 12, borderRadius: 2, background: s.color }} />
+          <span style={{ fontSize: 12, color: '#1C1917' }}>{s.label}: <strong>{s.value}</strong></span>
+        </div>)}
+      </div>
+    </div>
+  )
+}
+
+function SourceBarChart({ data }: any) {
+  if (!data || data.length === 0) return <div style={{ color: '#A8A29E', fontSize: 12 }}>No data</div>
+  const maxVal = Math.max(...data.map((d: any) => d.count || 0))
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {data.slice(0, 5).map((row: any, i: number) => (
+        <div key={i}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 12, color: '#1C1917', fontWeight: 500 }}>{row.source}</span>
+            <span style={{ fontSize: 11, color: '#78716C', fontFamily: 'JetBrains Mono' }}>{row.count}</span>
+          </div>
+          <Bar value={row.count} max={maxVal} tone="indigo" height={6} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function StateBarChart({ data }: any) {
+  if (!data || data.length === 0) return <div style={{ color: '#A8A29E', fontSize: 12 }}>No data</div>
+  const maxVal = Math.max(...data.map((d: any) => d.totalValue || 0))
+  const sorted = [...data].sort((a: any, b: any) => (b.totalValue || 0) - (a.totalValue || 0))
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {sorted.slice(0, 5).map((row: any, i: number) => (
+        <div key={i}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 12, color: '#1C1917', fontWeight: 500 }}>{row.state}</span>
+            <span style={{ fontSize: 11, color: '#78716C', fontFamily: 'JetBrains Mono' }}>${(row.totalValue / 1000).toFixed(0)}K</span>
+          </div>
+          <Bar value={row.totalValue} max={maxVal} tone="emerald" height={6} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Analytics API types ─────────────────────────────────────────────────────
 
 interface AnalyticsData {
@@ -211,6 +331,57 @@ export default function AnalyticsPage() {
           <StatCard label="Intelligence Recs" value={analytics.totalIntelRecords || 0} sub={`last sync ${analytics.lastSyncIntel}`} tone="indigo" />
           <StatCard label="Opportunities" value={analytics.totalOppRecords || 0} sub={`last sync ${analytics.lastSyncOpp}`} tone="blue" />
           <StatCard label="Recompetes" value={INSIGHTS.recompetes.length} sub="contracts expiring soon" tone="amber" />
+        </div>
+
+        {/* Pipeline Summary Row */}
+        {analytics.pipelineStages && analytics.pipelineStages.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+            <StatCard
+              label="Total Pipeline Value"
+              value={`$${Math.round(analytics.pipelineStages.reduce((sum: number, s: any) => sum + (s.value || 0), 0) / 1000)}K`}
+              sub={`${analytics.pipelineStages.reduce((sum: number, s: any) => sum + (s.count || 0), 0)} opportunities`}
+              tone="indigo"
+            />
+            <StatCard
+              label="Won Value"
+              value={`$${Math.round((analytics.pipelineStages.find((s: any) => s.stage === 'Won')?.value || 0) / 1000)}K`}
+              sub="closed pipeline"
+              tone="emerald"
+            />
+            <StatCard
+              label="Active Opportunities"
+              value={analytics.pipelineStages.reduce((sum: number, s: any) => s.stage !== 'Won' ? sum + (s.count || 0) : sum, 0)}
+              sub={`in ${analytics.pipelineStages.length} stages`}
+              tone="blue"
+            />
+          </div>
+        )}
+
+        {/* Charts Grid — 2x2 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          {/* Funnel Chart */}
+          <Card>
+            <SectionHeader>Pipeline Funnel</SectionHeader>
+            <FunnelChart data={analytics.pipelineStages || []} />
+          </Card>
+
+          {/* Donut Chart */}
+          <Card>
+            <SectionHeader>Score Distribution</SectionHeader>
+            <DonutChart data={analytics.scoreDistribution} avgScore={analytics.averageScore} />
+          </Card>
+
+          {/* Source Bar Chart */}
+          <Card>
+            <SectionHeader>Top Sources</SectionHeader>
+            <SourceBarChart data={analytics.bySource || []} />
+          </Card>
+
+          {/* State Bar Chart */}
+          <Card>
+            <SectionHeader>Opportunities by State</SectionHeader>
+            <StateBarChart data={analytics.opportunitiesByState || []} />
+          </Card>
         </div>
 
         {/* Pipeline Stages (Real Data) */}
