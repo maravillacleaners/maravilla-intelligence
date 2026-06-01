@@ -849,9 +849,9 @@ export default function OpportunitiesPage() {
       </div>
 
       {/* Filter Toolbar */}
-      <div style={{
+      <div className="filter-wrap-mobile" style={{
         borderBottom: `1px solid ${C.border}`, background: C.card,
-        padding: '12px 32px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+        padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8,
       }}>
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as OppStatus | 'All')} style={{ height: 34, padding: '0 8px', border: `1px solid ${C.border}`, borderRadius: 7, fontSize: 12, color: C.text, background: '#FFF', cursor: 'pointer' }}>
           {STATUSES.concat(['All']).map(s => <option key={s} value={s}>{s}</option>)}
@@ -869,7 +869,7 @@ export default function OpportunitiesPage() {
 
       {/* Body */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 32 }} className="md:p-8">
 
           {/* Section A — Live Opportunities */}
           <div>
@@ -897,8 +897,8 @@ export default function OpportunitiesPage() {
                 ))}
               </div>
             ) : (
-              <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', background: C.card }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div className="table-scroll-mobile" style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', background: C.card }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                   <thead>
                     <tr>
                       {[

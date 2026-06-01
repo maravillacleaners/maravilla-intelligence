@@ -86,7 +86,8 @@ export default function LeadDetailPage() {
   const fetchLead = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/leads/${id}`)
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const res = await fetch(`/api/leads/${id}${token ? `?token=${token}` : ''}`)
       const data = await res.json()
       setLead(data)
       setNotes(data.lead?.notes || data.notes || '')
@@ -242,10 +243,24 @@ export default function LeadDetailPage() {
                 </div>
               )}
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: 18 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: C.xmuted, letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginBottom: 12 }}>Scores</div>
-                <ScoreBar label="Priority" value={l.priority_score || 0} color={C.indigo} />
-                <ScoreBar label="GovCon" value={l.govcon_fit || 0} color={C.blue} />
-                <ScoreBar label="Commercial" value={l.commercial_fit || 0} color={C.green} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.xmuted, letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginBottom: 12 }}>Score Breakdown</div>
+                {lead?.scoreBreakdown ? (
+                  <>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: C.indigo, marginBottom: 12 }}>
+                      {lead.scoreBreakdown.total} / 100
+                    </div>
+                    <ScoreBar label="GovCon Fit" value={lead.scoreBreakdown.govconFit} color={C.blue} />
+                    <ScoreBar label="Commercial Fit" value={lead.scoreBreakdown.commercialFit} color={C.green} />
+                    <ScoreBar label="Signal Recency" value={lead.scoreBreakdown.signalRecency} color={C.amber} />
+                    <ScoreBar label="Contact Complete" value={lead.scoreBreakdown.contactCompleteness} color={C.indigo} />
+                  </>
+                ) : (
+                  <>
+                    <ScoreBar label="Priority" value={l.priority_score || 0} color={C.indigo} />
+                    <ScoreBar label="GovCon" value={l.govcon_fit || 0} color={C.blue} />
+                    <ScoreBar label="Commercial" value={l.commercial_fit || 0} color={C.green} />
+                  </>
+                )}
               </div>
               <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: 18 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: C.xmuted, letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginBottom: 12 }}>Details</div>

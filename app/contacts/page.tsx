@@ -152,7 +152,7 @@ export default function ContactsPage() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'system-ui, -apple-system, sans-serif', color: C.text }}>
       <TopBar screen="Contacts" notifications={notifs} onMarkAllRead={() => setNotifs([])} onClickNotif={() => {}} onOpenCopilot={() => {}} onOpenCmdK={() => {}} />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 24px', display: 'grid', gridTemplateColumns: selected ? '1fr 360px' : '1fr', gap: 20 }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '16px 12px', display: 'grid', gridTemplateColumns: selected ? '1fr 360px' : '1fr', gap: 20 }}>
 
         <div>
           {/* Header */}
@@ -261,7 +261,7 @@ export default function ContactsPage() {
               )}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
               {contacts.map(c => (
                 <ContactCard key={c.id} contact={c} onClick={() => setSelected(selected?.id === c.id ? null : c)} />
               ))}

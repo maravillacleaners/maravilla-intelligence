@@ -678,13 +678,13 @@ export default function LeadsPage() {
         />
       )}
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '28px 24px' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '16px 12px' }} className="md:p-7">
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexDirection: 'column', gap: 12 }} className="md:flex-row">
           <div style={{ flex: 1, minWidth: 200 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: 0 }}>Leads</h1>
-            <p style={{ color: C.muted, fontSize: 14, margin: '4px 0 0' }}>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: 0 }} className="md:text-2xl">Leads</h1>
+            <p style={{ color: C.muted, fontSize: 12, margin: '4px 0 0' }} className="text-sm">
               {loading ? 'Loading…' : `${total} leads · SAM · Intelligence · Avatars`}
             </p>
           </div>
@@ -692,13 +692,13 @@ export default function LeadsPage() {
           {/* Search bar */}
           <input
             type="text"
-            placeholder="Search by name, agency, NAICS, location…"
+            placeholder="Search…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') fetchLeads() }}
             style={{
-              flex: '1 1 300px',
-              minWidth: 200,
+              flex: '1 1 100%',
+              minWidth: '100%',
               height: 36,
               padding: '0 12px',
               border: C.border,
@@ -708,8 +708,9 @@ export default function LeadsPage() {
               background: '#FFF',
               fontFamily: 'inherit',
             }}
+            className="md:flex-1 md:min-w-200 md:flex-basis-300"
           />
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', overflow: 'x-auto' }} className="filter-wrap-mobile">
             {/* Filter dropdown */}
             <div style={{ position: 'relative' }}>
               <button
@@ -969,7 +970,7 @@ export default function LeadsPage() {
         })()}
 
         {/* Table */}
-        <div style={{ background: '#FFF', border: C.border, borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ background: '#FFF', border: C.border, borderRadius: 12, overflow: 'hidden' }} className="table-scroll-mobile">
           {loading ? (
             <div style={{ padding: 48, textAlign: 'center', color: C.vMuted }}>Loading leads…</div>
           ) : leads.length === 0 ? (
@@ -1123,7 +1124,7 @@ function LeadRow({
 
       {/* Quick actions */}
       <td style={{ padding: '10px 12px' }}>
-        <div style={{ display: 'flex', gap: 4, opacity: hover ? 1 : 0, transition: 'opacity 120ms' }}>
+        <div style={{ display: 'flex', gap: 4, opacity: hover ? 1 : 0, transition: 'opacity 120ms', flexWrap: 'wrap' }}>
           {actions.map(btn => (
             <button
               key={btn.id}
@@ -1132,7 +1133,7 @@ function LeadRow({
               style={{
                 padding: '3px 8px', borderRadius: 5, border: 'none',
                 background: btn.bg, color: btn.color,
-                fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                fontSize: 10, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
               {btn.label}
