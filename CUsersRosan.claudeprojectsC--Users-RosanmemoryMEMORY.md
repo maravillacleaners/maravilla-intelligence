@@ -1,0 +1,1 @@
+- [Phase 6 Insights Dashboard](project_maravilla_intelligence_phase6_inprogress.md) — **VERIFIED 2026-06-01** Real-time pipeline analytics + sync metrics, HTTP 200 ✅

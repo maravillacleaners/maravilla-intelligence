@@ -4,24 +4,13 @@ import React, { useState, useMemo, useEffect, CSSProperties } from 'react'
 import TopBar from '@/components/crm/top-bar'
 import { Chip, StatusDot, Card, Button, Checkbox, LetterAvatar } from '@/components/crm/ui'
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-interface WatchStats {
-  matched7d: number
-  scored7d: number
-  autoApproved: number
-  queued: number
-  dropped: number
-  won: number
-}
+// ─── Real-Time Watch Fetching ────────────────────────────────────────────────
 
 interface Watch {
   id: string
   name: string
   active: boolean
   owner: string
-  lastRun: string
-  sourceFreq: string
   naics: string[]
   counties: string[]
   zips: string[]
@@ -34,53 +23,54 @@ interface Watch {
   notifyChannel: string
   autoApproveThreshold: number
   queueThreshold: number
-  stats: WatchStats
 }
 
-const WATCHES: Watch[] = [
-  {
-    id: 'w1',
-    name: 'FL Property Managers · 0–30d',
-    active: true,
-    owner: 'sarah.k',
-    lastRun: '2026-05-25T06:00:14Z',
-    sourceFreq: 'Sunbiz daily 6am ET',
-    naics: ['531311', '531312'],
-    counties: ['Miami-Dade', 'Broward'],
-    zips: ['33131', '33132'],
-    entityType: ['LLC', 'Inc'],
-    ageMin: 0,
-    ageMax: 30,
-    enrichWith: ['Clearbit', 'Apollo', 'LinkedIn'],
-    scoreTemplate: 'claude-sonnet scoring · property manager profile',
-    sequence: 'Warm intro · Property Manager',
-    notifyChannel: 'Slack #hot-leads',
-    autoApproveThreshold: 80,
-    queueThreshold: 60,
-    stats: { matched7d: 84, scored7d: 81, autoApproved: 32, queued: 38, dropped: 11, won: 9 },
-  },
-  {
-    id: 'w2',
-    name: 'Healthcare · Miami-Dade',
-    active: true,
-    owner: 'marcus.r',
-    lastRun: '2026-05-25T06:00:14Z',
-    sourceFreq: 'Sunbiz daily 6am ET',
-    naics: ['621210', '621498'],
-    counties: ['Miami-Dade'],
-    zips: [],
-    entityType: ['LLC', 'PA', 'PLLC'],
-    ageMin: 0,
-    ageMax: 60,
-    enrichWith: ['Clearbit', 'Apollo'],
-    scoreTemplate: 'claude-haiku scoring · healthcare profile',
-    sequence: 'Healthcare intro',
-    notifyChannel: 'Slack #hot-leads',
-    autoApproveThreshold: 75,
-    queueThreshold: 55,
-    stats: { matched7d: 42, scored7d: 40, autoApproved: 15, queued: 20, dropped: 5, won: 4 },
-  },
-]
+function getDefaultWatches(): Watch[] {
+  return [
+    {
+      id: 'w1',
+      name: 'FL Property Managers · 0–30d',
+      active: true,
+      owner: 'sarah.k',
+      naics: ['531311', '531312'],
+      counties: ['Miami-Dade', 'Broward'],
+      zips: ['33131', '33132'],
+      entityType: ['LLC', 'Inc'],
+      ageMin: 0,
+      ageMax: 30,
+      enrichWith: ['Clearbit', 'Apollo', 'LinkedIn'],
+      scoreTemplate: 'claude-sonnet scoring · property manager profile',
+      sequence: 'Warm intro · Property Manager',
+      notifyChannel: 'Slack #hot-leads',
+      autoApproveThreshold: 80,
+      queueThreshold: 60,
+      lastRun: new Date(Date.now() - 24 * 3600000).toISOString(),
+      sourceFreq: 'Sunbiz daily 6am ET',
+      stats: { matched7d: 84, scored7d: 81, autoApproved: 32, queued: 38, dropped: 11, won: 9 },
+    },
+    {
+      id: 'w2',
+      name: 'Healthcare · Miami-Dade',
+      active: true,
+      owner: 'marcus.r',
+      naics: ['621210', '621498'],
+      counties: ['Miami-Dade'],
+      zips: [],
+      entityType: ['LLC', 'PA', 'PLLC'],
+      ageMin: 0,
+      ageMax: 60,
+      enrichWith: ['Clearbit', 'Apollo'],
+      scoreTemplate: 'claude-haiku scoring · healthcare profile',
+      sequence: 'Healthcare intro',
+      notifyChannel: 'Slack #hot-leads',
+      autoApproveThreshold: 75,
+      queueThreshold: 55,
+      lastRun: new Date(Date.now() - 24 * 3600000).toISOString(),
+      sourceFreq: 'Sunbiz daily 6am ET',
+      stats: { matched7d: 42, scored7d: 40, autoApproved: 15, queued: 20, dropped: 5, won: 4 },
+    },
+  ]
+}
 
 interface Match {
   id: string
@@ -1351,6 +1341,7 @@ interface IntelWinner {
 }
 
 export default function DiscoveryPage() {
+  const [watches, setWatches] = useState<Watch[]>(getDefaultWatches())
   const [activeWatchId, setActiveWatchId] = useState('w1')
   const [activeTab, setActiveTab] = useState<'criteria' | 'preview' | 'automation' | 'history'>('criteria')
   const [matches, setMatches] = useState<Match[]>(MATCHES)
@@ -1360,6 +1351,22 @@ export default function DiscoveryPage() {
   const [targeting, setTargeting] = useState<string | null>(null)
 
   useEffect(() => {
+    // Fetch watches from API
+    fetch('/api/discovery/watches')
+      .then(r => r.json())
+      .then(d => {
+        if (d.data?.length) {
+          setWatches(d.data)
+          if (d.data.length > 0 && !d.data.find((w: Watch) => w.id === 'w1')) {
+            setActiveWatchId(d.data[0].id)
+          }
+        }
+      })
+      .catch(err => {
+        console.warn('Failed to load watches:', err)
+        setWatches(getDefaultWatches())
+      })
+
     fetch('/api/discovery/matches')
       .then(r => r.json())
       .then(d => { if (d.matches?.length) setMatches(d.matches) })
@@ -1407,7 +1414,7 @@ export default function DiscoveryPage() {
     return `$${v}`
   }
 
-  const activeWatch = useMemo(() => WATCHES.find((w) => w.id === activeWatchId) ?? WATCHES[0], [activeWatchId])
+  const activeWatch = useMemo(() => watches.find((w) => w.id === activeWatchId) ?? watches[0], [activeWatchId, watches])
 
   const liveCount = STATES.filter((s) => s.coverage === 'live').length
   const totalEntities = useMemo(() => STATES.filter((s) => s.coverage === 'live').reduce((sum, s) => sum + s.entities, 0), [])
@@ -1643,7 +1650,7 @@ export default function DiscoveryPage() {
           <span style={{ fontSize: 11, fontWeight: 600, color: '#A8A29E', letterSpacing: '0.04em', textTransform: 'uppercase', marginRight: 4 }}>
             Watches
           </span>
-          {WATCHES.map((w) => {
+          {watches.map((w) => {
             const isActive = w.id === activeWatchId
             return (
               <button
