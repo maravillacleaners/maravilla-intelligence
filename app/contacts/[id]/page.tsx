@@ -54,14 +54,17 @@ export default function ContactDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [contact, setContact] = useState<any>(null)
+  const [relatedLeads, setRelatedLeads] = useState<any[]>([])
+  const [relatedOpportunities, setRelatedOpportunities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [enriching, setEnriching] = useState(false)
   const [saving, setSaving] = useState(false)
   const [notes, setNotes] = useState('')
   const [notesChanged, setNotesChanged] = useState(false)
-  const [tab, setTab] = useState<'overview'|'outreach'|'notes'>('overview')
+  const [tab, setTab] = useState<'overview'|'outreach'|'notes'|'related'>('overview')
   const [toast, setToast] = useState<{ msg: string; ok?: boolean } | null>(null)
   const [outreachStatus, setOutreachStatus] = useState('')
+  const [autoEnrichedOnce, setAutoEnrichedOnce] = useState(false)
 
   function showToast(msg: string, ok = true) { setToast({ msg, ok }); setTimeout(() => setToast(null), 4000) }
 
@@ -71,14 +74,45 @@ export default function ContactDetailPage() {
       const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
       const res = await fetch(`/api/contacts/${id}${token ? `?token=${token}` : ''}`)
       const data = await res.json()
-      setContact(data)
-      setNotes(data.notes || '')
-      setOutreachStatus(data.outreach_status || '')
+      setContact(data.contact || data)
+      setRelatedLeads(data.relatedLeads || [])
+      setRelatedOpportunities(data.relatedOpportunities || [])
+      setNotes((data.contact || data).notes || '')
+      setOutreachStatus((data.contact || data).outreach_status || '')
     } catch (e: any) { showToast(e.message, false) }
     setLoading(false)
   }, [id])
 
-  useEffect(() => { fetchContact() }, [fetchContact])
+  useEffect(() => {
+    fetchContact()
+  }, [fetchContact])
+
+  // Auto-enrich on-page load if email is missing
+  useEffect(() => {
+    if (contact && !contact.email && !autoEnrichedOnce && !loading) {
+      setAutoEnrichedOnce(true)
+      setEnriching(true)
+      fetch('/api/enrichment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contactId: id,
+          name: contact.name,
+          organization: contact.organization,
+          email: contact.email,
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showToast('Email enriched automatically via Hunter.io')
+            fetchContact()
+          }
+        })
+        .catch(e => console.error('Auto-enrichment failed:', e))
+        .finally(() => setEnriching(false))
+    }
+  }, [contact, autoEnrichedOnce, loading, id])
 
   async function enrichContact() {
     setEnriching(true)
@@ -201,14 +235,14 @@ export default function ContactDetailPage() {
 
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${C.border}`, marginBottom: 18 }}>
-            {(['overview', 'outreach', 'notes'] as const).map(t => (
+            {(['overview', 'outreach', 'notes', 'related'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: '9px 16px', background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: 13, fontWeight: tab === t ? 600 : 400,
                 color: tab === t ? C.text : C.muted,
                 borderBottom: tab === t ? `2px solid ${C.indigo}` : '2px solid transparent',
               }}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {t === 'related' ? 'Related' : t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
           </div>
@@ -291,6 +325,45 @@ export default function ContactDetailPage() {
                 <textarea value={notes} onChange={e => { setNotes(e.target.value); setNotesChanged(true) }} placeholder="Add notes, research, next steps…"
                   style={{ width: '100%', minHeight: 150, background: '#FAFAF9', border: `1px solid ${C.border}`, borderRadius: 8, padding: 12, color: C.text, fontSize: 13, resize: 'vertical' as const, boxSizing: 'border-box' as const, fontFamily: 'system-ui' }} />
                 {notesChanged && <button onClick={saveNotes} disabled={saving} style={{ marginTop: 8, padding: '7px 14px', background: C.indigo, border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>Save</button>}
+              </div>
+            </div>
+          )}
+
+          {/* RELATED */}
+          {tab === 'related' && (
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 14 }}>
+              {/* Related Leads */}
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: 18 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.xmuted, letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginBottom: 12 }}>Related Leads</div>
+                {relatedLeads.length === 0 ? (
+                  <div style={{ color: C.muted, fontSize: 13 }}>No related leads</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
+                    {relatedLeads.map((lead: any) => (
+                      <div key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} style={{ padding: 10, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 7, cursor: 'pointer', transition: 'all 0.2s', fontSize: 13 }}>
+                        <div style={{ fontWeight: 600, marginBottom: 3, color: C.text }}>{lead.entity_name}</div>
+                        <div style={{ fontSize: 11, color: C.muted }}>Stage: {lead.stage} • Value: ${lead.value?.toLocaleString()}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Related Opportunities */}
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: 18 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.xmuted, letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginBottom: 12 }}>Related Opportunities</div>
+                {relatedOpportunities.length === 0 ? (
+                  <div style={{ color: C.muted, fontSize: 13 }}>No related opportunities</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
+                    {relatedOpportunities.map((opp: any) => (
+                      <div key={opp.id} onClick={() => router.push(`/opportunities`)} style={{ padding: 10, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 7, cursor: 'pointer', transition: 'all 0.2s', fontSize: 13 }}>
+                        <div style={{ fontWeight: 600, marginBottom: 3, color: C.text }}>{opp.title}</div>
+                        <div style={{ fontSize: 11, color: C.muted }}>Deadline: {opp.deadline} • ${opp.estimated_value?.toLocaleString()}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

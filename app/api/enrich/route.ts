@@ -10,7 +10,8 @@
  * 4. Try Google Places if GOOGLE_PLACES_API_KEY is set for physical presence check
  */
 
-const HUNTER_API_KEY = process.env.HUNTER_API_KEY
+import { getCredential } from '@/lib/credentials-dynamic'
+
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY
 const AIRTABLE_API_URL = 'https://api.airtable.com/v0'
 
@@ -55,10 +56,11 @@ interface HunterResult {
 }
 
 async function queryHunter(domain: string): Promise<HunterResult | null> {
-  if (!HUNTER_API_KEY) return null
+  const hunterKey = await getCredential('HUNTER_API_KEY')
+  if (!hunterKey) return null
 
   try {
-    const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${HUNTER_API_KEY}&limit=5`
+    const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${hunterKey}&limit=5`
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
 
     if (!res.ok) {
@@ -339,11 +341,12 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  const hunterKey = await getCredential('HUNTER_API_KEY')
   return Response.json({
     status: 'ok',
     description: 'POST { companyName, domain?, email?, record_id? } to enrich a company',
     env: {
-      hunter_configured: !!HUNTER_API_KEY,
+      hunter_configured: !!hunterKey,
       google_places_configured: !!GOOGLE_PLACES_API_KEY,
     },
   })

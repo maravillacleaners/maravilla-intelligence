@@ -9,6 +9,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { getCredential } from '@/lib/credentials-dynamic'
 import { fetchSamOpportunities, type SamOpportunity } from '@/lib/scrapers/sam-gov-scraper'
 
 const KEY  = process.env.AIRTABLE_API_KEY!
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
   const dry_run    = body.dry_run ?? false
   const days_back  = body.days_back ?? 30
 
-  const apiKey = process.env.SAM_GOV_API_KEY
+  const apiKey = await getCredential('SAM_GOV_API_KEY')
   if (!apiKey || apiKey.length < 8) {
     return NextResponse.json({
       ok: false,

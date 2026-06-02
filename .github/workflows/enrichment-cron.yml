@@ -1,0 +1,16 @@
+name: Enrichment Cron Job (Hourly)
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour at minute 0
+
+jobs:
+  batch-enrichment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger batch enrichment
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "${{ secrets.ENRICHMENT_API_URL }}/api/enrichment/batch"

@@ -1,5 +1,5 @@
 /**
- * GET /api/contacts/[id] — Fetch single contact
+ * GET /api/contacts/[id] — Fetch single contact with related leads and opportunities
  * PATCH /api/contacts/[id] — Update contact fields
  * DELETE /api/contacts/[id] — Delete contact
  * Requires: Valid auth token
@@ -12,6 +12,8 @@ import { authMiddleware } from '@/app/lib/auth-middleware'
 const KEY  = credentials.airtableApiKey
 const BASE = credentials.airtableBaseId
 const TBL  = airtableTables.contacts
+const TBL_LEADS = airtableTables.leads
+const TBL_OPPORTUNITIES = airtableTables.opportunities
 const AT   = `https://api.airtable.com/v0/${BASE}`
 const HDR  = () => ({ Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' })
 
@@ -46,12 +48,12 @@ function mapContact(r: any) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authError = await authMiddleware(req)
   if (authError) return authError
 
-  const { id } = params
+  const { id } = await params
 
   try {
     const res = await fetch(`${AT}/${TBL}/${id}`, { headers: HDR() })
@@ -65,7 +67,71 @@ export async function GET(
     const record = await res.json()
     const contact = mapContact(record)
 
-    return NextResponse.json(contact)
+    // Fetch related leads: where contact is linked or by Entity_Name/Entity_Key match
+    let relatedLeads: any[] = []
+    if (TBL_LEADS) {
+      try {
+        const entityName = contact.entity_name || contact.organization
+        const formula = entityName
+          ? encodeURIComponent(`OR({Entity_Name}='${entityName}',{Agency_Name}='${entityName}')`)
+          : ''
+        if (formula) {
+          const leadsRes = await fetch(
+            `${AT}/${TBL_LEADS}?filterByFormula=${formula}&maxRecords=50`,
+            { headers: HDR() }
+          )
+          if (leadsRes.ok) {
+            const leadsData = await leadsRes.json()
+            relatedLeads = (leadsData.records || []).map((r: any) => ({
+              id: r.id,
+              entity_name: r.fields?.Entity_Name || '',
+              stage: r.fields?.Stage || '',
+              value: r.fields?.Value || 0,
+              agency_name: r.fields?.Agency_Name || '',
+              source: r.fields?.Source || '',
+            }))
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch related leads:', err)
+      }
+    }
+
+    // Fetch related opportunities: by agency or NAICS match
+    let relatedOpportunities: any[] = []
+    if (TBL_OPPORTUNITIES) {
+      try {
+        const agency = contact.organization
+        const formula = agency
+          ? encodeURIComponent(`{agency}='${agency}'`)
+          : ''
+        if (formula) {
+          const oppRes = await fetch(
+            `${AT}/${TBL_OPPORTUNITIES}?filterByFormula=${formula}&maxRecords=50`,
+            { headers: HDR() }
+          )
+          if (oppRes.ok) {
+            const oppData = await oppRes.json()
+            relatedOpportunities = (oppData.records || []).map((r: any) => ({
+              id: r.id,
+              title: r.fields?.title || '',
+              agency: r.fields?.agency || '',
+              deadline: r.fields?.deadline || '',
+              estimated_value: r.fields?.estimated_value || 0,
+              status: r.fields?.status || '',
+            }))
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch related opportunities:', err)
+      }
+    }
+
+    return NextResponse.json({
+      contact,
+      relatedLeads,
+      relatedOpportunities,
+    })
   } catch (err) {
     console.error('GET contact error:', err)
     return NextResponse.json(
@@ -77,12 +143,12 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authError = await authMiddleware(req)
   if (authError) return authError
 
-  const { id } = params
+  const { id } = await params
 
   try {
     const body = await req.json()
@@ -149,12 +215,12 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authError = await authMiddleware(req)
   if (authError) return authError
 
-  const { id } = params
+  const { id } = await params
 
   try {
     const res = await fetch(`${AT}/${TBL}/${id}`, {

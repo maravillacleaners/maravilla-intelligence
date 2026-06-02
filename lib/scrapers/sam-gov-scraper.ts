@@ -6,6 +6,8 @@
  * Extracts opportunities → Intelligence table.
  */
 
+import { getCredential } from '@/lib/credentials-dynamic'
+
 const SAM_BASE = 'https://api.sam.gov/prod/opportunities/v2/search'
 
 // NAICS codes for Maravilla's business
@@ -95,9 +97,9 @@ export async function fetchSamOpportunities(options: {
   naicsCodes?: string[]
   states?: string[]
 } = {}): Promise<SamOpportunity[]> {
-  const apiKey = process.env.SAM_GOV_API_KEY
+  const apiKey = await getCredential('SAM_GOV_API_KEY')
   if (!apiKey || apiKey.length < 8) {
-    console.log('[SAM.gov] SAM_GOV_API_KEY not set — skipping')
+    console.log('[SAM.gov] SAM_GOV_API_KEY not configured — skipping')
     return []
   }
 
@@ -139,7 +141,7 @@ export async function fetchSamOpportunities(options: {
 
 // ── SAM.gov Entity API — fetch POC data for a known company ────────────────────
 export async function fetchSamEntity(companyName: string): Promise<any | null> {
-  const apiKey = process.env.SAM_GOV_API_KEY
+  const apiKey = await getCredential('SAM_GOV_API_KEY')
   if (!apiKey || apiKey.length < 8) return null
 
   try {
