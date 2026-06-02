@@ -11,6 +11,7 @@ const C = {
   green: '#059669', greenBg: '#ECFDF5', greenBorder: '#A7F3D0',
   amber: '#D97706', amberBg: '#FFFBEB', amberBorder: '#FDE68A',
   red: '#DC2626', redBg: '#FEF2F2', redBorder: '#FECACA',
+  blue: '#2563EB', blueBg: '#EFF6FF', blueBorder: '#BFDBFE',
 }
 
 const AVATAR_ICONS: Record<string, string> = {
@@ -31,11 +32,12 @@ function SourceChip({ source }: { source: string }) {
   return <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 600 }}>{source}</span>
 }
 
-function ContactCard({ contact, onClick }: { contact: any; onClick: () => void }) {
+function ContactCard({ contact, onNavigate }: { contact: any; onNavigate: (id: string) => void }) {
   const icon = AVATAR_ICONS[contact.avatar_type] || '👤'
+  const matchScoreAboveThreshold = (contact.match_score || 0) > 50
   return (
     <div
-      onClick={onClick}
+      onClick={() => onNavigate(contact.id)}
       style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'box-shadow 0.12s' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.07)' }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
@@ -52,7 +54,12 @@ function ContactCard({ contact, onClick }: { contact: any; onClick: () => void }
             </div>
             <SourceChip source={contact.source || 'unknown'} />
           </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {contact.match_score !== undefined && (
+              <span style={{ fontSize: 11, background: matchScoreAboveThreshold ? C.blueBg : '#F5F5F4', color: matchScoreAboveThreshold ? C.blue : C.xmuted, padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>
+                Match: {contact.match_score}%
+              </span>
+            )}
             {contact.email && (
               <a href={`mailto:${contact.email}`} onClick={e => e.stopPropagation()} style={{ fontSize: 12, color: C.indigo, textDecoration: 'none' }}>✉ {contact.email}</a>
             )}
@@ -263,7 +270,7 @@ export default function ContactsPage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
               {contacts.map(c => (
-                <ContactCard key={c.id} contact={c} onClick={() => setSelected(selected?.id === c.id ? null : c)} />
+                <ContactCard key={c.id} contact={c} onNavigate={id => router.push(`/contacts/${id}`)} />
               ))}
             </div>
           )}

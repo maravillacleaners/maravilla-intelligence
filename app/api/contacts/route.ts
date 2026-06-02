@@ -17,7 +17,7 @@ const TBL  = airtableTables.contacts
 const AT   = `https://api.airtable.com/v0/${BASE}`
 const HDR  = () => ({ Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' })
 
-function mapContact(r: any) {
+function mapContact(r: any, matchScore?: number) {
   const f = r.fields || {}
   return {
     id: r.id,
@@ -30,6 +30,7 @@ function mapContact(r: any) {
     decision_role:         f['Decision_Role']         || '',
     influence_score:       f['Influence_Score']       || 0,
     relevance_score:       f['Relevance_Score']       || 0,
+    match_score:           matchScore ?? 0,
     source:                f['Source']                || '',
     status:                f['Status']                || 'Active',
     outreach_status:       f['Outreach_Status']       || '',
@@ -82,10 +83,54 @@ async function getHandler(req: NextRequest) {
   if (formula) params.set('filterByFormula', formula)
 
   try {
+    // Fetch contacts
     const res = await fetch(`${AT}/${TBL}?${params}`, { headers: HDR(), cache: 'no-store' })
     if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: res.status })
     const data = await res.json()
-    const contacts = (data.records || []).map(mapContact)
+
+    // Fetch opportunities to get agency names for match_score computation
+    const oppParams = new URLSearchParams({
+      fields: 'agency',
+      pageSize: '50',
+    })
+    let agencies: string[] = []
+    try {
+      const oppRes = await fetch(`${AT}/${airtableTables.opportunities}?${oppParams}`, { headers: HDR(), cache: 'no-store' })
+      if (oppRes.ok) {
+        const oppData = await oppRes.json()
+        agencies = (oppData.records || [])
+          .map((r: any) => (r.fields?.agency || '').toLowerCase())
+          .filter((a: string) => a.length > 0)
+      }
+    } catch (err) {
+      console.warn('Failed to fetch opportunities for match scoring:', err)
+    }
+
+    // Compute match_score for each contact
+    const contacts = (data.records || []).map((r: any) => {
+      let score = 0
+      const contact = mapContact(r)
+
+      // +50 if organization matches any opportunity agency
+      const contactOrg = (contact.organization || '').toLowerCase()
+      if (contactOrg && agencies.some(a => a.includes(contactOrg) || contactOrg.includes(a))) {
+        score += 50
+      }
+
+      // +30 if decision_role is in key roles
+      const keyRoles = ['contracting_officer', 'facilities_manager', 'government_buyer', 'prime_bd']
+      if (contact.decision_role && keyRoles.some(r => contact.decision_role.toLowerCase().includes(r))) {
+        score += 30
+      }
+
+      // Normalize to 0-100
+      const matchScore = Math.min(Math.round((score / 80) * 100), 100)
+      contact.match_score = matchScore
+      return contact
+    })
+
+    // Sort by match_score descending
+    contacts.sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0))
 
     const srcCounts: Record<string, number> = {}
     const typeCounts: Record<string, number> = {}
