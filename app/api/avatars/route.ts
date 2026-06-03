@@ -5,16 +5,18 @@
  * Creates a new avatar with building location and approach mode
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { getCredential } from '@/lib/credentials-dynamic'
 
+const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID
 const AVATARS_TABLE_ID = process.env.AVATARS_TABLE_ID || 'tblrIv6lKjsMeUcyU'
 const AT = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`
 
-async function getAirtableAuth() {
-  const key = await getCredential('AIRTABLE_API_KEY')
+function getAirtableAuth() {
+  if (!AIRTABLE_API_KEY) {
+    throw new Error('AIRTABLE_API_KEY not configured')
+  }
   return {
-    Authorization: `Bearer ${key}`,
+    Authorization: `Bearer ${AIRTABLE_API_KEY}`,
     'Content-Type': 'application/json',
   }
 }
@@ -42,7 +44,7 @@ function mapAvatar(record: any) {
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await getAirtableAuth()
+    const auth = getAirtableAuth()
 
     // Fetch all avatars from the base
     const url = `${AT}/${AVATARS_TABLE_ID}`
@@ -89,7 +91,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const auth = await getAirtableAuth()
+    const auth = getAirtableAuth()
     const url = `${AT}/${AVATARS_TABLE_ID}`
 
     const createRes = await fetch(url, {
