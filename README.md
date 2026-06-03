@@ -345,3 +345,4 @@ El sistema está **100% operativo** para Fase 2 (n8n deployment).
 **Status:** ✅ Production-Ready (Phase 1 Complete)
 
 Para preguntas o support: Consulta `/docs/`
+# VPS Auto-Deploy Workflow Test
