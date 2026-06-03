@@ -9,7 +9,7 @@ import { getCredential } from '@/lib/credentials-dynamic'
 import { enrichAvatars, cacheEnrichmentResults } from '@/lib/enrichment-strategy'
 
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID
-const AVATARS_TABLE_ID = 'tblAvatars'
+const AVATARS_TABLE_ID = process.env.AVATARS_TABLE_ID || 'tblrIv6lKjsMeUcyU'
 const AT = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`
 
 async function getAirtableAuth() {

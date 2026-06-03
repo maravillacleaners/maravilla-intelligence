@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCredential } from '@/lib/credentials-dynamic'
 
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID
-const AVATARS_TABLE_ID = 'tblAvatars' // Will be created if needed
+const AVATARS_TABLE_ID = process.env.AVATARS_TABLE_ID || 'tblrIv6lKjsMeUcyU'
 const AT = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`
 
 async function getAirtableAuth() {
