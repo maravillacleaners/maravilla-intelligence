@@ -346,3 +346,4 @@ El sistema está **100% operativo** para Fase 2 (n8n deployment).
 
 Para preguntas o support: Consulta `/docs/`
 # VPS Auto-Deploy Workflow Test
+# Deployment trigger
