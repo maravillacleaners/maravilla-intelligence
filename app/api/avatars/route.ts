@@ -13,7 +13,7 @@ const AT = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`
 
 function getAirtableAuth() {
   if (!AIRTABLE_API_KEY) {
-    throw new Error('AIRTABLE_API_KEY not configured')
+    throw new Error('AIRTABLE_API_KEY not configured. Set environment variable or create .env file.')
   }
   return {
     Authorization: `Bearer ${AIRTABLE_API_KEY}`,
