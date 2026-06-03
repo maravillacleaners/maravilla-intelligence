@@ -5,6 +5,7 @@
  * Creates a new avatar with building location and approach mode
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { avatarsLimiter, getClientIP, checkRateLimit } from '@/lib/ratelimit'
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID
@@ -44,6 +45,30 @@ function mapAvatar(record: any) {
 
 export async function GET(req: NextRequest) {
   try {
+    // Apply rate limiting
+    const clientIP = getClientIP(req)
+    const rateLimitResult = await checkRateLimit(avatarsLimiter, clientIP)
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests',
+          message: `Rate limit exceeded. Max 10 requests per 60 seconds.`,
+          retryAfter: rateLimitResult.retryAfter,
+          ok: false,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter || 60),
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': String(Math.max(0, rateLimitResult.remaining)),
+            'X-RateLimit-Reset': String(rateLimitResult.reset),
+          },
+        }
+      )
+    }
+
     const auth = getAirtableAuth()
 
     // Fetch all avatars from the base
@@ -61,7 +86,13 @@ export async function GET(req: NextRequest) {
     const data = await res.json()
     const avatars = (data.records || []).map(mapAvatar)
 
-    return NextResponse.json({ avatars, ok: true })
+    return NextResponse.json({ avatars, ok: true }, {
+      headers: {
+        'X-RateLimit-Limit': '10',
+        'X-RateLimit-Remaining': String(Math.max(0, rateLimitResult.remaining - 1)),
+        'X-RateLimit-Reset': String(rateLimitResult.reset),
+      },
+    })
   } catch (err) {
     console.error('[GET /api/avatars]', err)
     return NextResponse.json({ error: String(err), ok: false }, { status: 500 })
@@ -70,7 +101,47 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    // Apply rate limiting
+    const clientIP = getClientIP(req)
+    const rateLimitResult = await checkRateLimit(avatarsLimiter, clientIP)
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests',
+          message: `Rate limit exceeded. Max 10 requests per 60 seconds.`,
+          retryAfter: rateLimitResult.retryAfter,
+          ok: false,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter || 60),
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': String(Math.max(0, rateLimitResult.remaining)),
+            'X-RateLimit-Reset': String(rateLimitResult.reset),
+          },
+        }
+      )
+    }
+
+    let body: any
+    try {
+      body = await req.json()
+    } catch (parseErr) {
+      if (parseErr instanceof SyntaxError) {
+        console.warn('[POST /api/avatars] Invalid JSON:', parseErr.message)
+        return NextResponse.json(
+          {
+            error: 'Invalid JSON: ' + parseErr.message,
+            ok: false
+          },
+          { status: 400 }
+        )
+      }
+      throw parseErr
+    }
+
     const {
       name,
       type = 'contact',
@@ -86,7 +157,14 @@ export async function POST(req: NextRequest) {
 
     if (!name || !zone || latitude === null || longitude === null) {
       return NextResponse.json(
-        { error: 'name, zone, latitude, longitude required' },
+        { error: 'Validation error: name, zone, latitude, longitude are required', ok: false },
+        { status: 400 }
+      )
+    }
+
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+      return NextResponse.json(
+        { error: 'Validation error: latitude and longitude must be numbers', ok: false },
         { status: 400 }
       )
     }
@@ -121,15 +199,31 @@ export async function POST(req: NextRequest) {
     })
 
     if (!createRes.ok) {
-      throw new Error(`Failed to create avatar: ${createRes.status}`)
+      const errDetails = await createRes.text()
+      console.error('[POST /api/avatars] Airtable error:', createRes.status, errDetails)
+      return NextResponse.json(
+        { error: `Airtable error ${createRes.status}: failed to create avatar`, ok: false },
+        { status: 500 }
+      )
     }
 
     const result = await createRes.json()
     const avatar = mapAvatar(result.records[0])
 
-    return NextResponse.json({ avatar, ok: true }, { status: 201 })
+    return NextResponse.json({ avatar, ok: true }, {
+      status: 201,
+      headers: {
+        'X-RateLimit-Limit': '10',
+        'X-RateLimit-Remaining': String(Math.max(0, rateLimitResult.remaining - 1)),
+        'X-RateLimit-Reset': String(rateLimitResult.reset),
+      },
+    })
   } catch (err) {
-    console.error('[POST /api/avatars]', err)
-    return NextResponse.json({ error: String(err), ok: false }, { status: 500 })
+    console.error('[POST /api/avatars] Unexpected error:', err)
+    const errorMsg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json(
+      { error: 'Server error: ' + errorMsg, ok: false },
+      { status: 500 }
+    )
   }
 }
