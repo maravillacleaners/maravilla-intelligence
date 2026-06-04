@@ -60,7 +60,8 @@ export async function GET(
     return NextResponse.json({ avatar, ok: true })
   } catch (err) {
     console.error('[GET /api/avatars/[id]]', err)
-    return NextResponse.json({ error: String(err), ok: false }, { status: 500 })
+    // Don't expose error details to client (FIX #5: Error Handling)
+    return NextResponse.json({ error: 'Internal server error', ok: false }, { status: 500 })
   }
 }
 
@@ -99,6 +100,7 @@ export async function PATCH(
     return NextResponse.json({ avatar, ok: true })
   } catch (err) {
     console.error('[PATCH /api/avatars/[id]]', err)
-    return NextResponse.json({ error: String(err), ok: false }, { status: 500 })
+    // Don't expose error details to client (FIX #5: Error Handling)
+    return NextResponse.json({ error: 'Internal server error', ok: false }, { status: 500 })
   }
 }

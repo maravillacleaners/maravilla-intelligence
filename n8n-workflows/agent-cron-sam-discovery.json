@@ -1,0 +1,181 @@
+{
+  "name": "Agent Cron - SAM Discovery (6h)",
+  "description": "Autonomous cron job to trigger SAM discovery agent every 6 hours",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": null,
+              "triggerAtMinute": 0,
+              "repeatInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env.API_HOST }}/api/agents/sam-discovery",
+        "method": "POST",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "sam"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            },
+            {
+              "name": "filters",
+              "value": "{\"status\": \"Active\"}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "follow": true,
+            "maxRedirects": 5
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "trigger-sam-agent",
+      "name": "Trigger SAM Discovery Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        450,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": "jwt_token"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.statusCode }}",
+              "operation": "equals",
+              "value2": 200
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Check Status Code",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "notifications": [
+            {
+              "type": "success",
+              "text": "SAM Discovery Agent executed successfully",
+              "showNotification": true
+            }
+          ]
+        }
+      },
+      "id": "notify-success",
+      "name": "Notify Success",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "notifications": [
+            {
+              "type": "error",
+              "text": "SAM Discovery Agent failed: {{ $json.error }}",
+              "showNotification": true
+            }
+          ]
+        }
+      },
+      "id": "notify-failure",
+      "name": "Notify Failure",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1,
+      "position": [
+        850,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "trigger-sam-agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trigger-sam-agent": {
+      "main": [
+        [
+          {
+            "node": "check-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-success": {
+      "main": [
+        [
+          {
+            "node": "notify-success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "notify-failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": "default"
+  }
+}

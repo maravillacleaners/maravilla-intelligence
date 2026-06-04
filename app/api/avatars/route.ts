@@ -5,7 +5,7 @@
  * Creates a new avatar with building location and approach mode
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { avatarsLimiter, getClientIP, checkRateLimit } from '@/lib/ratelimit'
+import { avatarsLimiter, getClientIP, checkRateLimit, addRateLimitHeaders } from '@/lib/ratelimit'
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID
@@ -49,21 +49,22 @@ export async function GET(req: NextRequest) {
     const clientIP = getClientIP(req)
     const rateLimitResult = await checkRateLimit(avatarsLimiter, clientIP)
 
-    if (!rateLimitResult.success) {
+    if (!rateLimitResult.allowed) {
+      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
       return NextResponse.json(
         {
           error: 'Too many requests',
-          message: `Rate limit exceeded. Max 10 requests per 60 seconds.`,
-          retryAfter: rateLimitResult.retryAfter,
+          message: `Rate limit exceeded. Max ${avatarsLimiter.maxRequests} requests per minute.`,
+          retryAfter,
           ok: false,
         },
         {
           status: 429,
           headers: {
-            'Retry-After': String(rateLimitResult.retryAfter || 60),
-            'X-RateLimit-Limit': '10',
-            'X-RateLimit-Remaining': String(Math.max(0, rateLimitResult.remaining)),
-            'X-RateLimit-Reset': String(rateLimitResult.reset),
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': avatarsLimiter.maxRequests.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
           },
         }
       )
@@ -86,16 +87,12 @@ export async function GET(req: NextRequest) {
     const data = await res.json()
     const avatars = (data.records || []).map(mapAvatar)
 
-    return NextResponse.json({ avatars, ok: true }, {
-      headers: {
-        'X-RateLimit-Limit': '10',
-        'X-RateLimit-Remaining': String(Math.max(0, rateLimitResult.remaining - 1)),
-        'X-RateLimit-Reset': String(rateLimitResult.reset),
-      },
-    })
+    const response = NextResponse.json({ avatars, ok: true })
+    return addRateLimitHeaders(response, avatarsLimiter, rateLimitResult.remaining, rateLimitResult.resetTime)
   } catch (err) {
     console.error('[GET /api/avatars]', err)
-    return NextResponse.json({ error: String(err), ok: false }, { status: 500 })
+    // Don't expose error details to client (FIX #5: Error Handling)
+    return NextResponse.json({ error: 'Internal server error', ok: false }, { status: 500 })
   }
 }
 
@@ -105,21 +102,22 @@ export async function POST(req: NextRequest) {
     const clientIP = getClientIP(req)
     const rateLimitResult = await checkRateLimit(avatarsLimiter, clientIP)
 
-    if (!rateLimitResult.success) {
+    if (!rateLimitResult.allowed) {
+      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
       return NextResponse.json(
         {
           error: 'Too many requests',
-          message: `Rate limit exceeded. Max 10 requests per 60 seconds.`,
-          retryAfter: rateLimitResult.retryAfter,
+          message: `Rate limit exceeded. Max ${avatarsLimiter.maxRequests} requests per minute.`,
+          retryAfter,
           ok: false,
         },
         {
           status: 429,
           headers: {
-            'Retry-After': String(rateLimitResult.retryAfter || 60),
-            'X-RateLimit-Limit': '10',
-            'X-RateLimit-Remaining': String(Math.max(0, rateLimitResult.remaining)),
-            'X-RateLimit-Reset': String(rateLimitResult.reset),
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': avatarsLimiter.maxRequests.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
           },
         }
       )
@@ -210,19 +208,13 @@ export async function POST(req: NextRequest) {
     const result = await createRes.json()
     const avatar = mapAvatar(result.records[0])
 
-    return NextResponse.json({ avatar, ok: true }, {
-      status: 201,
-      headers: {
-        'X-RateLimit-Limit': '10',
-        'X-RateLimit-Remaining': String(Math.max(0, rateLimitResult.remaining - 1)),
-        'X-RateLimit-Reset': String(rateLimitResult.reset),
-      },
-    })
+    const response = NextResponse.json({ avatar, ok: true }, { status: 201 })
+    return addRateLimitHeaders(response, avatarsLimiter, rateLimitResult.remaining, rateLimitResult.resetTime)
   } catch (err) {
     console.error('[POST /api/avatars] Unexpected error:', err)
-    const errorMsg = err instanceof Error ? err.message : String(err)
+    // Don't expose error details to client (FIX #5: Error Handling)
     return NextResponse.json(
-      { error: 'Server error: ' + errorMsg, ok: false },
+      { error: 'Internal server error', ok: false },
       { status: 500 }
     )
   }

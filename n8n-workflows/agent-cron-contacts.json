@@ -1,0 +1,197 @@
+{
+  "name": "Agent Cron - Contact Discovery (Every 2 Hours)",
+  "description": "Autonomous cron job to trigger contact discovery agent every 2 hours",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": null,
+              "triggerAtMinute": 0,
+              "repeatInterval": 2
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env.API_HOST }}/api/agents/discover-contacts",
+        "method": "POST",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "200"
+            },
+            {
+              "name": "includeRelated",
+              "value": "true"
+            },
+            {
+              "name": "enrichRoles",
+              "value": "true"
+            },
+            {
+              "name": "filters",
+              "value": "{\"minScore\": 50, \"status\": \"Active\"}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "follow": true,
+            "maxRedirects": 5
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "trigger-contact-agent",
+      "name": "Trigger Contact Discovery Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        450,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": "jwt_token"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ [200, 202].includes($json.statusCode) }}",
+              "operation": "equals",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Check Status Code",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_WEBHOOK_OPS }}",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "✅ Contact Discovery Agent - Executed"
+            },
+            {
+              "name": "blocks",
+              "value": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Contact Discovery Agent*\\nStatus: Success\\nLimit: 200\\nInclude Related: true\\nTime: *{{ new Date().toISOString() }}*\"}}]"
+            }
+          ]
+        }
+      },
+      "id": "slack-success",
+      "name": "Slack Notification (Success)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_WEBHOOK_OPS }}",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "❌ Contact Discovery Agent - Failed"
+            },
+            {
+              "name": "blocks",
+              "value": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Contact Discovery Agent*\\nStatus: Failed\\nError: *{{ $json.error ?? $json.statusCode }}*\\nTime: *{{ new Date().toISOString() }}*\"}}]"
+            }
+          ]
+        }
+      },
+      "id": "slack-failure",
+      "name": "Slack Notification (Failure)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "trigger-contact-agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trigger-contact-agent": {
+      "main": [
+        [
+          {
+            "node": "check-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-success": {
+      "main": [
+        [
+          {
+            "node": "slack-success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "slack-failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": "default"
+  }
+}

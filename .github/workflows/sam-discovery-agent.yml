@@ -1,0 +1,111 @@
+name: SAM Discovery Agent
+
+on:
+  schedule:
+    # Run every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      daysBack:
+        description: 'Number of days to look back'
+        required: false
+        default: '7'
+
+jobs:
+  sam-discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      NODE_ENV: production
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+      AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+      SAM_GOV_API_KEY: ${{ secrets.SAM_GOV_API_KEY }}
+      ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+      JWT_SECRET_SUPPLIER: ${{ secrets.JWT_SECRET_SUPPLIER }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run SAM Discovery Agent
+        run: |
+          node -e "
+            const path = require('path');
+            const { runSAMDiscoveryAgent } = require('./dist/lib/agents/sam-discovery-agent.js');
+
+            const daysBack = process.env.DAYS_BACK || 7;
+            console.log('Starting SAM Discovery Agent...');
+            console.log('Days back:', daysBack);
+
+            runSAMDiscoveryAgent(parseInt(daysBack))
+              .then(result => {
+                console.log('Agent completed:');
+                console.log(JSON.stringify(result, null, 2));
+                process.exit(result.status === 'error' ? 1 : 0);
+              })
+              .catch(error => {
+                console.error('Agent failed:', error);
+                process.exit(1);
+              });
+          "
+        env:
+          DAYS_BACK: ${{ github.event.inputs.daysBack || '7' }}
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: agent-logs
+          path: logs/
+          retention-days: 7
+
+      - name: Notify Slack on success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "SAM Discovery Agent completed successfully",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*SAM Discovery Agent* - Run Completed\n✅ Status: Success\n📄 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "SAM Discovery Agent failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*SAM Discovery Agent* - Run Failed\n❌ Status: Error\n📄 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }

@@ -1,0 +1,3074 @@
+{
+  "records": [
+    {
+      "fields": {
+        "name": "SAM.gov API",
+        "category": "Gobierno federal",
+        "description": "Empresas registradas para contratos federales CAGE code certificaciones POC de contratos",
+        "url": "open.gsa.gov/api/sam/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USASpending.gov API",
+        "category": "Gobierno federal",
+        "description": "Contratos grants y gastos federales por agencia empresa receptora y monto",
+        "url": "api.usaspending.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FPDS-NG API",
+        "category": "Gobierno federal",
+        "description": "Federal Procurement Data System historial completo de contratos desde 2004",
+        "url": "fpds.gov/fpdsng_cms/index.php/en/worksite",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Grants.gov API",
+        "category": "Gobierno federal",
+        "description": "Convocatorias de grants federales activas montos elegibles y deadlines",
+        "url": "grants.gov/web/grants/s2s",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Data.gov CKAN API",
+        "category": "Gobierno federal",
+        "description": "Portal central con miles de datasets federales buscador unificado",
+        "url": "catalog.data.gov/api/3",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "GSA Per Diem API",
+        "category": "Gobierno federal",
+        "description": "Tarifas de viaje federal por ciudad",
+        "url": "open.gsa.gov/api/per-diem-api/",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "GSA Auctions API",
+        "category": "Gobierno federal",
+        "description": "Subastas de propiedad federal excedente activos vehiculos equipo",
+        "url": "gsa.gov/auctions",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "beta.SAM Entity API",
+        "category": "Gobierno federal",
+        "description": "Busqueda de entidades por NAICS estado certificacion tamano de empresa",
+        "url": "open.gsa.gov/api/entity-api/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FOIA.gov API",
+        "category": "Gobierno federal",
+        "description": "Solicitudes FOIA presentadas agencias status para inteligencia competitiva",
+        "url": "foia.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Regulations.gov API",
+        "category": "Gobierno federal",
+        "description": "Comentarios y regulaciones federales empresas que participan en procesos regulatorios",
+        "url": "open.gsa.gov/api/regulationsgov/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "OpenCorporates API",
+        "category": "Estatal y local",
+        "description": "Registros de empresas de todos los estados EE.UU. agente registrado status fecha",
+        "url": "api.opencorporates.com",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Florida Division of Corporations",
+        "category": "Estatal y local",
+        "description": "Sunbiz.org todas las empresas registradas en Florida gratis y sin key",
+        "url": "search.sunbiz.org/Inquiry/CorporationSearch/ByName",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "California Secretary of State API",
+        "category": "Estatal y local",
+        "description": "Empresas registradas en CA agente registrado tipo de entidad",
+        "url": "bizfileonline.sos.ca.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Texas SOS Direct API",
+        "category": "Estatal y local",
+        "description": "Empresas registradas en Texas filings oficiales registrados",
+        "url": "direct.sos.state.tx.us",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NY Open Data API",
+        "category": "Estatal y local",
+        "description": "Licencias de negocios permisos contratos del estado de Nueva York",
+        "url": "data.ny.gov/api/odata/v4",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Illinois Data Portal",
+        "category": "Estatal y local",
+        "description": "Licencias de negocios contratos estatales proveedores certificados IL",
+        "url": "data.illinois.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Miami-Dade Open Data",
+        "category": "Estatal y local",
+        "description": "Licencias de negocios locales permisos de construccion contratistas",
+        "url": "gis-mdc.opendata.arcgis.com/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "City of Chicago Data Portal",
+        "category": "Estatal y local",
+        "description": "Licencias de negocios activas en Chicago con direccion y tipo de negocio",
+        "url": "data.cityofchicago.org/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "LA County Open Data",
+        "category": "Estatal y local",
+        "description": "Permisos licencias contratistas aprobados del condado de Los Angeles",
+        "url": "data.lacounty.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Georgia Secretary of State",
+        "category": "Estatal y local",
+        "description": "Busqueda de entidades registradas en Georgia gratis sin key",
+        "url": "ecorp.sos.ga.gov/BusinessSearch",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Census Bureau API",
+        "category": "GIS y geoespacial",
+        "description": "Demografia TIGER shapefiles NAICS por ZIP poblacion ingresos por zona",
+        "url": "api.census.gov/data.html",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Overpass API (OSM)",
+        "category": "GIS y geoespacial",
+        "description": "Negocios edificios POIs de OpenStreetMap por radio bbox o nombre",
+        "url": "overpass-api.de/api/interpreter",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "ESRI ArcGIS Hub API",
+        "category": "GIS y geoespacial",
+        "description": "Datasets geoespaciales publicos de ciudades condados y agencias federales",
+        "url": "hub.arcgis.com/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USGS National Map API",
+        "category": "GIS y geoespacial",
+        "description": "Topografia imagery satelital cuencas infraestructura por coordenadas",
+        "url": "apps.nationalmap.gov/tnmaccess/api/v1",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "HUD Location Affordability",
+        "category": "GIS y geoespacial",
+        "description": "Costos de vivienda y transporte por zona",
+        "url": "hudgis-hud.opendata.arcgis.com",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NOAA Weather API",
+        "category": "GIS y geoespacial",
+        "description": "Datos climaticos historicos y forecast",
+        "url": "api.weather.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Google Maps Places API",
+        "category": "GIS y geoespacial",
+        "description": "Negocios locales con telefono web horario fotos y rating",
+        "url": "developers.google.com/maps/documentation/places",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Geocodio API",
+        "category": "GIS y geoespacial",
+        "description": "Geocodificacion de direcciones EE.UU. convierte listas de empresas a coords",
+        "url": "api.geocod.io/v1.7",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "EPA Facility Registry (FRS)",
+        "category": "GIS y geoespacial",
+        "description": "Instalaciones industriales reguladas por EPA con NAICS coords y contacto",
+        "url": "frs.epa.gov/frs-public-rest-api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CMS NPI Registry",
+        "category": "Salud y regulacion",
+        "description": "Todos los proveedores de salud Medicare/Medicaid nombre especialidad direccion telefono",
+        "url": "npiregistry.cms.hhs.gov/api/",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "openFDA API",
+        "category": "Salud y regulacion",
+        "description": "Fabricantes recalls dispositivos medicos inspecciones de FDA",
+        "url": "open.fda.gov/apis/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CMS Hospital Compare",
+        "category": "Salud y regulacion",
+        "description": "Hospitales registrados con calidad certificaciones y contactos",
+        "url": "data.cms.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "HRSA Health Workforce",
+        "category": "Salud y regulacion",
+        "description": "Centros de salud comunitarios clinicas federales shortage areas",
+        "url": "data.hrsa.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DEA Registrant Lookup",
+        "category": "Salud y regulacion",
+        "description": "Farmaceuticos y medicos con licencia DEA para sustancias controladas",
+        "url": "apps.deadiversion.usdoj.gov/webforms",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CMS Physician Compare",
+        "category": "Salud y regulacion",
+        "description": "Medicos que aceptan Medicare especialidad afiliacion hospitalaria",
+        "url": "data.cms.gov/provider-data",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "AHRQ Data API",
+        "category": "Salud y regulacion",
+        "description": "Investigacion en calidad de salud hospitalizaciones outcomes por estado",
+        "url": "hcupnet.ahrq.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "SEC EDGAR Full-Text API",
+        "category": "Financiero y corporativo",
+        "description": "Filings completos 10-K 10-Q 8-K ejecutivos compensaciones subsidiarias",
+        "url": "efts.sec.gov/LATEST/search-index",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "SEC EDGAR Company API",
+        "category": "Financiero y corporativo",
+        "description": "Busqueda por empresa CIK ticker datos estructurados de filings recientes",
+        "url": "data.sec.gov/submissions/",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "IRS Nonprofits (ProPublica)",
+        "category": "Financiero y corporativo",
+        "description": "Form 990 de todas las nonprofits ingresos gastos salarios de ejecutivos",
+        "url": "projects.propublica.org/nonprofits/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FDIC Bank Data API",
+        "category": "Financiero y corporativo",
+        "description": "Datos de todos los bancos asegurados activos depositos ubicaciones",
+        "url": "banks.data.fdic.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Federal Reserve FRED API",
+        "category": "Financiero y corporativo",
+        "description": "Indicadores economicos tasas GDP por estado contexto macroeconomico",
+        "url": "fred.stlouisfed.org/docs/api/fred/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "SBA Loan Data",
+        "category": "Financiero y corporativo",
+        "description": "Prestamos SBA aprobados por empresa monto sector y estado",
+        "url": "data.sba.gov/api/3",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "PPP Loan Data",
+        "category": "Financiero y corporativo",
+        "description": "Empresas que recibieron prestamos PPP COVID monto y empleados",
+        "url": "home.treasury.gov/policy-issues/cares-act",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USDebtwatch API",
+        "category": "Financiero y corporativo",
+        "description": "Deuda federal contratos de bonos inversores institucionales",
+        "url": "fiscaldata.treasury.gov/api/v1",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Yelp Fusion API",
+        "category": "Directorios de negocios",
+        "description": "Negocios locales por categoria y ubicacion telefono direccion horarios",
+        "url": "docs.developer.yelp.com",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Crunchbase API",
+        "category": "Directorios de negocios",
+        "description": "Startups funding rounds ejecutivos fechas de fundacion inversores",
+        "url": "data.crunchbase.com/docs",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "LinkedIn (via Apify)",
+        "category": "Directorios de negocios",
+        "description": "Perfiles publicos de ejecutivos cargo empresa ubicacion contacto",
+        "url": "apify.com/apify/linkedin-scraper",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BBB API",
+        "category": "Directorios de negocios",
+        "description": "Empresas acreditadas Better Business Bureau con rating y quejas",
+        "url": "bbb.org/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Glassdoor API",
+        "category": "Directorios de negocios",
+        "description": "Empresas numero de empleados reviews salarios publicados",
+        "url": "glassdoor.com/developer/index.htm",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Hunter.io API",
+        "category": "Directorios de negocios",
+        "description": "Encuentra emails corporativos por dominio o nombre de persona",
+        "url": "api.hunter.io/v2",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Clearbit Enrichment",
+        "category": "Directorios de negocios",
+        "description": "Enriquece empresa o email con cargo tamano tecnologias usadas",
+        "url": "dashboard.clearbit.com/docs",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Apollo.io API",
+        "category": "Directorios de negocios",
+        "description": "Base B2B de contactos con emails verificados busqueda por NAICS y cargo",
+        "url": "apolloio.github.io/apollo-api-docs/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BLS API",
+        "category": "Laboral y empleo",
+        "description": "Empleo por industria y estado salarios medios NAICS laboral",
+        "url": "api.bls.gov/publicAPI/v2",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "OSHA Enforcement API",
+        "category": "Laboral y empleo",
+        "description": "Inspecciones de OSHA por empresa violaciones multas",
+        "url": "enforcedata.dol.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "H-1B Visa Data",
+        "category": "Laboral y empleo",
+        "description": "Empresas que patrocinan visas H-1B salarios ofrecidos cargo",
+        "url": "h1bdata.info",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DOL WARN Act Notices",
+        "category": "Laboral y empleo",
+        "description": "Layoffs masivos reportados por empresa fecha y numero de empleados",
+        "url": "dol.gov/agencies/eta/layoffs",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NLRB Case Data",
+        "category": "Laboral y empleo",
+        "description": "Casos de relaciones laborales por empresa sindicatos disputas",
+        "url": "nlrb.gov/resources/data",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USAJobs API",
+        "category": "Laboral y empleo",
+        "description": "Vacantes del gobierno federal agencia cargo requisitos salario",
+        "url": "developer.usajobs.gov",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FMCSA Motor Carrier API",
+        "category": "Transporte y logistica",
+        "description": "Empresas de camiones y transporte DOT number seguro historial de seguridad",
+        "url": "mobile.fmcsa.dot.gov/qc/services/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FAA Aircraft Registry",
+        "category": "Transporte y logistica",
+        "description": "Aviones registrados en EE.UU. propietario modelo numero de serie",
+        "url": "av-info.faa.gov/data/AircraftRegistry",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Maritime MISLE API",
+        "category": "Transporte y logistica",
+        "description": "Buques empresas navieras incidentes USCG Coast Guard data",
+        "url": "homeport.uscg.mil",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BTS Transportation Stats",
+        "category": "Transporte y logistica",
+        "description": "Estadisticas de aerolineas carga pasajeros rutas por carrier",
+        "url": "transtats.bts.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "National Pipeline API",
+        "category": "Transporte y logistica",
+        "description": "Operadores de gasoductos rutas inspecciones PHMSA",
+        "url": "phmsa.dot.gov/data-and-statistics",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "EIA Energy API",
+        "category": "Energia y medio ambiente",
+        "description": "Plantas de energia generadores combustible capacidad por empresa",
+        "url": "api.eia.gov",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FERC eLibrary API",
+        "category": "Energia y medio ambiente",
+        "description": "Empresas de energia reguladas tarifas licencias de generacion",
+        "url": "elibrary.ferc.gov/eLibrary/search",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "EPA GHG Reporting",
+        "category": "Energia y medio ambiente",
+        "description": "Empresas que reportan emisiones de gases nombre sector cantidad",
+        "url": "ghgdata.epa.gov/ghgp/main.do",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DOE Loan Programs",
+        "category": "Energia y medio ambiente",
+        "description": "Empresas con prestamos de energia limpia del Departamento de Energia",
+        "url": "loan.energy.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NREL Developer API",
+        "category": "Energia y medio ambiente",
+        "description": "Datos de energia solar eolica y eficiencia por ubicacion",
+        "url": "developer.nrel.gov/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "IPEDS API",
+        "category": "Educacion e investigacion",
+        "description": "Todas las universidades y colleges matricula programas contactos admin",
+        "url": "nces.ed.gov/ipeds/datacenter/DataFiles.aspx",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "ED School Data",
+        "category": "Educacion e investigacion",
+        "description": "Escuelas K-12 publicas y privadas directores telefonos tamano",
+        "url": "api.data.gov/ed/collegescorecard/v1",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NSF Research Awards",
+        "category": "Educacion e investigacion",
+        "description": "Grants de investigacion por universidad y empresa PI monto tema",
+        "url": "api.nsf.gov/services/v1/awards.json",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NIH Reporter API",
+        "category": "Educacion e investigacion",
+        "description": "Proyectos de investigacion financiados por NIH institucion investigador monto",
+        "url": "api.reporter.nih.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "PACER Federal Court Records",
+        "category": "Legal y judicial",
+        "description": "Casos federales civiles y criminales por empresa demandas bankruptcies litigios activos",
+        "url": "pacer.uscourts.gov",
+        "is_free": false,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CourtListener API",
+        "category": "Legal y judicial",
+        "description": "Millones de opiniones judiciales federales y estatales empresas involucradas en litigios",
+        "url": "courtlistener.com/api/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "PACER Case Locator",
+        "category": "Legal y judicial",
+        "description": "Localizador de casos federales por nombre de empresa o persona",
+        "url": "pcl.uscourts.gov/pcl/pages/search/find.jsf",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Dockets.justia.com",
+        "category": "Legal y judicial",
+        "description": "Casos federales indexados y buscables demandas por empresa gratis",
+        "url": "dockets.justia.com",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USPTO Patent API",
+        "category": "Legal y judicial",
+        "description": "Patentes por empresa inventores asignees fechas tecnologia",
+        "url": "api.uspto.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USPTO Trademark API",
+        "category": "Legal y judicial",
+        "description": "Marcas registradas por empresa dueno status clase de producto",
+        "url": "tsdrapi.uspto.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Copyright.gov Records",
+        "category": "Legal y judicial",
+        "description": "Registros de copyright por empresa o autor",
+        "url": "cocatalog.loc.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FTC Enforcement Actions",
+        "category": "Legal y judicial",
+        "description": "Empresas con acciones de la FTC fraude publicidad enganosa violaciones de privacidad",
+        "url": "ftc.gov/enforcement/cases-proceedings",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DOJ Civil Division",
+        "category": "Legal y judicial",
+        "description": "Demandas del Departamento de Justicia contra empresas",
+        "url": "justice.gov/civil",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CFPB Complaint Database",
+        "category": "Legal y judicial",
+        "description": "Quejas de consumidores contra empresas financieras banco nombre tipo de queja",
+        "url": "api.consumerfinance.gov/data/complaints",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Zillow Bridge API",
+        "category": "Inmobiliario y propiedad",
+        "description": "Datos de propiedades residenciales valor estimado Zestimate historial",
+        "url": "bridgedataoutput.com/api/v2",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "ATTOM Property API",
+        "category": "Inmobiliario y propiedad",
+        "description": "Datos de propiedades comerciales y residenciales dueno valor historial de venta",
+        "url": "api.attomdata.com",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "HUD USPS Vacancy Data",
+        "category": "Inmobiliario y propiedad",
+        "description": "Propiedades vacantes por ZIP code util para real estate e inversion",
+        "url": "huduser.gov/portal/datasets/usps.html",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CoStar",
+        "category": "Inmobiliario y propiedad",
+        "description": "Datos comerciales de edificios de oficinas tenants precios disponibilidad",
+        "url": "costar.com",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "LoopNet API",
+        "category": "Inmobiliario y propiedad",
+        "description": "Propiedades comerciales en venta o renta precio tamano dueno",
+        "url": "loopnet.com/services/api",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Redfin Data Center",
+        "category": "Inmobiliario y propiedad",
+        "description": "Datos de mercado inmobiliario descargables precios medios por ZIP y ciudad",
+        "url": "redfin.com/news/data-center",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Miami-Dade Property Appraiser",
+        "category": "Inmobiliario y propiedad",
+        "description": "Duenos de propiedades comerciales en Miami-Dade con valor y direccion",
+        "url": "miamidade.gov/pa/property_search.asp",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FEMA Flood Map API",
+        "category": "Inmobiliario y propiedad",
+        "description": "Zonas de inundacion por direccion relevante para seguros y construccion",
+        "url": "msc.fema.gov/arcgis/rest/services",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "SAM.gov Construction",
+        "category": "Construccion y licencias",
+        "description": "Contratistas de construccion registrados federalmente con certificaciones",
+        "url": "open.gsa.gov/api/sam/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "AIA Architect Finder",
+        "category": "Construccion y licencias",
+        "description": "Arquitectos licenciados por estado nombre firma especialidad",
+        "url": "architectfinder.aia.org",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NCARB License Data",
+        "category": "Construccion y licencias",
+        "description": "Arquitectos certificados nacionalmente estado de licencia reciprocidad",
+        "url": "ncarb.org/licensing-renewals",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Florida DBPR API",
+        "category": "Construccion y licencias",
+        "description": "Contratistas y profesionales licenciados en Florida tipo status vencimiento",
+        "url": "myfloridalicense.com/wl11.asp",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Texas TDLR Licenses",
+        "category": "Construccion y licencias",
+        "description": "Licencias de contratistas en Texas electricistas plomeros HVAC",
+        "url": "tdlr.texas.gov/LicenseSearch",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BuildZoom API",
+        "category": "Construccion y licencias",
+        "description": "Contratistas con historial de permisos ratings y proyectos completados",
+        "url": "buildzoom.com/api",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Census Building Permits",
+        "category": "Construccion y licencias",
+        "description": "Permisos de construccion por area metropolitana actividad del mercado",
+        "url": "census.gov/construction/bps",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "HUD CHAS Data",
+        "category": "Construccion y licencias",
+        "description": "Necesidades de vivienda asequible por condado oportunidades para constructores",
+        "url": "huduser.gov/portal/datasets/cp.html",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USDA Farm Service Agency",
+        "category": "Agricultura y alimentos",
+        "description": "Productores agricolas registrados subsidios cultivos por condado",
+        "url": "fsa.usda.gov/programs-and-services",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USDA ERS API",
+        "category": "Agricultura y alimentos",
+        "description": "Estadisticas economicas agricolas precios produccion exportaciones",
+        "url": "ers.usda.gov/developer/data-apis",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USDA NASS QuickStats API",
+        "category": "Agricultura y alimentos",
+        "description": "Censos agricolas numero de fincas acreaje ingresos por estado",
+        "url": "quickstats.nass.usda.gov/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USDA AMS Market News",
+        "category": "Agricultura y alimentos",
+        "description": "Precios de mercado de commodities agricolas en tiempo real",
+        "url": "mymarketnews.ams.usda.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "EPA Pesticide Registrations",
+        "category": "Agricultura y alimentos",
+        "description": "Fabricantes y distribuidores de pesticidas registrados en EPA",
+        "url": "ordspub.epa.gov/ords/pesticides",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USDA Organic Integrity",
+        "category": "Agricultura y alimentos",
+        "description": "Operaciones organicas certificadas nombre tipo estado certificador",
+        "url": "organic.ams.usda.gov/Organic/Data",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DIBBS DLA Internet Bid Board",
+        "category": "Defensa y contratacion militar",
+        "description": "Licitaciones de la Defense Logistics Agency partes equipos suministros",
+        "url": "dibbs.dla.mil",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DoD EMALL API",
+        "category": "Defensa y contratacion militar",
+        "description": "Catalogo de proveedores aprobados por el Departamento de Defensa",
+        "url": "emall.dla.mil",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USASpending Defense",
+        "category": "Defensa y contratacion militar",
+        "description": "Contratos del DoD filtrados por agencia Army Navy Air Force DARPA",
+        "url": "api.usaspending.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DSCA Arms Sales",
+        "category": "Defensa y contratacion militar",
+        "description": "Ventas de armas aprobadas empresas contratistas de defensa",
+        "url": "dsca.mil/resources/security-cooperation-data",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DTIC Technical Reports",
+        "category": "Defensa y contratacion militar",
+        "description": "Investigacion tecnica financiada por DoD empresas e instituciones involucradas",
+        "url": "discover.dtic.mil/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CAGE Code Lookup",
+        "category": "Defensa y contratacion militar",
+        "description": "Todos los contratistas de defensa con CAGE code nombre direccion pais",
+        "url": "cage.dla.mil",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BuiltWith API",
+        "category": "Tecnologia y digital",
+        "description": "Tecnologias usadas por cualquier sitio web CRM ecommerce analytics",
+        "url": "api.builtwith.com",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Wappalyzer API",
+        "category": "Tecnologia y digital",
+        "description": "Stack tecnologico de empresas frameworks servidores herramientas",
+        "url": "wappalyzer.com/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Shodan API",
+        "category": "Tecnologia y digital",
+        "description": "Dispositivos y servidores expuestos a internet por empresa o IP",
+        "url": "api.shodan.io",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "SecurityTrails API",
+        "category": "Tecnologia y digital",
+        "description": "DNS historico subdominios IPs asociadas a dominios de empresas",
+        "url": "api.securitytrails.com",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DomainTools API",
+        "category": "Tecnologia y digital",
+        "description": "Registros WHOIS historicos dueno del dominio email de contacto original",
+        "url": "api.domaintools.com",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Common Crawl",
+        "category": "Tecnologia y digital",
+        "description": "Snapshots de millones de sitios web texto emails telefonos extraibles",
+        "url": "commoncrawl.org/the-data/get-started",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "GitHub API",
+        "category": "Tecnologia y digital",
+        "description": "Empresas con repositorios publicos devs proyectos tecnologias",
+        "url": "api.github.com",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Product Hunt API",
+        "category": "Tecnologia y digital",
+        "description": "Lanzamientos de productos tech fundadores empresa descripcion",
+        "url": "api.producthunt.com/v2/api/graphql",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "G2 Reviews API",
+        "category": "Tecnologia y digital",
+        "description": "Resenas de software B2B empresa usuarios industria",
+        "url": "g2.com/api",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Census Foreign Trade API",
+        "category": "Comercio exterior",
+        "description": "Importaciones y exportaciones por empresa producto y pais",
+        "url": "api.census.gov/data/timeseries/intltrade",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USITC DataWeb",
+        "category": "Comercio exterior",
+        "description": "Estadisticas de comercio exterior por HTS code y empresa",
+        "url": "dataweb.usitc.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CBP Import Records",
+        "category": "Comercio exterior",
+        "description": "Manifiestos de importacion quien importa que de donde y cuanto",
+        "url": "customs.gov/vessel-sea-manifest",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "ImportGenius / Panjiva",
+        "category": "Comercio exterior",
+        "description": "Base de datos de importadores y exportadores EE.UU. con volumen",
+        "url": "importgenius.com",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BIS Export Controls",
+        "category": "Comercio exterior",
+        "description": "Empresas con licencias de exportacion tecnologia controlada defensa",
+        "url": "bis.doc.gov/index.php/licensing",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FTZ Locator CBP",
+        "category": "Comercio exterior",
+        "description": "Zonas de libre comercio en EE.UU. empresas operadoras y usuarios",
+        "url": "cbp.gov/trade/programs-administration/free-trade-zones",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NAIC Insurance API",
+        "category": "Seguros y pensiones",
+        "description": "Aseguradoras licenciadas por estado nombre tipo estado de licencia",
+        "url": "content.naic.org/cis_refined_ui.htm",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FMCSA Insurance MCS-90",
+        "category": "Seguros y pensiones",
+        "description": "Seguros de camiones y transportistas carrier aseguradora monto",
+        "url": "li-public.fmcsa.dot.gov/LIVIEW",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "WCRI Workers Comp Data",
+        "category": "Seguros y pensiones",
+        "description": "Datos de compensacion laboral por estado e industria",
+        "url": "wcrinet.org/data",
+        "is_free": false,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CMS Medicare Cost Reports",
+        "category": "Seguros y pensiones",
+        "description": "Reportes financieros detallados de hospitales y centros de salud",
+        "url": "data.cms.gov/provider-compliance",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "PBGC Pension Data",
+        "category": "Seguros y pensiones",
+        "description": "Planes de pension de empresas estado activos participantes",
+        "url": "pbgc.gov/about/pg/other/open-government/open-data",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "EPA ECHO API",
+        "category": "Medio ambiente",
+        "description": "Cumplimiento ambiental por empresa violaciones multas permisos",
+        "url": "echo.epa.gov/tools/web-services",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "EPA TRI Toxic Release",
+        "category": "Medio ambiente",
+        "description": "Empresas que reportan liberacion de toxicos nombre cantidad quimico",
+        "url": "epa.gov/toxics-release-inventory-tri-program",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "EPA RCRA Hazardous Waste",
+        "category": "Medio ambiente",
+        "description": "Generadores de residuos peligrosos empresa direccion tipo de residuo",
+        "url": "rcrainfo.epa.gov/rcrainfopublicapi",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NOAA Fisheries API",
+        "category": "Medio ambiente",
+        "description": "Permisos de pesca comercial empresa tipo area cuota",
+        "url": "fisheries.noaa.gov/contact/office-science-and-technology",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Forest Service Permits",
+        "category": "Medio ambiente",
+        "description": "Permisos en tierras federales operadores campamentos empresas",
+        "url": "fs.usda.gov/science-technology/data-information-systems",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "OpenDataSoft Network",
+        "category": "Municipal y local",
+        "description": "Portal con 400+ ciudades y condados licencias permisos contratos locales",
+        "url": "data.opendatasoft.com/api/explore/v2.1",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Socrata Open Data API",
+        "category": "Municipal y local",
+        "description": "Plataforma usada por cientos de ciudades EE.UU. para publicar datos",
+        "url": "dev.socrata.com",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NYC Open Data",
+        "category": "Municipal y local",
+        "description": "Licencias de negocios permisos contratistas en Nueva York",
+        "url": "data.cityofnewyork.us/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Houston Open Data",
+        "category": "Municipal y local",
+        "description": "Licencias permisos de construccion y contratos de Houston TX",
+        "url": "data.houstontx.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Phoenix Open Data",
+        "category": "Municipal y local",
+        "description": "Negocios licenciados permisos contratos municipales de Phoenix AZ",
+        "url": "data.phoenix.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "San Antonio Open Data",
+        "category": "Municipal y local",
+        "description": "Licencias de negocios y permisos en San Antonio TX",
+        "url": "data.sanantonio.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Broward County Open Data",
+        "category": "Municipal y local",
+        "description": "Permisos contratos y licencias del condado Broward Fort Lauderdale",
+        "url": "opendata-browardcounty.opendata.arcgis.com",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Palm Beach County GIS",
+        "category": "Municipal y local",
+        "description": "Datos geoespaciales y de negocios del condado Palm Beach",
+        "url": "discover.pbcgov.org/pbcgis",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NIH Reporter API",
+        "category": "Investigacion y ciencia",
+        "description": "Grants de investigacion institucion investigador principal monto tema",
+        "url": "api.reporter.nih.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NSF Awards API",
+        "category": "Investigacion y ciencia",
+        "description": "Proyectos financiados por NSF universidad empresa investigador monto",
+        "url": "api.nsf.gov/services/v1/awards.json",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DOE OSTI API",
+        "category": "Investigacion y ciencia",
+        "description": "Investigacion cientifica financiada por Departamento de Energia",
+        "url": "api.osti.gov/api/v1/records",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "ClinicalTrials.gov API",
+        "category": "Investigacion y ciencia",
+        "description": "Estudios clinicos empresa patrocinadora investigador fase condicion",
+        "url": "clinicaltrials.gov/api/v2",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NASA Technical Reports",
+        "category": "Investigacion y ciencia",
+        "description": "Contratistas de NASA con reportes tecnicos publicos",
+        "url": "ntrs.nasa.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Semantic Scholar API",
+        "category": "Investigacion y ciencia",
+        "description": "Papers academicos autores instituciones citas financiadores",
+        "url": "api.semanticscholar.org/graph/v1",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CDC WONDER API",
+        "category": "Social y demografia",
+        "description": "Datos de salud publica por condado mortalidad enfermedades demografia",
+        "url": "wonder.cdc.gov/wonder/help/WONDER-API.html",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FBI Crime Data API",
+        "category": "Social y demografia",
+        "description": "Crimenes por ciudad y tipo util para seguridad seguros real estate",
+        "url": "api.usa.gov/crime/fbi/cde/",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USDA Food Desert Locator",
+        "category": "Social y demografia",
+        "description": "Zonas sin acceso a alimentos frescos oportunidades para retail y salud",
+        "url": "ers.usda.gov/data-products/food-access-research-atlas",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "HUD AFFH Data",
+        "category": "Social y demografia",
+        "description": "Segregacion y demografia de vivienda por zona fair housing data",
+        "url": "hudgis-hud.opendata.arcgis.com",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DOT National Walkability",
+        "category": "Social y demografia",
+        "description": "Score de caminabilidad y transporte por zona retail urbanismo",
+        "url": "epa.gov/smartgrowth/smart-location-mapping",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "STR Smith Travel Research",
+        "category": "Hospitality y turismo",
+        "description": "Datos de hoteles por ciudad ocupacion tarifa media RevPAR por propiedad",
+        "url": "str.com/data-benchmarking",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Florida DBPR Hotel Licenses",
+        "category": "Hospitality y turismo",
+        "description": "Todos los hoteles moteles y B&B licenciados en Florida con contacto del dueno",
+        "url": "myfloridalicense.com/wl11.asp",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "OpenTable Restaurant Data",
+        "category": "Hospitality y turismo",
+        "description": "Restaurantes con reservaciones capacidad tipo de cocina ciudad",
+        "url": "opentable.com/partner/restaurants-usa",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "TripAdvisor Content API",
+        "category": "Hospitality y turismo",
+        "description": "Hoteles restaurantes y atracciones rating resenas contacto",
+        "url": "tripadvisor.com/developers",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FDA Food Facility Registry",
+        "category": "Hospitality y turismo",
+        "description": "Establecimientos de alimentos registrados restaurantes procesadores distribuidores",
+        "url": "open.fda.gov/apis/food/enforcement/",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Health Inspection Records",
+        "category": "Hospitality y turismo",
+        "description": "Inspecciones sanitarias de restaurantes disponibles por condado",
+        "url": "data.cityofchicago.org/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Airbnb Inside Data",
+        "category": "Hospitality y turismo",
+        "description": "Listings activos de Airbnb por ciudad anfitrion precio ocupacion estimada",
+        "url": "insideairbnb.com/get-the-data",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Liquor License Records",
+        "category": "Hospitality y turismo",
+        "description": "Licencias de alcohol por estado bar restaurante distribuidor dueno",
+        "url": "abs.alabama.gov/licensing",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USCG Marine Information API",
+        "category": "Maritimo y portuario",
+        "description": "Embarcaciones registradas nombre dueno tipo puerto base valor",
+        "url": "uscgboating.org/recreational-boaters/boat-registration",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "MarineTraffic API",
+        "category": "Maritimo y portuario",
+        "description": "Posicion en tiempo real de buques empresa operadora destino carga",
+        "url": "marinetraffic.com/api",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NOAA Port Data",
+        "category": "Maritimo y portuario",
+        "description": "Actividad portuaria importaciones exportaciones tipos de carga por puerto",
+        "url": "coast.noaa.gov/digitalcoast",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CBP Vessel Manifests",
+        "category": "Maritimo y portuario",
+        "description": "Manifiestos de buques empresa importadora origen contenido de carga",
+        "url": "customs.gov/vessel-sea-manifest",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FMC Ocean Carrier Data",
+        "category": "Maritimo y portuario",
+        "description": "Navieras registradas ante Federal Maritime Commission tarifas y rutas",
+        "url": "fmc.gov/resources/automated-tariff-filing-system",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "SeaRates API",
+        "category": "Maritimo y portuario",
+        "description": "Tarifas de flete maritimo rutas carriers precios por contenedor",
+        "url": "searates.com/api",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Port of Miami Cargo Data",
+        "category": "Maritimo y portuario",
+        "description": "Estadisticas de carga del Puerto de Miami empresa volumen tipo",
+        "url": "miamidade.gov/portmiami",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FAA Aircraft Registry",
+        "category": "Aviacion y aeronautica",
+        "description": "Todos los aviones registrados en EE.UU. propietario modelo numero de serie",
+        "url": "av-info.faa.gov/data/AircraftRegistry",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FAA Pilot Certification",
+        "category": "Aviacion y aeronautica",
+        "description": "Pilotos certificados tipo de licencia ratings estado",
+        "url": "amsrvs.amsrvs.faa.gov/airmeninquiry",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FAA Airport Data",
+        "category": "Aviacion y aeronautica",
+        "description": "Aeropuertos y aerodromos operador tipo coordenadas instalaciones",
+        "url": "faa.gov/airports/airport_safety/airportdata_5010",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BTS Airline On-Time Data",
+        "category": "Aviacion y aeronautica",
+        "description": "Aerolineas puntualidad rutas pasajeros ingresos por ruta",
+        "url": "transtats.bts.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FlightAware API",
+        "category": "Aviacion y aeronautica",
+        "description": "Vuelos en tiempo real empresa operadora matricula origen destino",
+        "url": "flightaware.com/commercial/flightxml",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Aviation Safety Network",
+        "category": "Aviacion y aeronautica",
+        "description": "Accidentes e incidentes aereos por empresa y aeronave",
+        "url": "aviation-safety.net/database",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FAA Repair Stations",
+        "category": "Aviacion y aeronautica",
+        "description": "Talleres de mantenimiento aeronautico certificados empresa tipo estado",
+        "url": "av-info.faa.gov/repairstation.asp",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "MSHA Mine Data API",
+        "category": "Mineria y recursos naturales",
+        "description": "Minas activas en EE.UU. empresa operadora tipo de mineral empleados estado",
+        "url": "arlweb.msha.gov/opengovernmentdata",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USGS Mineral Resources",
+        "category": "Mineria y recursos naturales",
+        "description": "Produccion mineral por estado empresa commodity volumen",
+        "url": "minerals.usgs.gov/minerals/pubs/mcs",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BLM Mining Claims",
+        "category": "Mineria y recursos naturales",
+        "description": "Concesiones mineras en tierras federales empresa ubicacion mineral",
+        "url": "mlrs.blm.gov/mining-claims",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "EPA Superfund Sites",
+        "category": "Mineria y recursos naturales",
+        "description": "Sitios contaminados empresa responsable tipo de contaminacion estado de limpieza",
+        "url": "epa.gov/superfund/search-superfund-sites-where-you-live",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FERC Hydropower Licenses",
+        "category": "Mineria y recursos naturales",
+        "description": "Operadores de plantas hidroelectricas empresa rio capacidad licencia",
+        "url": "ferc.gov/industries-data/hydropower",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FCC Broadcast Licenses",
+        "category": "Media y broadcasting",
+        "description": "Estaciones de TV y radio empresa duena frecuencia mercado contacto",
+        "url": "fcc.gov/media/radio/broadcast-radio-links",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FCC Cable Operators",
+        "category": "Media y broadcasting",
+        "description": "Operadores de cable por mercado empresa area de servicio suscriptores",
+        "url": "fcc.gov/consumers/guides/cable-television",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Nielsen DMA Data",
+        "category": "Media y broadcasting",
+        "description": "Mercados de television DMAs cobertura hogares demografia",
+        "url": "nielsen.com/dma-map",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "iTunes Podcast Directory",
+        "category": "Media y broadcasting",
+        "description": "Podcasts con empresa/persona detras nombre categoria audiencia",
+        "url": "itunes.apple.com/us/genre/podcasts",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Spotify Podcast API",
+        "category": "Media y broadcasting",
+        "description": "Podcasts en Spotify productor episodios seguidores",
+        "url": "developer.spotify.com/documentation/web-api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "YouTube Data API",
+        "category": "Media y broadcasting",
+        "description": "Canales de empresas suscriptores vistas contacto en descripcion",
+        "url": "developers.google.com/youtube/v3",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NewsAPI",
+        "category": "Media y broadcasting",
+        "description": "Articulos de noticias empresas mencionadas cobertura mediatica",
+        "url": "newsapi.org",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Census Retail Trade API",
+        "category": "Retail y consumo",
+        "description": "Ventas minoristas por categoria y zona tamano del mercado local",
+        "url": "api.census.gov/data/2021/ecnbasic",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "UPC Database API",
+        "category": "Retail y consumo",
+        "description": "Productos con codigo de barras fabricante marca descripcion",
+        "url": "api.upcitemdb.com",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Open Food Facts API",
+        "category": "Retail y consumo",
+        "description": "Productos alimenticios fabricante ingredientes nutricion distribuidor",
+        "url": "world.openfoodfacts.org/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "GS1 Company Database",
+        "category": "Retail y consumo",
+        "description": "Empresas con codigos GS1/UPC registrados nombre pais categoria",
+        "url": "gepir.gs1.org",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Amazon Seller API SP-API",
+        "category": "Retail y consumo",
+        "description": "Vendedores de Amazon productos ratings categorias volumen estimado",
+        "url": "developer-docs.amazon.com/sp-api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Shopify Partner API",
+        "category": "Retail y consumo",
+        "description": "Tiendas en Shopify nombre industria apps usadas pais",
+        "url": "shopify.dev/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BBB Accredited Business API",
+        "category": "Retail y consumo",
+        "description": "Negocios acreditados BBB con rating quejas y anos en operacion",
+        "url": "bbb.org/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "GuideStar Candid API",
+        "category": "Nonprofits y fundaciones",
+        "description": "Base de datos mas completa de nonprofits 990s ejecutivos programas financiero",
+        "url": "candid.org/our-products/guidestar",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Foundation Directory Online",
+        "category": "Nonprofits y fundaciones",
+        "description": "Fundaciones privadas areas de donacion ejecutivos grants otorgados",
+        "url": "fdo.foundationcenter.org",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "IRS BMF Business Master File",
+        "category": "Nonprofits y fundaciones",
+        "description": "Archivo maestro del IRS de todas las nonprofits EIN nombre estado tipo",
+        "url": "irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Charity Navigator API",
+        "category": "Nonprofits y fundaciones",
+        "description": "Rating de nonprofits transparencia impacto finanzas liderazgo",
+        "url": "charitynavigator.org/index.cfm",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "GiveWell Charity Data",
+        "category": "Nonprofits y fundaciones",
+        "description": "Nonprofits evaluadas con datos de efectividad e impacto",
+        "url": "givewell.org/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Form 990 Finder ProPublica",
+        "category": "Nonprofits y fundaciones",
+        "description": "990s individuales descargables cada linea del formulario en JSON",
+        "url": "projects.propublica.org/nonprofits/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FDIC Bank Find API",
+        "category": "Fintech y banca",
+        "description": "Todos los bancos asegurados nombre activos depositos ubicaciones de sucursales",
+        "url": "banks.data.fdic.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NCUA Credit Union Data",
+        "category": "Fintech y banca",
+        "description": "Cooperativas de credito nombre activos miembros CEO direccion",
+        "url": "ncua.gov/analysis/credit-union-corporate-call-report-data",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FinCEN Beneficial Ownership",
+        "category": "Fintech y banca",
+        "description": "Duenos reales de empresas nuevo registro federal 2024",
+        "url": "fincen.gov/boi",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CFPB HMDA API",
+        "category": "Fintech y banca",
+        "description": "Prestamos hipotecarios por banco institucion monto demografia aprobacion",
+        "url": "ffiec.cfpb.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "SEC Investment Advisers",
+        "category": "Fintech y banca",
+        "description": "Asesores financieros registrados firma AUM clientes ejecutivos",
+        "url": "adviserinfo.sec.gov/IAPD/Content/Search/iapd_OrgSearch.aspx",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FINRA BrokerCheck API",
+        "category": "Fintech y banca",
+        "description": "Brokers y firmas de valores historial certificaciones quejas",
+        "url": "api.brokercheck.finra.org",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Treasury OFAC Sanctions",
+        "category": "Fintech y banca",
+        "description": "Empresas y personas sancionadas lista SDN completa y actualizada",
+        "url": "ofac.treasury.gov/system/files/126/sdn.xml",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "OpenSecrets API",
+        "category": "Lobbying y politica",
+        "description": "Gastos de lobbying por empresa industria monto legislacion objetivo",
+        "url": "opensecrets.org/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "LDA Lobbying Disclosures",
+        "category": "Lobbying y politica",
+        "description": "Reportes de lobbying federal empresa lobbyista agencia issue",
+        "url": "lda.congress.gov/api/v1",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FEC Campaign Finance API",
+        "category": "Lobbying y politica",
+        "description": "Donaciones a campanas empresa donante PAC monto candidato",
+        "url": "api.open.fec.gov/v1",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Congress.gov API",
+        "category": "Lobbying y politica",
+        "description": "Legislacion comites testimonios empresas que testifican ante el Congreso",
+        "url": "api.congress.gov",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Florida Lobbying Disclosures",
+        "category": "Lobbying y politica",
+        "description": "Lobbyistas y clientes registrados en Florida empresa tema monto",
+        "url": "floridalobbyist.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "ProPublica Congress API",
+        "category": "Lobbying y politica",
+        "description": "Votaciones miembros comites quien financia a cada congresista",
+        "url": "propublica.org/datastore/api/propublica-congress-api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "EIA Utility Data",
+        "category": "Utilities y servicios publicos",
+        "description": "Empresas de electricidad nombre estado clientes generacion tarifas",
+        "url": "api.eia.gov",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FCC Broadband Map API",
+        "category": "Utilities y servicios publicos",
+        "description": "Proveedores de internet por direccion empresa velocidad tecnologia",
+        "url": "broadbandmap.fcc.gov/api",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "PHMSA Pipeline Operators",
+        "category": "Utilities y servicios publicos",
+        "description": "Operadores de gasoductos y oleoductos empresa millas tipo de gas",
+        "url": "phmsa.dot.gov/data-and-statistics/pipeline",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FERC Electric Utilities",
+        "category": "Utilities y servicios publicos",
+        "description": "Utilities electricas reguladas empresa tarifas area de servicio",
+        "url": "ferc.gov/industries-data/electric",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Water Utility Data ECHO",
+        "category": "Utilities y servicios publicos",
+        "description": "Sistemas de agua potable empresa operadora usuarios violaciones",
+        "url": "echo.epa.gov/tools/web-services",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "NARUC Utility Directory",
+        "category": "Utilities y servicios publicos",
+        "description": "Directorio de todas las utilities reguladas por estado",
+        "url": "naruc.org/compilation-of-utility-regulatory-annual-reports",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "VA Veteran-Owned Business",
+        "category": "Veteranos y militar",
+        "description": "Empresas certificadas como veteran-owned nombre NAICS contacto",
+        "url": "vetbiz.va.gov/vip",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "SBA VOSB/SDVOSB API",
+        "category": "Veteranos y militar",
+        "description": "Service-disabled veteran businesses certificadas para contratos",
+        "url": "veterans.certify.sba.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "DOD Transition Assistance",
+        "category": "Veteranos y militar",
+        "description": "Veteranos en transicion al sector privado programas por base militar",
+        "url": "dodtap.mil",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Military Base Directory",
+        "category": "Veteranos y militar",
+        "description": "Bases militares activas comando unidades contratistas residentes",
+        "url": "militaryinstallations.dod.mil",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USAJobs Veterans Preference",
+        "category": "Veteranos y militar",
+        "description": "Vacantes federales con preferencia de veteranos agencia cargo salario",
+        "url": "usajobs.gov/Search/Results",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "ITAR Registration DDTC",
+        "category": "Internacional en EE.UU.",
+        "description": "Empresas registradas para exportar defensa nombre pais producto",
+        "url": "pmddtc.state.gov/ddtc_public",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "FDI Markets Database",
+        "category": "Internacional en EE.UU.",
+        "description": "Inversion extranjera directa en EE.UU. empresa pais de origen sector",
+        "url": "fdimarkets.com",
+        "is_free": false,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "BEA Foreign Direct Investment",
+        "category": "Internacional en EE.UU.",
+        "description": "Estadisticas de IED en EE.UU. por pais de origen e industria",
+        "url": "bea.gov/data/intl-trade-investment/foreign-direct-investment-us",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "USTR Trade Agreements",
+        "category": "Internacional en EE.UU.",
+        "description": "Empresas que participan en comentarios de tratados comerciales",
+        "url": "regulations.gov/search",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "OFAC Foreign Sanctions",
+        "category": "Internacional en EE.UU.",
+        "description": "Empresas extranjeras sancionadas con operaciones en EE.UU.",
+        "url": "sanctions.ofac.treas.gov",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "CBP Trusted Trader CTPAT",
+        "category": "Internacional en EE.UU.",
+        "description": "Importadores certificados como socios confiables de aduanas",
+        "url": "cbp.gov/border-security/ports-entry/cargo-security/ctpat",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "SEC Regulation CF Filings",
+        "category": "Crowdfunding e inversion",
+        "description": "Empresas que hacen crowdfunding de equity fundadores monto sector",
+        "url": "efts.sec.gov/LATEST/search-index",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Kickstarter API",
+        "category": "Crowdfunding e inversion",
+        "description": "Proyectos de crowdfunding creador monto recaudado categoria backers",
+        "url": "kickstarter.com/help/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Indiegogo Campaign Data",
+        "category": "Crowdfunding e inversion",
+        "description": "Campanas activas y completadas empresa fundador monto categoria",
+        "url": "developer.indiegogo.com",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "AngelList / Wellfound API",
+        "category": "Crowdfunding e inversion",
+        "description": "Startups buscando inversion fundador sector ubicacion funding stage",
+        "url": "wellfound.com/api",
+        "is_free": true,
+        "requires_api_key": true,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    },
+    {
+      "fields": {
+        "name": "Republic Funding Data",
+        "category": "Crowdfunding e inversion",
+        "description": "Empresas con rondas de equity crowdfunding activas o pasadas",
+        "url": "republic.com/companies",
+        "is_free": true,
+        "requires_api_key": false,
+        "status": "Inactive",
+        "data_type": "Mixed",
+        "geographic_scope": "US"
+      }
+    }
+  ],
+  "count": 236,
+  "timestamp": "2026-06-04 06:52:57"
+}

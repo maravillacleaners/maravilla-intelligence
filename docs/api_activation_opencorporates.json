@@ -1,0 +1,66 @@
+{
+  "api": "OpenCorporates",
+  "status": "pending",
+  "activation_date": "2026-06-04",
+  "notes": "API endpoint verified and responding. Authentication required. Token must be obtained from https://opencorporates.com/users/sign_up and stored in .env as OPENCORPORATES_API_TOKEN. Once token is added, all endpoints become active: /companies (search), /officers (lookup), /relationships (corporate structure), /corporate_actions (M&A/bankruptcy tracking). Integration ready for Phase 2 of Maravilla Intelligence enrichment pipeline.",
+  "test_results": {
+    "endpoint": "https://api.opencorporates.com/v0.4/companies",
+    "http_status": 401,
+    "requires_auth": true,
+    "server_responding": true
+  },
+  "endpoints": {
+    "companies_search": {
+      "path": "/v0.4/companies",
+      "method": "GET",
+      "auth": "required",
+      "parameters": ["q", "jurisdiction", "order", "per_page", "api_token"]
+    },
+    "company_details": {
+      "path": "/v0.4/companies/{jurisdiction}/{company_number}",
+      "method": "GET",
+      "auth": "optional",
+      "example": "/v0.4/companies/us_fl/P09000099467"
+    },
+    "officers_search": {
+      "path": "/v0.4/officers",
+      "method": "GET",
+      "auth": "required",
+      "parameters": ["q", "jurisdiction", "api_token"]
+    },
+    "relationships": {
+      "path": "/v0.4/relationships",
+      "method": "GET",
+      "auth": "required",
+      "parameters": ["q", "api_token"]
+    },
+    "corporate_actions": {
+      "path": "/v0.4/corporate_actions",
+      "method": "GET",
+      "auth": "required",
+      "parameters": ["q", "type", "api_token"]
+    }
+  },
+  "rate_limits": {
+    "unauthenticated": "50 requests/minute",
+    "authenticated": "Varies by plan",
+    "enterprise": "Custom (1M+ calls/month)"
+  },
+  "use_cases": [
+    "Company verification (verify client company exists & is registered)",
+    "Officer lookup (find executives for enrichment data)",
+    "Corporate actions (track mergers, bankruptcies, dissolutions)",
+    "Jurisdiction compliance (validate state registration)",
+    "Relationship mapping (discover parent companies, subsidiaries)"
+  ],
+  "implementation_priority": "medium",
+  "integration_phase": "post-enrichment",
+  "next_steps": [
+    "Obtain API token from https://opencorporates.com/users/sign_up",
+    "Add token to .env: OPENCORPORATES_API_TOKEN=<token>",
+    "Test endpoint: curl -s 'https://api.opencorporates.com/v0.4/companies?api_token=<token>&q=Apple'",
+    "Implement in enrichment pipeline (post Hunter.io, Census, SAM)",
+    "Add to weekly audit batch process"
+  ],
+  "documentation": "https://api.opencorporates.com/documentation"
+}

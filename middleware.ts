@@ -1,63 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-const ADMIN_SECRET = process.env.ADMIN_SECRET ?? 'maravilla-admin-2026'
-
-// Public API routes that do NOT require JWT authentication
-const PUBLIC_API_ROUTES = [
-  '/api/auth/login',
-  '/api/auth/google',
-  '/api/suppliers/login',
-  '/api/suppliers/register',
-]
-
-function verifyAdminToken(token: string): boolean {
-  return token === ADMIN_SECRET
-}
-
-function isPublicApiRoute(pathname: string): boolean {
-  return PUBLIC_API_ROUTES.some(route => pathname.startsWith(route))
-}
+import { verifyToken, isPublicRoute } from './app/lib/auth-middleware'
+import { applySecurityHeaders } from './app/lib/security-headers'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  let response: NextResponse
 
-  // Protect ALL /api/* routes except public auth endpoints — require Authorization: Bearer <ADMIN_TOKEN>
+  // Handle API routes
   if (pathname.startsWith('/api')) {
     // Allow public routes without authentication
-    if (isPublicApiRoute(pathname)) {
-      return NextResponse.next()
+    if (isPublicRoute(pathname)) {
+      response = NextResponse.next()
+    } else {
+      // All other API routes require valid Bearer token
+      const authHeader = request.headers.get('authorization') ?? ''
+      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+
+      if (!token) {
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Missing Authorization header' },
+          { status: 401 }
+        )
+      }
+
+      const payload = verifyToken(token)
+      if (!payload) {
+        return NextResponse.json(
+          { error: 'Invalid or expired token' },
+          { status: 401 }
+        )
+      }
+
+      response = NextResponse.next()
     }
-
-    // All other API routes require valid Bearer token
-    const authHeader = request.headers.get('authorization') ?? ''
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
-
-    if (!token || !verifyAdminToken(token)) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Missing or invalid Authorization header' },
-        { status: 401 }
-      )
-    }
-
-    return NextResponse.next()
   }
-
-  // Protect admin UI routes — redirect to /login if no valid admin_token cookie
-  if (pathname.startsWith('/admin')) {
+  // Handle admin UI routes
+  else if (pathname.startsWith('/admin')) {
     const cookieToken = request.cookies.get('admin_token')?.value ?? ''
+    const headerToken = request.headers.get('authorization')?.replace('Bearer ', '') ?? ''
 
-    if (!cookieToken || !verifyAdminToken(cookieToken)) {
+    const token = cookieToken || headerToken
+
+    if (!token || !verifyToken(token)) {
       const loginUrl = request.nextUrl.clone()
       loginUrl.pathname = '/login'
       return NextResponse.redirect(loginUrl)
     }
 
-    return NextResponse.next()
+    response = NextResponse.next()
+  } else {
+    response = NextResponse.next()
   }
 
-  return NextResponse.next()
+  // Apply security headers to all responses
+  response = applySecurityHeaders(response)
+
+  // Add rate limit headers from context if available
+  // (rate limiting is applied per-route)
+
+  return response
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/:path*'],
+  matcher: ['/admin/:path*', '/api/:path*', '/:path*'],
 }

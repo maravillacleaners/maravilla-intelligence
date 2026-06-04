@@ -1,0 +1,113 @@
+name: Contact Discovery Agent
+
+on:
+  schedule:
+    # Run every 2 hours: 00:00, 02:00, 04:00, ..., 22:00 UTC
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+    inputs:
+      maxCompanies:
+        description: 'Maximum number of companies to process'
+        required: false
+        default: '5'
+
+jobs:
+  contact-discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      NODE_ENV: production
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+      AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+      HUNTER_API_KEY: ${{ secrets.HUNTER_API_KEY }}
+      ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+      JWT_SECRET_SUPPLIER: ${{ secrets.JWT_SECRET_SUPPLIER }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run Contact Discovery Agent
+        run: |
+          node -e "
+            const { ContactDiscoveryAgent } = require('./dist/lib/agent-contact-discovery.js');
+
+            const maxCompanies = process.env.MAX_COMPANIES || 5;
+            console.log('Starting Contact Discovery Agent...');
+            console.log('Max companies to process:', maxCompanies);
+
+            const agent = new ContactDiscoveryAgent();
+            agent.execute()
+              .then(results => {
+                console.log('Agent completed:');
+                console.log(JSON.stringify(results, null, 2));
+                const totalCreated = results.reduce((sum, r) => sum + r.contacts_created, 0);
+                console.log(\`Total contacts created: \${totalCreated}\`);
+                process.exit(results.length > 0 ? 0 : 1);
+              })
+              .catch(error => {
+                console.error('Agent failed:', error);
+                process.exit(1);
+              });
+          "
+        env:
+          MAX_COMPANIES: ${{ github.event.inputs.maxCompanies || '5' }}
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: contact-agent-logs
+          path: logs/
+          retention-days: 7
+
+      - name: Notify Slack on success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "Contact Discovery Agent completed successfully",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Contact Discovery Agent* - Run Completed\n✅ Status: Success\n📄 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "Contact Discovery Agent failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Contact Discovery Agent* - Run Failed\n❌ Status: Error\n📄 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }

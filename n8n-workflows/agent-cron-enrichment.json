@@ -1,0 +1,193 @@
+{
+  "name": "Agent Cron - Company Enrichment (Hourly)",
+  "description": "Autonomous cron job to trigger company enrichment agent every hour",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": null,
+              "triggerAtMinute": 0,
+              "repeatInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env.API_HOST }}/api/agents/enrich-company",
+        "method": "POST",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "batchSize",
+              "value": "50"
+            },
+            {
+              "name": "prioritizeNew",
+              "value": "true"
+            },
+            {
+              "name": "sources",
+              "value": "[\"hunter\", \"clearbit\"]"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "follow": true,
+            "maxRedirects": 5
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "trigger-enrichment-agent",
+      "name": "Trigger Enrichment Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        450,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": "jwt_token"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ [200, 202, 204].includes($json.statusCode) }}",
+              "operation": "equals",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Check Status Code",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_WEBHOOK_OPS }}",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "✅ Company Enrichment Agent - Batch executed"
+            },
+            {
+              "name": "blocks",
+              "value": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Company Enrichment Agent*\\nStatus: Success\\nBatch Size: 50\\nTime: *{{ new Date().toISOString() }}*\"}}]"
+            }
+          ]
+        }
+      },
+      "id": "slack-success",
+      "name": "Slack Notification (Success)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_WEBHOOK_OPS }}",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "❌ Company Enrichment Agent - Failed"
+            },
+            {
+              "name": "blocks",
+              "value": "[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Company Enrichment Agent*\\nStatus: Failed\\nError: *{{ $json.error ?? $json.statusCode }}*\\nTime: *{{ new Date().toISOString() }}*\"}}]"
+            }
+          ]
+        }
+      },
+      "id": "slack-failure",
+      "name": "Slack Notification (Failure)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "trigger-enrichment-agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trigger-enrichment-agent": {
+      "main": [
+        [
+          {
+            "node": "check-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-success": {
+      "main": [
+        [
+          {
+            "node": "slack-success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "slack-failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": "default"
+  }
+}
