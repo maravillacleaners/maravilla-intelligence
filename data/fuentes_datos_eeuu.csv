@@ -1,0 +1,237 @@
+Categoria,Nombre,Descripcion,URL,Gratis,API Key
+Gobierno federal,SAM.gov API,Empresas registradas para contratos federales CAGE code certificaciones POC de contratos,open.gsa.gov/api/sam/,Si,Si
+Gobierno federal,USASpending.gov API,Contratos grants y gastos federales por agencia empresa receptora y monto,api.usaspending.gov,Si,No
+Gobierno federal,FPDS-NG API,Federal Procurement Data System historial completo de contratos desde 2004,fpds.gov/fpdsng_cms/index.php/en/worksite,Si,No
+Gobierno federal,Grants.gov API,Convocatorias de grants federales activas montos elegibles y deadlines,grants.gov/web/grants/s2s,Si,No
+Gobierno federal,Data.gov CKAN API,Portal central con miles de datasets federales buscador unificado,catalog.data.gov/api/3,Si,No
+Gobierno federal,GSA Per Diem API,Tarifas de viaje federal por ciudad,open.gsa.gov/api/per-diem-api/,Si,No
+Gobierno federal,GSA Auctions API,Subastas de propiedad federal excedente activos vehiculos equipo,gsa.gov/auctions,Si,Si
+Gobierno federal,beta.SAM Entity API,Busqueda de entidades por NAICS estado certificacion tamano de empresa,open.gsa.gov/api/entity-api/,Si,Si
+Gobierno federal,FOIA.gov API,Solicitudes FOIA presentadas agencias status para inteligencia competitiva,foia.gov/api,Si,No
+Gobierno federal,Regulations.gov API,Comentarios y regulaciones federales empresas que participan en procesos regulatorios,open.gsa.gov/api/regulationsgov/,Si,Si
+Estatal y local,OpenCorporates API,Registros de empresas de todos los estados EE.UU. agente registrado status fecha,api.opencorporates.com,Si,Si
+Estatal y local,Florida Division of Corporations,Sunbiz.org todas las empresas registradas en Florida gratis y sin key,search.sunbiz.org/Inquiry/CorporationSearch/ByName,Si,No
+Estatal y local,California Secretary of State API,Empresas registradas en CA agente registrado tipo de entidad,bizfileonline.sos.ca.gov/api,Si,No
+Estatal y local,Texas SOS Direct API,Empresas registradas en Texas filings oficiales registrados,direct.sos.state.tx.us,Si,Si
+Estatal y local,NY Open Data API,Licencias de negocios permisos contratos del estado de Nueva York,data.ny.gov/api/odata/v4,Si,No
+Estatal y local,Illinois Data Portal,Licencias de negocios contratos estatales proveedores certificados IL,data.illinois.gov/api,Si,No
+Estatal y local,Miami-Dade Open Data,Licencias de negocios locales permisos de construccion contratistas,gis-mdc.opendata.arcgis.com/api,Si,No
+Estatal y local,City of Chicago Data Portal,Licencias de negocios activas en Chicago con direccion y tipo de negocio,data.cityofchicago.org/api,Si,No
+Estatal y local,LA County Open Data,Permisos licencias contratistas aprobados del condado de Los Angeles,data.lacounty.gov/api,Si,No
+Estatal y local,Georgia Secretary of State,Busqueda de entidades registradas en Georgia gratis sin key,ecorp.sos.ga.gov/BusinessSearch,Si,No
+GIS y geoespacial,Census Bureau API,Demografia TIGER shapefiles NAICS por ZIP poblacion ingresos por zona,api.census.gov/data.html,Si,Si
+GIS y geoespacial,Overpass API (OSM),Negocios edificios POIs de OpenStreetMap por radio bbox o nombre,overpass-api.de/api/interpreter,Si,No
+GIS y geoespacial,ESRI ArcGIS Hub API,Datasets geoespaciales publicos de ciudades condados y agencias federales,hub.arcgis.com/api,Si,No
+GIS y geoespacial,USGS National Map API,Topografia imagery satelital cuencas infraestructura por coordenadas,apps.nationalmap.gov/tnmaccess/api/v1,Si,No
+GIS y geoespacial,HUD Location Affordability,Costos de vivienda y transporte por zona,hudgis-hud.opendata.arcgis.com,Si,No
+GIS y geoespacial,NOAA Weather API,Datos climaticos historicos y forecast,api.weather.gov,Si,No
+GIS y geoespacial,Google Maps Places API,Negocios locales con telefono web horario fotos y rating,developers.google.com/maps/documentation/places,Credito $200/mes,Si
+GIS y geoespacial,Geocodio API,Geocodificacion de direcciones EE.UU. convierte listas de empresas a coords,api.geocod.io/v1.7,Si,Si
+GIS y geoespacial,EPA Facility Registry (FRS),Instalaciones industriales reguladas por EPA con NAICS coords y contacto,frs.epa.gov/frs-public-rest-api,Si,No
+Salud y regulacion,CMS NPI Registry,Todos los proveedores de salud Medicare/Medicaid nombre especialidad direccion telefono,npiregistry.cms.hhs.gov/api/,Si,No
+Salud y regulacion,openFDA API,Fabricantes recalls dispositivos medicos inspecciones de FDA,open.fda.gov/apis/,Si,Si
+Salud y regulacion,CMS Hospital Compare,Hospitales registrados con calidad certificaciones y contactos,data.cms.gov/api,Si,No
+Salud y regulacion,HRSA Health Workforce,Centros de salud comunitarios clinicas federales shortage areas,data.hrsa.gov/api,Si,No
+Salud y regulacion,DEA Registrant Lookup,Farmaceuticos y medicos con licencia DEA para sustancias controladas,apps.deadiversion.usdoj.gov/webforms,Si,No
+Salud y regulacion,CMS Physician Compare,Medicos que aceptan Medicare especialidad afiliacion hospitalaria,data.cms.gov/provider-data,Si,No
+Salud y regulacion,AHRQ Data API,Investigacion en calidad de salud hospitalizaciones outcomes por estado,hcupnet.ahrq.gov,Si,No
+Financiero y corporativo,SEC EDGAR Full-Text API,Filings completos 10-K 10-Q 8-K ejecutivos compensaciones subsidiarias,efts.sec.gov/LATEST/search-index,Si,No
+Financiero y corporativo,SEC EDGAR Company API,Busqueda por empresa CIK ticker datos estructurados de filings recientes,data.sec.gov/submissions/,Si,No
+Financiero y corporativo,IRS Nonprofits (ProPublica),Form 990 de todas las nonprofits ingresos gastos salarios de ejecutivos,projects.propublica.org/nonprofits/api,Si,No
+Financiero y corporativo,FDIC Bank Data API,Datos de todos los bancos asegurados activos depositos ubicaciones,banks.data.fdic.gov/api,Si,No
+Financiero y corporativo,Federal Reserve FRED API,Indicadores economicos tasas GDP por estado contexto macroeconomico,fred.stlouisfed.org/docs/api/fred/,Si,Si
+Financiero y corporativo,SBA Loan Data,Prestamos SBA aprobados por empresa monto sector y estado,data.sba.gov/api/3,Si,No
+Financiero y corporativo,PPP Loan Data,Empresas que recibieron prestamos PPP COVID monto y empleados,home.treasury.gov/policy-issues/cares-act,Si,No
+Financiero y corporativo,USDebtwatch API,Deuda federal contratos de bonos inversores institucionales,fiscaldata.treasury.gov/api/v1,Si,No
+Directorios de negocios,Yelp Fusion API,Negocios locales por categoria y ubicacion telefono direccion horarios,docs.developer.yelp.com,Si,Si
+Directorios de negocios,Crunchbase API,Startups funding rounds ejecutivos fechas de fundacion inversores,data.crunchbase.com/docs,No,Si
+Directorios de negocios,LinkedIn (via Apify),Perfiles publicos de ejecutivos cargo empresa ubicacion contacto,apify.com/apify/linkedin-scraper,No,Si
+Directorios de negocios,BBB API,Empresas acreditadas Better Business Bureau con rating y quejas,bbb.org/api,Si,Si
+Directorios de negocios,Glassdoor API,Empresas numero de empleados reviews salarios publicados,glassdoor.com/developer/index.htm,Si,Si
+Directorios de negocios,Hunter.io API,Encuentra emails corporativos por dominio o nombre de persona,api.hunter.io/v2,Si,Si
+Directorios de negocios,Clearbit Enrichment,Enriquece empresa o email con cargo tamano tecnologias usadas,dashboard.clearbit.com/docs,No,Si
+Directorios de negocios,Apollo.io API,Base B2B de contactos con emails verificados busqueda por NAICS y cargo,apolloio.github.io/apollo-api-docs/,Si,Si
+Laboral y empleo,BLS API,Empleo por industria y estado salarios medios NAICS laboral,api.bls.gov/publicAPI/v2,Si,Si
+Laboral y empleo,OSHA Enforcement API,Inspecciones de OSHA por empresa violaciones multas,enforcedata.dol.gov,Si,No
+Laboral y empleo,H-1B Visa Data,Empresas que patrocinan visas H-1B salarios ofrecidos cargo,h1bdata.info,Si,No
+Laboral y empleo,DOL WARN Act Notices,Layoffs masivos reportados por empresa fecha y numero de empleados,dol.gov/agencies/eta/layoffs,Si,No
+Laboral y empleo,NLRB Case Data,Casos de relaciones laborales por empresa sindicatos disputas,nlrb.gov/resources/data,Si,No
+Laboral y empleo,USAJobs API,Vacantes del gobierno federal agencia cargo requisitos salario,developer.usajobs.gov,Si,Si
+Transporte y logistica,FMCSA Motor Carrier API,Empresas de camiones y transporte DOT number seguro historial de seguridad,mobile.fmcsa.dot.gov/qc/services/,Si,Si
+Transporte y logistica,FAA Aircraft Registry,Aviones registrados en EE.UU. propietario modelo numero de serie,av-info.faa.gov/data/AircraftRegistry,Si,No
+Transporte y logistica,Maritime MISLE API,Buques empresas navieras incidentes USCG Coast Guard data,homeport.uscg.mil,Si,No
+Transporte y logistica,BTS Transportation Stats,Estadisticas de aerolineas carga pasajeros rutas por carrier,transtats.bts.gov/api,Si,No
+Transporte y logistica,National Pipeline API,Operadores de gasoductos rutas inspecciones PHMSA,phmsa.dot.gov/data-and-statistics,Si,No
+Energia y medio ambiente,EIA Energy API,Plantas de energia generadores combustible capacidad por empresa,api.eia.gov,Si,Si
+Energia y medio ambiente,FERC eLibrary API,Empresas de energia reguladas tarifas licencias de generacion,elibrary.ferc.gov/eLibrary/search,Si,No
+Energia y medio ambiente,EPA GHG Reporting,Empresas que reportan emisiones de gases nombre sector cantidad,ghgdata.epa.gov/ghgp/main.do,Si,No
+Energia y medio ambiente,DOE Loan Programs,Empresas con prestamos de energia limpia del Departamento de Energia,loan.energy.gov,Si,No
+Energia y medio ambiente,NREL Developer API,Datos de energia solar eolica y eficiencia por ubicacion,developer.nrel.gov/api,Si,Si
+Educacion e investigacion,IPEDS API,Todas las universidades y colleges matricula programas contactos admin,nces.ed.gov/ipeds/datacenter/DataFiles.aspx,Si,No
+Educacion e investigacion,ED School Data,Escuelas K-12 publicas y privadas directores telefonos tamano,api.data.gov/ed/collegescorecard/v1,Si,Si
+Educacion e investigacion,NSF Research Awards,Grants de investigacion por universidad y empresa PI monto tema,api.nsf.gov/services/v1/awards.json,Si,No
+Educacion e investigacion,NIH Reporter API,Proyectos de investigacion financiados por NIH institucion investigador monto,api.reporter.nih.gov,Si,No
+Legal y judicial,PACER Federal Court Records,Casos federales civiles y criminales por empresa demandas bankruptcies litigios activos,pacer.uscourts.gov,No,No
+Legal y judicial,CourtListener API,Millones de opiniones judiciales federales y estatales empresas involucradas en litigios,courtlistener.com/api/,Si,Si
+Legal y judicial,PACER Case Locator,Localizador de casos federales por nombre de empresa o persona,pcl.uscourts.gov/pcl/pages/search/find.jsf,Si,No
+Legal y judicial,Dockets.justia.com,Casos federales indexados y buscables demandas por empresa gratis,dockets.justia.com,Si,No
+Legal y judicial,USPTO Patent API,Patentes por empresa inventores asignees fechas tecnologia,api.uspto.gov,Si,No
+Legal y judicial,USPTO Trademark API,Marcas registradas por empresa dueno status clase de producto,tsdrapi.uspto.gov,Si,No
+Legal y judicial,Copyright.gov Records,Registros de copyright por empresa o autor,cocatalog.loc.gov,Si,No
+Legal y judicial,FTC Enforcement Actions,Empresas con acciones de la FTC fraude publicidad enganosa violaciones de privacidad,ftc.gov/enforcement/cases-proceedings,Si,No
+Legal y judicial,DOJ Civil Division,Demandas del Departamento de Justicia contra empresas,justice.gov/civil,Si,No
+Legal y judicial,CFPB Complaint Database,Quejas de consumidores contra empresas financieras banco nombre tipo de queja,api.consumerfinance.gov/data/complaints,Si,No
+Inmobiliario y propiedad,Zillow Bridge API,Datos de propiedades residenciales valor estimado Zestimate historial,bridgedataoutput.com/api/v2,No,Si
+Inmobiliario y propiedad,ATTOM Property API,Datos de propiedades comerciales y residenciales dueno valor historial de venta,api.attomdata.com,No,Si
+Inmobiliario y propiedad,HUD USPS Vacancy Data,Propiedades vacantes por ZIP code util para real estate e inversion,huduser.gov/portal/datasets/usps.html,Si,No
+Inmobiliario y propiedad,CoStar,Datos comerciales de edificios de oficinas tenants precios disponibilidad,costar.com,No,Si
+Inmobiliario y propiedad,LoopNet API,Propiedades comerciales en venta o renta precio tamano dueno,loopnet.com/services/api,No,Si
+Inmobiliario y propiedad,Redfin Data Center,Datos de mercado inmobiliario descargables precios medios por ZIP y ciudad,redfin.com/news/data-center,Si,No
+Inmobiliario y propiedad,Miami-Dade Property Appraiser,Duenos de propiedades comerciales en Miami-Dade con valor y direccion,miamidade.gov/pa/property_search.asp,Si,No
+Inmobiliario y propiedad,FEMA Flood Map API,Zonas de inundacion por direccion relevante para seguros y construccion,msc.fema.gov/arcgis/rest/services,Si,No
+Construccion y licencias,SAM.gov Construction,Contratistas de construccion registrados federalmente con certificaciones,open.gsa.gov/api/sam/,Si,Si
+Construccion y licencias,AIA Architect Finder,Arquitectos licenciados por estado nombre firma especialidad,architectfinder.aia.org,Si,No
+Construccion y licencias,NCARB License Data,Arquitectos certificados nacionalmente estado de licencia reciprocidad,ncarb.org/licensing-renewals,Si,No
+Construccion y licencias,Florida DBPR API,Contratistas y profesionales licenciados en Florida tipo status vencimiento,myfloridalicense.com/wl11.asp,Si,No
+Construccion y licencias,Texas TDLR Licenses,Licencias de contratistas en Texas electricistas plomeros HVAC,tdlr.texas.gov/LicenseSearch,Si,No
+Construccion y licencias,BuildZoom API,Contratistas con historial de permisos ratings y proyectos completados,buildzoom.com/api,No,Si
+Construccion y licencias,Census Building Permits,Permisos de construccion por area metropolitana actividad del mercado,census.gov/construction/bps,Si,No
+Construccion y licencias,HUD CHAS Data,Necesidades de vivienda asequible por condado oportunidades para constructores,huduser.gov/portal/datasets/cp.html,Si,No
+Agricultura y alimentos,USDA Farm Service Agency,Productores agricolas registrados subsidios cultivos por condado,fsa.usda.gov/programs-and-services,Si,No
+Agricultura y alimentos,USDA ERS API,Estadisticas economicas agricolas precios produccion exportaciones,ers.usda.gov/developer/data-apis,Si,No
+Agricultura y alimentos,USDA NASS QuickStats API,Censos agricolas numero de fincas acreaje ingresos por estado,quickstats.nass.usda.gov/api,Si,Si
+Agricultura y alimentos,USDA AMS Market News,Precios de mercado de commodities agricolas en tiempo real,mymarketnews.ams.usda.gov/api,Si,No
+Agricultura y alimentos,EPA Pesticide Registrations,Fabricantes y distribuidores de pesticidas registrados en EPA,ordspub.epa.gov/ords/pesticides,Si,No
+Agricultura y alimentos,USDA Organic Integrity,Operaciones organicas certificadas nombre tipo estado certificador,organic.ams.usda.gov/Organic/Data,Si,No
+Defensa y contratacion militar,DIBBS DLA Internet Bid Board,Licitaciones de la Defense Logistics Agency partes equipos suministros,dibbs.dla.mil,Si,No
+Defensa y contratacion militar,DoD EMALL API,Catalogo de proveedores aprobados por el Departamento de Defensa,emall.dla.mil,Si,Si
+Defensa y contratacion militar,USASpending Defense,Contratos del DoD filtrados por agencia Army Navy Air Force DARPA,api.usaspending.gov,Si,No
+Defensa y contratacion militar,DSCA Arms Sales,Ventas de armas aprobadas empresas contratistas de defensa,dsca.mil/resources/security-cooperation-data,Si,No
+Defensa y contratacion militar,DTIC Technical Reports,Investigacion tecnica financiada por DoD empresas e instituciones involucradas,discover.dtic.mil/api,Si,Si
+Defensa y contratacion militar,CAGE Code Lookup,Todos los contratistas de defensa con CAGE code nombre direccion pais,cage.dla.mil,Si,No
+Tecnologia y digital,BuiltWith API,Tecnologias usadas por cualquier sitio web CRM ecommerce analytics,api.builtwith.com,No,Si
+Tecnologia y digital,Wappalyzer API,Stack tecnologico de empresas frameworks servidores herramientas,wappalyzer.com/api,Si,Si
+Tecnologia y digital,Shodan API,Dispositivos y servidores expuestos a internet por empresa o IP,api.shodan.io,Si,Si
+Tecnologia y digital,SecurityTrails API,DNS historico subdominios IPs asociadas a dominios de empresas,api.securitytrails.com,Si,Si
+Tecnologia y digital,DomainTools API,Registros WHOIS historicos dueno del dominio email de contacto original,api.domaintools.com,No,Si
+Tecnologia y digital,Common Crawl,Snapshots de millones de sitios web texto emails telefonos extraibles,commoncrawl.org/the-data/get-started,Si,No
+Tecnologia y digital,GitHub API,Empresas con repositorios publicos devs proyectos tecnologias,api.github.com,Si,Si
+Tecnologia y digital,Product Hunt API,Lanzamientos de productos tech fundadores empresa descripcion,api.producthunt.com/v2/api/graphql,Si,Si
+Tecnologia y digital,G2 Reviews API,Resenas de software B2B empresa usuarios industria,g2.com/api,No,Si
+Comercio exterior,Census Foreign Trade API,Importaciones y exportaciones por empresa producto y pais,api.census.gov/data/timeseries/intltrade,Si,Si
+Comercio exterior,USITC DataWeb,Estadisticas de comercio exterior por HTS code y empresa,dataweb.usitc.gov/api,Si,No
+Comercio exterior,CBP Import Records,Manifiestos de importacion quien importa que de donde y cuanto,customs.gov/vessel-sea-manifest,Si,No
+Comercio exterior,ImportGenius / Panjiva,Base de datos de importadores y exportadores EE.UU. con volumen,importgenius.com,No,Si
+Comercio exterior,BIS Export Controls,Empresas con licencias de exportacion tecnologia controlada defensa,bis.doc.gov/index.php/licensing,Si,No
+Comercio exterior,FTZ Locator CBP,Zonas de libre comercio en EE.UU. empresas operadoras y usuarios,cbp.gov/trade/programs-administration/free-trade-zones,Si,No
+Seguros y pensiones,NAIC Insurance API,Aseguradoras licenciadas por estado nombre tipo estado de licencia,content.naic.org/cis_refined_ui.htm,Si,No
+Seguros y pensiones,FMCSA Insurance MCS-90,Seguros de camiones y transportistas carrier aseguradora monto,li-public.fmcsa.dot.gov/LIVIEW,Si,No
+Seguros y pensiones,WCRI Workers Comp Data,Datos de compensacion laboral por estado e industria,wcrinet.org/data,No,No
+Seguros y pensiones,CMS Medicare Cost Reports,Reportes financieros detallados de hospitales y centros de salud,data.cms.gov/provider-compliance,Si,No
+Seguros y pensiones,PBGC Pension Data,Planes de pension de empresas estado activos participantes,pbgc.gov/about/pg/other/open-government/open-data,Si,No
+Medio ambiente,EPA ECHO API,Cumplimiento ambiental por empresa violaciones multas permisos,echo.epa.gov/tools/web-services,Si,No
+Medio ambiente,EPA TRI Toxic Release,Empresas que reportan liberacion de toxicos nombre cantidad quimico,epa.gov/toxics-release-inventory-tri-program,Si,No
+Medio ambiente,EPA RCRA Hazardous Waste,Generadores de residuos peligrosos empresa direccion tipo de residuo,rcrainfo.epa.gov/rcrainfopublicapi,Si,Si
+Medio ambiente,NOAA Fisheries API,Permisos de pesca comercial empresa tipo area cuota,fisheries.noaa.gov/contact/office-science-and-technology,Si,No
+Medio ambiente,Forest Service Permits,Permisos en tierras federales operadores campamentos empresas,fs.usda.gov/science-technology/data-information-systems,Si,No
+Municipal y local,OpenDataSoft Network,Portal con 400+ ciudades y condados licencias permisos contratos locales,data.opendatasoft.com/api/explore/v2.1,Si,Si
+Municipal y local,Socrata Open Data API,Plataforma usada por cientos de ciudades EE.UU. para publicar datos,dev.socrata.com,Si,Si
+Municipal y local,NYC Open Data,Licencias de negocios permisos contratistas en Nueva York,data.cityofnewyork.us/api,Si,No
+Municipal y local,Houston Open Data,Licencias permisos de construccion y contratos de Houston TX,data.houstontx.gov/api,Si,No
+Municipal y local,Phoenix Open Data,Negocios licenciados permisos contratos municipales de Phoenix AZ,data.phoenix.gov/api,Si,No
+Municipal y local,San Antonio Open Data,Licencias de negocios y permisos en San Antonio TX,data.sanantonio.gov/api,Si,No
+Municipal y local,Broward County Open Data,Permisos contratos y licencias del condado Broward Fort Lauderdale,opendata-browardcounty.opendata.arcgis.com,Si,No
+Municipal y local,Palm Beach County GIS,Datos geoespaciales y de negocios del condado Palm Beach,discover.pbcgov.org/pbcgis,Si,No
+Investigacion y ciencia,NIH Reporter API,Grants de investigacion institucion investigador principal monto tema,api.reporter.nih.gov,Si,No
+Investigacion y ciencia,NSF Awards API,Proyectos financiados por NSF universidad empresa investigador monto,api.nsf.gov/services/v1/awards.json,Si,No
+Investigacion y ciencia,DOE OSTI API,Investigacion cientifica financiada por Departamento de Energia,api.osti.gov/api/v1/records,Si,No
+Investigacion y ciencia,ClinicalTrials.gov API,Estudios clinicos empresa patrocinadora investigador fase condicion,clinicaltrials.gov/api/v2,Si,No
+Investigacion y ciencia,NASA Technical Reports,Contratistas de NASA con reportes tecnicos publicos,ntrs.nasa.gov/api,Si,No
+Investigacion y ciencia,Semantic Scholar API,Papers academicos autores instituciones citas financiadores,api.semanticscholar.org/graph/v1,Si,Si
+Social y demografia,CDC WONDER API,Datos de salud publica por condado mortalidad enfermedades demografia,wonder.cdc.gov/wonder/help/WONDER-API.html,Si,No
+Social y demografia,FBI Crime Data API,Crimenes por ciudad y tipo util para seguridad seguros real estate,api.usa.gov/crime/fbi/cde/,Si,Si
+Social y demografia,USDA Food Desert Locator,Zonas sin acceso a alimentos frescos oportunidades para retail y salud,ers.usda.gov/data-products/food-access-research-atlas,Si,No
+Social y demografia,HUD AFFH Data,Segregacion y demografia de vivienda por zona fair housing data,hudgis-hud.opendata.arcgis.com,Si,No
+Social y demografia,DOT National Walkability,Score de caminabilidad y transporte por zona retail urbanismo,epa.gov/smartgrowth/smart-location-mapping,Si,No
+Hospitality y turismo,STR Smith Travel Research,Datos de hoteles por ciudad ocupacion tarifa media RevPAR por propiedad,str.com/data-benchmarking,No,Si
+Hospitality y turismo,Florida DBPR Hotel Licenses,Todos los hoteles moteles y B&B licenciados en Florida con contacto del dueno,myfloridalicense.com/wl11.asp,Si,No
+Hospitality y turismo,OpenTable Restaurant Data,Restaurantes con reservaciones capacidad tipo de cocina ciudad,opentable.com/partner/restaurants-usa,Si,No
+Hospitality y turismo,TripAdvisor Content API,Hoteles restaurantes y atracciones rating resenas contacto,tripadvisor.com/developers,Si,Si
+Hospitality y turismo,FDA Food Facility Registry,Establecimientos de alimentos registrados restaurantes procesadores distribuidores,open.fda.gov/apis/food/enforcement/,Si,No
+Hospitality y turismo,Health Inspection Records,Inspecciones sanitarias de restaurantes disponibles por condado,data.cityofchicago.org/api,Si,No
+Hospitality y turismo,Airbnb Inside Data,Listings activos de Airbnb por ciudad anfitrion precio ocupacion estimada,insideairbnb.com/get-the-data,Si,No
+Hospitality y turismo,Liquor License Records,Licencias de alcohol por estado bar restaurante distribuidor dueno,abs.alabama.gov/licensing,Si,No
+Maritimo y portuario,USCG Marine Information API,Embarcaciones registradas nombre dueno tipo puerto base valor,uscgboating.org/recreational-boaters/boat-registration,Si,No
+Maritimo y portuario,MarineTraffic API,Posicion en tiempo real de buques empresa operadora destino carga,marinetraffic.com/api,No,Si
+Maritimo y portuario,NOAA Port Data,Actividad portuaria importaciones exportaciones tipos de carga por puerto,coast.noaa.gov/digitalcoast,Si,No
+Maritimo y portuario,CBP Vessel Manifests,Manifiestos de buques empresa importadora origen contenido de carga,customs.gov/vessel-sea-manifest,Si,No
+Maritimo y portuario,FMC Ocean Carrier Data,Navieras registradas ante Federal Maritime Commission tarifas y rutas,fmc.gov/resources/automated-tariff-filing-system,Si,No
+Maritimo y portuario,SeaRates API,Tarifas de flete maritimo rutas carriers precios por contenedor,searates.com/api,No,Si
+Maritimo y portuario,Port of Miami Cargo Data,Estadisticas de carga del Puerto de Miami empresa volumen tipo,miamidade.gov/portmiami,Si,No
+Aviacion y aeronautica,FAA Aircraft Registry,Todos los aviones registrados en EE.UU. propietario modelo numero de serie,av-info.faa.gov/data/AircraftRegistry,Si,No
+Aviacion y aeronautica,FAA Pilot Certification,Pilotos certificados tipo de licencia ratings estado,amsrvs.amsrvs.faa.gov/airmeninquiry,Si,No
+Aviacion y aeronautica,FAA Airport Data,Aeropuertos y aerodromos operador tipo coordenadas instalaciones,faa.gov/airports/airport_safety/airportdata_5010,Si,No
+Aviacion y aeronautica,BTS Airline On-Time Data,Aerolineas puntualidad rutas pasajeros ingresos por ruta,transtats.bts.gov/api,Si,No
+Aviacion y aeronautica,FlightAware API,Vuelos en tiempo real empresa operadora matricula origen destino,flightaware.com/commercial/flightxml,No,Si
+Aviacion y aeronautica,Aviation Safety Network,Accidentes e incidentes aereos por empresa y aeronave,aviation-safety.net/database,Si,No
+Aviacion y aeronautica,FAA Repair Stations,Talleres de mantenimiento aeronautico certificados empresa tipo estado,av-info.faa.gov/repairstation.asp,Si,No
+Mineria y recursos naturales,MSHA Mine Data API,Minas activas en EE.UU. empresa operadora tipo de mineral empleados estado,arlweb.msha.gov/opengovernmentdata,Si,No
+Mineria y recursos naturales,USGS Mineral Resources,Produccion mineral por estado empresa commodity volumen,minerals.usgs.gov/minerals/pubs/mcs,Si,No
+Mineria y recursos naturales,BLM Mining Claims,Concesiones mineras en tierras federales empresa ubicacion mineral,mlrs.blm.gov/mining-claims,Si,No
+Mineria y recursos naturales,EPA Superfund Sites,Sitios contaminados empresa responsable tipo de contaminacion estado de limpieza,epa.gov/superfund/search-superfund-sites-where-you-live,Si,No
+Mineria y recursos naturales,FERC Hydropower Licenses,Operadores de plantas hidroelectricas empresa rio capacidad licencia,ferc.gov/industries-data/hydropower,Si,No
+Media y broadcasting,FCC Broadcast Licenses,Estaciones de TV y radio empresa duena frecuencia mercado contacto,fcc.gov/media/radio/broadcast-radio-links,Si,No
+Media y broadcasting,FCC Cable Operators,Operadores de cable por mercado empresa area de servicio suscriptores,fcc.gov/consumers/guides/cable-television,Si,No
+Media y broadcasting,Nielsen DMA Data,Mercados de television DMAs cobertura hogares demografia,nielsen.com/dma-map,Si,No
+Media y broadcasting,iTunes Podcast Directory,Podcasts con empresa/persona detras nombre categoria audiencia,itunes.apple.com/us/genre/podcasts,Si,No
+Media y broadcasting,Spotify Podcast API,Podcasts en Spotify productor episodios seguidores,developer.spotify.com/documentation/web-api,Si,Si
+Media y broadcasting,YouTube Data API,Canales de empresas suscriptores vistas contacto en descripcion,developers.google.com/youtube/v3,Si,Si
+Media y broadcasting,NewsAPI,Articulos de noticias empresas mencionadas cobertura mediatica,newsapi.org,Si,Si
+Retail y consumo,Census Retail Trade API,Ventas minoristas por categoria y zona tamano del mercado local,api.census.gov/data/2021/ecnbasic,Si,Si
+Retail y consumo,UPC Database API,Productos con codigo de barras fabricante marca descripcion,api.upcitemdb.com,Si,No
+Retail y consumo,Open Food Facts API,Productos alimenticios fabricante ingredientes nutricion distribuidor,world.openfoodfacts.org/api,Si,No
+Retail y consumo,GS1 Company Database,Empresas con codigos GS1/UPC registrados nombre pais categoria,gepir.gs1.org,Si,No
+Retail y consumo,Amazon Seller API SP-API,Vendedores de Amazon productos ratings categorias volumen estimado,developer-docs.amazon.com/sp-api,Si,Si
+Retail y consumo,Shopify Partner API,Tiendas en Shopify nombre industria apps usadas pais,shopify.dev/api,Si,Si
+Retail y consumo,BBB Accredited Business API,Negocios acreditados BBB con rating quejas y anos en operacion,bbb.org/api,Si,Si
+Nonprofits y fundaciones,GuideStar Candid API,Base de datos mas completa de nonprofits 990s ejecutivos programas financiero,candid.org/our-products/guidestar,No,Si
+Nonprofits y fundaciones,Foundation Directory Online,Fundaciones privadas areas de donacion ejecutivos grants otorgados,fdo.foundationcenter.org,No,Si
+Nonprofits y fundaciones,IRS BMF Business Master File,Archivo maestro del IRS de todas las nonprofits EIN nombre estado tipo,irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract,Si,No
+Nonprofits y fundaciones,Charity Navigator API,Rating de nonprofits transparencia impacto finanzas liderazgo,charitynavigator.org/index.cfm,Si,Si
+Nonprofits y fundaciones,GiveWell Charity Data,Nonprofits evaluadas con datos de efectividad e impacto,givewell.org/api,Si,No
+Nonprofits y fundaciones,Form 990 Finder ProPublica,990s individuales descargables cada linea del formulario en JSON,projects.propublica.org/nonprofits/api,Si,No
+Fintech y banca,FDIC Bank Find API,Todos los bancos asegurados nombre activos depositos ubicaciones de sucursales,banks.data.fdic.gov/api,Si,No
+Fintech y banca,NCUA Credit Union Data,Cooperativas de credito nombre activos miembros CEO direccion,ncua.gov/analysis/credit-union-corporate-call-report-data,Si,No
+Fintech y banca,FinCEN Beneficial Ownership,Duenos reales de empresas nuevo registro federal 2024,fincen.gov/boi,Si,No
+Fintech y banca,CFPB HMDA API,Prestamos hipotecarios por banco institucion monto demografia aprobacion,ffiec.cfpb.gov/api,Si,No
+Fintech y banca,SEC Investment Advisers,Asesores financieros registrados firma AUM clientes ejecutivos,adviserinfo.sec.gov/IAPD/Content/Search/iapd_OrgSearch.aspx,Si,No
+Fintech y banca,FINRA BrokerCheck API,Brokers y firmas de valores historial certificaciones quejas,api.brokercheck.finra.org,Si,No
+Fintech y banca,Treasury OFAC Sanctions,Empresas y personas sancionadas lista SDN completa y actualizada,ofac.treasury.gov/system/files/126/sdn.xml,Si,No
+Lobbying y politica,OpenSecrets API,Gastos de lobbying por empresa industria monto legislacion objetivo,opensecrets.org/api,Si,Si
+Lobbying y politica,LDA Lobbying Disclosures,Reportes de lobbying federal empresa lobbyista agencia issue,lda.congress.gov/api/v1,Si,Si
+Lobbying y politica,FEC Campaign Finance API,Donaciones a campanas empresa donante PAC monto candidato,api.open.fec.gov/v1,Si,Si
+Lobbying y politica,Congress.gov API,Legislacion comites testimonios empresas que testifican ante el Congreso,api.congress.gov,Si,Si
+Lobbying y politica,Florida Lobbying Disclosures,Lobbyistas y clientes registrados en Florida empresa tema monto,floridalobbyist.gov,Si,No
+Lobbying y politica,ProPublica Congress API,Votaciones miembros comites quien financia a cada congresista,propublica.org/datastore/api/propublica-congress-api,Si,Si
+Utilities y servicios publicos,EIA Utility Data,Empresas de electricidad nombre estado clientes generacion tarifas,api.eia.gov,Si,Si
+Utilities y servicios publicos,FCC Broadband Map API,Proveedores de internet por direccion empresa velocidad tecnologia,broadbandmap.fcc.gov/api,Si,No
+Utilities y servicios publicos,PHMSA Pipeline Operators,Operadores de gasoductos y oleoductos empresa millas tipo de gas,phmsa.dot.gov/data-and-statistics/pipeline,Si,No
+Utilities y servicios publicos,FERC Electric Utilities,Utilities electricas reguladas empresa tarifas area de servicio,ferc.gov/industries-data/electric,Si,No
+Utilities y servicios publicos,Water Utility Data ECHO,Sistemas de agua potable empresa operadora usuarios violaciones,echo.epa.gov/tools/web-services,Si,No
+Utilities y servicios publicos,NARUC Utility Directory,Directorio de todas las utilities reguladas por estado,naruc.org/compilation-of-utility-regulatory-annual-reports,Si,No
+Veteranos y militar,VA Veteran-Owned Business,Empresas certificadas como veteran-owned nombre NAICS contacto,vetbiz.va.gov/vip,Si,No
+Veteranos y militar,SBA VOSB/SDVOSB API,Service-disabled veteran businesses certificadas para contratos,veterans.certify.sba.gov,Si,No
+Veteranos y militar,DOD Transition Assistance,Veteranos en transicion al sector privado programas por base militar,dodtap.mil,Si,No
+Veteranos y militar,Military Base Directory,Bases militares activas comando unidades contratistas residentes,militaryinstallations.dod.mil,Si,No
+Veteranos y militar,USAJobs Veterans Preference,Vacantes federales con preferencia de veteranos agencia cargo salario,usajobs.gov/Search/Results,Si,No
+Internacional en EE.UU.,ITAR Registration DDTC,Empresas registradas para exportar defensa nombre pais producto,pmddtc.state.gov/ddtc_public,Si,No
+Internacional en EE.UU.,FDI Markets Database,Inversion extranjera directa en EE.UU. empresa pais de origen sector,fdimarkets.com,No,Si
+Internacional en EE.UU.,BEA Foreign Direct Investment,Estadisticas de IED en EE.UU. por pais de origen e industria,bea.gov/data/intl-trade-investment/foreign-direct-investment-us,Si,No
+Internacional en EE.UU.,USTR Trade Agreements,Empresas que participan en comentarios de tratados comerciales,regulations.gov/search,Si,No
+Internacional en EE.UU.,OFAC Foreign Sanctions,Empresas extranjeras sancionadas con operaciones en EE.UU.,sanctions.ofac.treas.gov,Si,No
+Internacional en EE.UU.,CBP Trusted Trader CTPAT,Importadores certificados como socios confiables de aduanas,cbp.gov/border-security/ports-entry/cargo-security/ctpat,Si,No
+Crowdfunding e inversion,SEC Regulation CF Filings,Empresas que hacen crowdfunding de equity fundadores monto sector,efts.sec.gov/LATEST/search-index,Si,No
+Crowdfunding e inversion,Kickstarter API,Proyectos de crowdfunding creador monto recaudado categoria backers,kickstarter.com/help/api,Si,Si
+Crowdfunding e inversion,Indiegogo Campaign Data,Campanas activas y completadas empresa fundador monto categoria,developer.indiegogo.com,Si,Si
+Crowdfunding e inversion,AngelList / Wellfound API,Startups buscando inversion fundador sector ubicacion funding stage,wellfound.com/api,Si,Si
+Crowdfunding e inversion,Republic Funding Data,Empresas con rondas de equity crowdfunding activas o pasadas,republic.com/companies,Si,No

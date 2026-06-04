@@ -110,3 +110,19 @@ export function getClientIP(req: any): string {
   // Fallback to connection remote address
   return req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
 }
+
+/**
+ * Add rate limit headers to response
+ */
+export function addRateLimitHeaders(
+  response: any,
+  remaining: number,
+  reset: number,
+  retryAfter?: number
+): void {
+  response.headers.set('X-RateLimit-Remaining', String(remaining));
+  response.headers.set('X-RateLimit-Reset', String(Math.ceil(reset / 1000)));
+  if (retryAfter) {
+    response.headers.set('Retry-After', String(retryAfter));
+  }
+}
