@@ -3,14 +3,47 @@ name: Enrichment Cron Job (Hourly)
 on:
   schedule:
     - cron: '0 * * * *'  # Every hour at minute 0
+  workflow_dispatch:  # Allow manual trigger
 
 jobs:
   batch-enrichment:
     runs-on: ubuntu-latest
+    environment: production
+
     steps:
-      - name: Trigger batch enrichment
+      - name: Trigger batch enrichment on VPS
         run: |
+          API_URL="http://72.61.92.220:3002"
+
+          echo "Triggering batch enrichment at $API_URL/api/enrichment/batch"
+
           curl -X POST \
             -H "Content-Type: application/json" \
-            -d '{}' \
-            "${{ secrets.ENRICHMENT_API_URL }}/api/enrichment/batch"
+            -H "Authorization: Bearer ${{ secrets.API_TOKEN }}" \
+            -d '{"batch_size": 50, "timeout": 600}' \
+            "$API_URL/api/enrichment/batch" \
+            --max-time 30 \
+            --retry 2 \
+            --retry-delay 5 \
+            -w "\nHTTP Status: %{http_code}\n"
+
+        continue-on-error: true
+
+      - name: Fallback - Trigger enrichment via n8n webhook
+        if: failure()
+        run: |
+          echo "VPS endpoint failed. Triggering via n8n webhook..."
+
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"action": "batch_enrich", "batch_size": 50}' \
+            "${{ secrets.N8N_WEBHOOK_URL }}" \
+            --max-time 30 \
+            --retry 2 \
+            -w "\nN8N Webhook Status: %{http_code}\n"
+
+        continue-on-error: true
+
+      - name: Log result
+        run: |
+          echo "Enrichment job completed. Check VPS logs at 72.61.92.220 for details."

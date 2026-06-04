@@ -66,7 +66,18 @@ async function enrichViaHunter(name: string, organization: string): Promise<{ em
 
 export async function POST(req: NextRequest) {
   try {
-    console.log('[BATCH ENRICHMENT] Starting batch enrichment job')
+    console.log('[BATCH ENRICHMENT] Starting batch enrichment job at', new Date().toISOString())
+
+    // Validate credentials
+    if (!KEY || !BASE || !TBL) {
+      console.error('[BATCH ENRICHMENT] Missing credentials:', { KEY: !!KEY, BASE: !!BASE, TBL: !!TBL })
+      return NextResponse.json(
+        { success: false, error: 'Missing Airtable credentials', details: 'API key or base ID not configured' },
+        { status: 400 }
+      )
+    }
+
+    console.log('[BATCH ENRICHMENT] Credentials validated. Fetching contacts without email...')
 
     // Fetch all contacts without email
     const listRes = await fetch(
@@ -75,9 +86,10 @@ export async function POST(req: NextRequest) {
     )
 
     if (!listRes.ok) {
-      console.error('Failed to fetch contacts:', listRes.status)
+      const errText = await listRes.text()
+      console.error('[BATCH ENRICHMENT] Failed to fetch contacts:', listRes.status, errText)
       return NextResponse.json(
-        { success: false, error: 'Failed to fetch contacts' },
+        { success: false, error: 'Failed to fetch contacts', status: listRes.status, details: errText },
         { status: 500 }
       )
     }
