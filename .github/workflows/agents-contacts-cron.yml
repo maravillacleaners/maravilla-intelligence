@@ -1,0 +1,71 @@
+name: Agent Cron - Discover Contacts (Every 2 Hours)
+
+on:
+  schedule:
+    # Every 2 hours at :00 minutes (UTC)
+    # 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00, 22:00
+    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * *'
+
+jobs:
+  discover-contacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Trigger Contact Discovery Agent
+        run: |
+          echo "Triggering Contact Discovery Agent..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.API_JWT_TOKEN }}" \
+            -d '{
+              "limit": 200,
+              "includeRelated": true,
+              "enrichRoles": true,
+              "filters": {
+                "minScore": 50,
+                "status": "Active"
+              }
+            }' \
+            "${{ secrets.API_BASE_URL }}/api/agents/discover-contacts")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" -ne 200 ] && [ "$http_code" -ne 202 ]; then
+            echo "❌ Contact Discovery failed with status $http_code"
+            exit 1
+          fi
+
+          echo "✅ Contact Discovery triggered successfully"
+
+      - name: Notify on completion
+        if: success()
+        run: |
+          # Extract metadata from response for logging
+          echo "Contact discovery completed successfully"
+          curl -X POST -H 'Content-Type: application/json' \
+            -d '{
+              "text": "✅ Contact Discovery Agent executed",
+              "blocks": [{
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Contact Discovery Agent*\nStatus: Success\nTime: '"$(date -u +'%Y-%m-%dT%H:%M:%SZ')"'"
+                }
+              }]
+            }' \
+            "${{ secrets.SLACK_WEBHOOK_OPS }}" || true
+
+      - name: Log execution metrics
+        if: always()
+        run: |
+          echo "=== Contact Discovery Execution ==="
+          echo "Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "Limit: 200 records"
+          echo "Include Related: true"
+          echo "Enrich Roles: true"
+          echo "Next run: $(date -u -d '+2 hours' +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "===================================="

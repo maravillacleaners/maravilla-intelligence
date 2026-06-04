@@ -1,0 +1,46 @@
+name: Agent Cron - SAM Discovery (Every 6 Hours)
+
+on:
+  schedule:
+    # Every 6 hours at :00 minutes (UTC)
+    # 00:00, 06:00, 12:00, 18:00
+    - cron: '0 0,6,12,18 * * *'
+
+jobs:
+  sam-discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger SAM Discovery Agent
+        run: |
+          echo "Triggering SAM Discovery Agent..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.API_JWT_TOKEN }}" \
+            -d '{
+              "source": "sam",
+              "limit": 100,
+              "filters": {
+                "status": "Active"
+              }
+            }' \
+            "${{ secrets.API_BASE_URL }}/api/agents/sam-discovery")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" -ne 200 ] && [ "$http_code" -ne 202 ]; then
+            echo "❌ SAM Discovery failed with status $http_code"
+            exit 1
+          fi
+
+          echo "✅ SAM Discovery triggered successfully"
+
+      - name: Log execution timestamp
+        if: always()
+        run: |
+          echo "Execution completed at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "Next run: $(date -u -d '+6 hours' +'%Y-%m-%dT%H:%M:%SZ')"

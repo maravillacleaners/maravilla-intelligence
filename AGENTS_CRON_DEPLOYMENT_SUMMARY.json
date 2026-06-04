@@ -1,0 +1,260 @@
+{
+  "deployment_status": "ready",
+  "deployment_date": "2026-06-04",
+  "crons_configured": 3,
+  "first_run_in": "minutes until next scheduled run (varies by cron schedule)",
+  "summary": {
+    "total_daily_executions": 40,
+    "total_records_processed_daily": 4000,
+    "estimated_daily_runtime": "60-90 minutes",
+    "infrastructure_cost": "$0 (GitHub Actions free tier)"
+  },
+  "cron_jobs": [
+    {
+      "id": 1,
+      "name": "SAM Discovery Agent",
+      "endpoint": "POST /api/agents/sam-discovery",
+      "schedule": "Every 6 hours",
+      "cron_expression": "0 0,6,12,18 * * *",
+      "schedule_details": {
+        "times_utc": ["00:00", "06:00", "12:00", "18:00"],
+        "executions_per_day": 4,
+        "timezone": "UTC"
+      },
+      "parameters": {
+        "source": "sam",
+        "limit": 100,
+        "filters": {
+          "status": "Active"
+        }
+      },
+      "expected_response": {
+        "http_code": [200, 202],
+        "body": {
+          "success": true,
+          "jobId": "sam-discovery-1717459200000",
+          "recordsProcessed": 87,
+          "timestamp": "2026-06-04T06:00:00Z"
+        }
+      },
+      "timeout_seconds": 600,
+      "deployment_method": ["GitHub Actions", "n8n"]
+    },
+    {
+      "id": 2,
+      "name": "Company Enrichment Agent",
+      "endpoint": "POST /api/agents/enrich-company",
+      "schedule": "Every 1 hour",
+      "cron_expression": "0 * * * *",
+      "schedule_details": {
+        "times_utc": "Every hour at :00",
+        "executions_per_day": 24,
+        "timezone": "UTC"
+      },
+      "parameters": {
+        "batchSize": 50,
+        "prioritizeNew": true,
+        "sources": ["hunter", "clearbit"]
+      },
+      "expected_response": {
+        "http_code": [200, 202, 204],
+        "body": {
+          "success": true,
+          "enriched": 42,
+          "skipped": 8,
+          "errors": 0,
+          "timestamp": "2026-06-04T07:00:00Z"
+        }
+      },
+      "timeout_seconds": 60,
+      "deployment_method": ["GitHub Actions", "n8n"]
+    },
+    {
+      "id": 3,
+      "name": "Contact Discovery Agent",
+      "endpoint": "POST /api/agents/discover-contacts",
+      "schedule": "Every 2 hours",
+      "cron_expression": "0 0,2,4,6,8,10,12,14,16,18,20,22 * * *",
+      "schedule_details": {
+        "times_utc": ["00:00", "02:00", "04:00", "06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"],
+        "executions_per_day": 12,
+        "timezone": "UTC"
+      },
+      "parameters": {
+        "limit": 200,
+        "includeRelated": true,
+        "enrichRoles": true,
+        "filters": {
+          "minScore": 50,
+          "status": "Active"
+        }
+      },
+      "expected_response": {
+        "http_code": [200, 202],
+        "body": {
+          "success": true,
+          "discovered": 156,
+          "related": 312,
+          "timestamp": "2026-06-04T08:00:00Z"
+        }
+      },
+      "timeout_seconds": 900,
+      "deployment_method": ["GitHub Actions", "n8n"]
+    }
+  ],
+  "deployment_options": {
+    "option_a": {
+      "name": "GitHub Actions (Recommended)",
+      "files": [
+        ".github/workflows/agents-discovery-cron.yml",
+        ".github/workflows/agents-enrichment-cron.yml",
+        ".github/workflows/agents-contacts-cron.yml"
+      ],
+      "setup_script": "setup-cron-github-actions.ps1 (Windows) or setup-cron-github-actions.sh (Linux/Mac)",
+      "advantages": [
+        "Free tier (2,000 minutes/month)",
+        "Built-in logging and history",
+        "Automatic retry on failure",
+        "No additional infrastructure needed",
+        "Works with existing VPS deployment"
+      ],
+      "cost": "$0 (within free tier)",
+      "setup_time_minutes": 5,
+      "monitoring_url": "https://github.com/maravillacleaners/maravilla-intelligence/actions"
+    },
+    "option_b": {
+      "name": "n8n Self-Hosted",
+      "files": [
+        "n8n-workflows/agent-cron-sam-discovery.json",
+        "n8n-workflows/agent-cron-enrichment.json",
+        "n8n-workflows/agent-cron-contacts.json"
+      ],
+      "advantages": [
+        "Visual workflow builder",
+        "More complex conditional logic",
+        "Local execution (no GitHub minutes)",
+        "Database retention of all executions",
+        "Email/SMS notifications built-in"
+      ],
+      "cost": "$0 (self-hosted) or $10-50/month (Cloud)",
+      "setup_time_minutes": 15,
+      "access_url": "http://srv1112587.hstgr.cloud:5678"
+    }
+  },
+  "deployment_checklist": {
+    "github_actions": [
+      {
+        "step": 1,
+        "task": "Push workflow files to GitHub",
+        "command": "git add .github/workflows/agents-*.yml && git commit -m 'Add autonomous agent cron jobs' && git push"
+      },
+      {
+        "step": 2,
+        "task": "Set GitHub secrets",
+        "command": "./setup-cron-github-actions.ps1 or bash setup-cron-github-actions.sh"
+      },
+      {
+        "step": 3,
+        "task": "Verify secrets created",
+        "command": "gh secret list"
+      },
+      {
+        "step": 4,
+        "task": "Monitor first runs",
+        "command": "GitHub Actions → Actions tab"
+      }
+    ],
+    "n8n": [
+      {
+        "step": 1,
+        "task": "Access n8n UI",
+        "url": "http://srv1112587.hstgr.cloud:5678"
+      },
+      {
+        "step": 2,
+        "task": "Create new workflows",
+        "action": "Copy JSON from n8n-workflows/ and import"
+      },
+      {
+        "step": 3,
+        "task": "Configure credentials",
+        "action": "Settings → Credentials → HTTP Header Auth"
+      },
+      {
+        "step": 4,
+        "task": "Set environment variables",
+        "action": "Settings → Environment Variables"
+      },
+      {
+        "step": 5,
+        "task": "Activate workflows",
+        "action": "Toggle 'Active' to ON"
+      }
+    ]
+  },
+  "github_secrets_required": [
+    {
+      "name": "API_BASE_URL",
+      "value": "http://72.61.92.220:3002",
+      "required": true
+    },
+    {
+      "name": "API_JWT_TOKEN",
+      "value": "<your-jwt-token-here>",
+      "required": true
+    },
+    {
+      "name": "SLACK_WEBHOOK_OPS",
+      "value": "<slack-ops-webhook-url>",
+      "required": false
+    }
+  ],
+  "n8n_environment_variables": [
+    {
+      "name": "API_HOST",
+      "value": "http://72.61.92.220:3002",
+      "required": true
+    },
+    {
+      "name": "SLACK_WEBHOOK_OPS",
+      "value": "<slack-ops-webhook-url>",
+      "required": false
+    }
+  ],
+  "first_run_schedule": {
+    "deployment_time": "2026-06-04T18:00:00Z (example)",
+    "note": "Times will vary based on actual deployment time",
+    "sam_discovery_first_run": "Next 00:00, 06:00, 12:00, or 18:00 UTC boundary",
+    "enrichment_first_run": "Next hour boundary (e.g., 19:00 UTC)",
+    "contacts_discovery_first_run": "Next 2-hour boundary (e.g., 20:00 UTC)"
+  },
+  "testing": {
+    "manual_trigger_sam": "curl -X POST -H 'Authorization: Bearer $API_JWT_TOKEN' -H 'Content-Type: application/json' -d '{\"source\": \"sam\", \"limit\": 100}' http://72.61.92.220:3002/api/agents/sam-discovery",
+    "manual_trigger_enrichment": "curl -X POST -H 'Authorization: Bearer $API_JWT_TOKEN' -H 'Content-Type: application/json' -d '{\"batchSize\": 50}' http://72.61.92.220:3002/api/agents/enrich-company",
+    "manual_trigger_contacts": "curl -X POST -H 'Authorization: Bearer $API_JWT_TOKEN' -H 'Content-Type: application/json' -d '{\"limit\": 200}' http://72.61.92.220:3002/api/agents/discover-contacts",
+    "health_check": "curl http://72.61.92.220:3002/health"
+  },
+  "documentation_files": [
+    "AGENTS_CRON_SETUP.md - Comprehensive setup guide",
+    "AGENTS_CRON_DEPLOYMENT_SUMMARY.json - This file",
+    ".github/workflows/agents-discovery-cron.yml - SAM discovery workflow",
+    ".github/workflows/agents-enrichment-cron.yml - Enrichment workflow",
+    ".github/workflows/agents-contacts-cron.yml - Contacts workflow",
+    "n8n-workflows/agent-cron-sam-discovery.json - n8n SAM workflow",
+    "n8n-workflows/agent-cron-enrichment.json - n8n enrichment workflow",
+    "n8n-workflows/agent-cron-contacts.json - n8n contacts workflow",
+    "setup-cron-github-actions.ps1 - PowerShell setup script",
+    "setup-cron-github-actions.sh - Bash setup script"
+  ],
+  "deployment_status": {
+    "ready": true,
+    "prerequisites": [
+      "VPS running (72.61.92.220:3002)",
+      "API endpoints responding",
+      "JWT token configured",
+      "GitHub repository access (for Actions)",
+      "Or n8n access (for n8n option)"
+    ],
+    "estimated_setup_time_minutes": 5
+  }
+}

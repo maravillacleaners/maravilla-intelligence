@@ -1,0 +1,62 @@
+name: Agent Cron - Enrich Company Data (Hourly)
+
+on:
+  schedule:
+    # Every hour at :00 minutes (UTC)
+    - cron: '0 * * * *'
+
+jobs:
+  enrich-company:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger Company Enrichment Agent
+        run: |
+          echo "Triggering Company Enrichment Agent..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.API_JWT_TOKEN }}" \
+            -d '{
+              "batchSize": 50,
+              "prioritizeNew": true,
+              "sources": ["hunter", "clearbit"]
+            }' \
+            "${{ secrets.API_BASE_URL }}/api/agents/enrich-company")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" -ne 200 ] && [ "$http_code" -ne 202 ] && [ "$http_code" -ne 204 ]; then
+            echo "⚠️ Company Enrichment returned status $http_code"
+            # Don't fail on 204 (no content)
+            if [ "$http_code" -ne 204 ]; then
+              exit 1
+            fi
+          fi
+
+          echo "✅ Company Enrichment triggered successfully"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Sending failure notification..."
+          curl -X POST -H 'Content-Type: application/json' \
+            -d '{
+              "text": "❌ Company Enrichment Agent failed - check logs",
+              "attachments": [{
+                "color": "danger",
+                "title": "Agent Cron Failure",
+                "text": "Enrich Company Data job failed at '"$(date -u +'%Y-%m-%dT%H:%M:%SZ')"'"
+              }]
+            }' \
+            "${{ secrets.SLACK_WEBHOOK_OPS }}" || true
+
+      - name: Log execution details
+        if: always()
+        run: |
+          echo "Execution completed at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "Batch size: 50 records"
+          echo "Next run: $(date -u -d '+1 hour' +'%Y-%m-%dT%H:%M:%SZ')"
